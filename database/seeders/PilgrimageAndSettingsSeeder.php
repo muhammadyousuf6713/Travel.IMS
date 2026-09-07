@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Models\SystemIntegrationSetting;
 use App\Models\PilgrimageSetting;
 use App\User;
 
@@ -56,20 +57,25 @@ class PilgrimageAndSettingsSeeder extends Seeder
             }
         }
 
-        // 3. Seed Default System Integration Settings
-        PilgrimageSetting::firstOrCreate(
-            ['id' => 1],
-            [
-                'makkah_ops_contact' => '+966 50 123 4567',
-                'madinah_ops_contact' => '+966 50 765 4321',
-                'jeddah_ops_contact' => '+966 50 999 8888',
-                'general_hotline' => '+92 300 1234567',
-                'ziyaraat_offset_hours' => 48,
-                'reminder_window_hours' => 48,
-                'reminder_repeat_hours' => 3,
-            ]
-        );
+        // 3. Initialize System Integration & Round-Robin Settings
+        $systemSettings = SystemIntegrationSetting::getSettings();
 
-        $this->command->info('Pilgrimage permissions and default integration settings seeded successfully.');
+        // 4. Default Tour & Pilgrimage Settings
+        if (class_exists(PilgrimageSetting::class)) {
+            PilgrimageSetting::firstOrCreate(
+                ['id' => 1],
+                [
+                    'makkah_ops_contact' => '+966 50 123 4567',
+                    'madinah_ops_contact' => '+966 50 765 4321',
+                    'jeddah_ops_contact' => '+966 50 999 8888',
+                    'general_hotline' => '+92 300 1234567',
+                    'ziyaraat_offset_hours' => 48,
+                    'reminder_window_hours' => 48,
+                    'reminder_repeat_hours' => 3,
+                ]
+            );
+        }
+
+        $this->command->info('Pilgrimage permissions, System Integration & Lead Auto-Assignment settings seeded successfully.');
     }
 }

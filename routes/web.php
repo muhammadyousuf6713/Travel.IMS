@@ -213,11 +213,18 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/{id}/voucher', [PilgrimageVoucherController::class, 'show'])->name('voucher.show');
     });
 
-    // System Integration Settings Module
-    Route::get('/system-integration-settings', [SystemIntegrationSettingController::class, 'edit'])->name('integration_settings.edit');
-    Route::post('/system-integration-settings', [SystemIntegrationSettingController::class, 'update'])->name('integration_settings.update');
+    // System Integration Settings & Auto Lead Assignment Module
+    Route::get('/system-integration-settings', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'edit'])->name('integration_settings.edit');
+    Route::post('/system-integration-settings', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'update'])->name('integration_settings.update');
+    Route::post('/system-integration-settings/regenerate-api-key', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'regenerateApiKey'])->name('integration_settings.regenerate_key');
+    Route::post('/system-integration-settings/simulate-lead', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'simulateLead'])->name('integration_settings.simulate_lead');
 
 });
+
+// Public Lead Intake Web Form (Embeddable / Shareable)
+Route::get('/inquire-now', [\App\Http\Controllers\PublicInquiryFormController::class, 'showForm'])->name('public.inquiry.form');
+Route::post('/inquire-now', [\App\Http\Controllers\PublicInquiryFormController::class, 'submitForm'])->name('public.inquiry.submit');
+
 
 Route::group(['middleware' => 'guest'], function () {
     Route::get('/login', [SessionsController::class, 'create']);

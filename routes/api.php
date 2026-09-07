@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\ApiAcademicController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -8,21 +7,17 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
 */
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Route::group(['prefix' => 'api-academic-program'], function () {
-//     Route::get('list', [ApiAcademicController::class, 'index'])->name('api.academic-program.list');
-//     Route::post('store', [ApiAcademicController::class, 'store'])->name('api.academic-program.store');
-//     Route::get('edit/{id}', [ApiAcademicController::class, 'edit'])->name('api.academic-program.edit');
-//     Route::put('update/{id}', [ApiAcademicController::class, 'update'])->name('api.academic-program.update');
-//     Route::delete('destroy/{id}', [ApiAcademicController::class, 'destroy'])->name('api.academic-program.destroy');
-// });
+// System Integration & Lead Ingestion Webhooks
+Route::prefix('v1/integrations')->group(function () {
+    // Meta / Facebook Lead Ads Webhook
+    Route::match(['get', 'post'], '/meta-leadgen', [\App\Http\Controllers\Api\LeadWebhookController::class, 'metaWebhook'])->name('api.integrations.meta_leadgen');
+    
+    // Direct REST API / External Webhook Ingestion (secured by API Key)
+    Route::post('/lead-webhook', [\App\Http\Controllers\Api\LeadWebhookController::class, 'directWebhook'])->name('api.integrations.lead_webhook');
+});

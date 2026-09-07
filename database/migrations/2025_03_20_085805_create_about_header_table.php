@@ -8,12 +8,14 @@ class CreateAboutHeaderTable extends Migration
 {
     public function up()
     {
-        Schema::create('about_header', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('image')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('about_header')) {
+            Schema::create('about_header', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('image')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     public function down()

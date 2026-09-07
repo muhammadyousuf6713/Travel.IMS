@@ -14,6 +14,7 @@ class remarks extends Model
     protected $primaryKey = 'id_remarks';
     protected $table = 'remarks';
     public $timestamps = true;
+    protected $guarded = [];
 
     
     public function createdBy()
