@@ -1,389 +1,285 @@
 @extends('layouts.user_type.auth')
 
 @section('content')
-<div class="container-fluid py-3 px-4">
-    <!-- Breadcrumb & Header -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
+<div class="container-fluid py-3 px-3">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
         <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb bg-transparent mb-1 pb-0 pt-1 px-0">
-                    <li class="breadcrumb-item"><a class="opacity-5 text-dark" href="{{ route('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item text-dark active" aria-current="page">System Integration Settings</li>
-                </ol>
-            </nav>
-            <h5 class="font-weight-bolder mb-0 text-dark">
-                <i class="fa-solid fa-network-wired text-primary me-2"></i> System Integration & Direct Lead Ingestion
-            </h5>
-            <p class="text-xs text-secondary mb-0">
-                Configure Meta Lead Ads, Direct Webhooks, Public Web Forms, and Automated Round-Robin Sales Distribution.
-            </p>
+            <h6 class="font-weight-bolder mb-0 text-dark">
+                <i class="fa-solid fa-network-wired text-primary me-2"></i> System Integration & Lead Management
+            </h6>
+            <p class="text-xs text-secondary mb-0">Configure automated lead assignment (round-robin), Meta webhooks, and public intake forms.</p>
         </div>
 
-        <div class="d-flex gap-2 align-items-center mt-2 mt-md-0">
-            <!-- Test Lead Simulation Button -->
+        <div class="d-flex gap-2 align-items-center">
             <form action="{{ route('integration_settings.simulate_lead') }}" method="POST" class="d-inline">
                 @csrf
-                <button type="submit" class="btn btn-sm btn-outline-primary mb-0 shadow-sm" title="Simulate an incoming lead and test round-robin assignment">
-                    <i class="fa-solid fa-vial me-1"></i> Simulate Test Lead
+                <button type="submit" class="btn btn-xs btn-outline-primary mb-0 shadow-none">
+                    <i class="fa-solid fa-vial me-1"></i> Test Lead Assignment
                 </button>
             </form>
-
-            <a href="{{ url('/inquire-now') }}" target="_blank" class="btn btn-sm btn-outline-dark mb-0 shadow-sm">
-                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Preview Public Form
+            <a href="{{ url('/inquire-now') }}" target="_blank" class="btn btn-xs btn-dark mb-0">
+                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Public Form
             </a>
         </div>
     </div>
 
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show text-white text-xs py-2 px-3 mb-3" role="alert">
-            <span class="alert-icon"><i class="fa-solid fa-circle-check me-2"></i></span>
-            <span class="alert-text"><strong>Success!</strong> {{ session('success') }}</span>
-            <button type="button" class="btn-close text-xs text-white" data-bs-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <i class="fa-solid fa-circle-check me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close text-xs text-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
     @if($errors->any())
         <div class="alert alert-danger alert-dismissible fade show text-white text-xs py-2 px-3 mb-3" role="alert">
-            <span class="alert-icon"><i class="fa-solid fa-triangle-exclamation me-2"></i></span>
-            <span class="alert-text"><strong>Please fix errors:</strong> {{ implode(', ', $errors->all()) }}</span>
-            <button type="button" class="btn-close text-xs text-white" data-bs-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> {{ implode(', ', $errors->all()) }}
+            <button type="button" class="btn-close text-xs text-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    <!-- Real-time Status Overview Cards -->
-    <div class="row g-3 mb-3">
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                    <div>
-                        <span class="text-xxs text-uppercase font-weight-bolder text-muted">Round-Robin Status</span>
-                        <h6 class="font-weight-bolder mb-0 mt-1">
-                            @if($settings->auto_assign_enabled)
-                                <span class="badge bg-gradient-success text-xxs px-2 py-1"><i class="fa-solid fa-circle-play me-1"></i> Active (Automated)</span>
-                            @else
-                                <span class="badge bg-secondary text-xxs px-2 py-1"><i class="fa-solid fa-circle-pause me-1"></i> Disabled</span>
-                            @endif
-                        </h6>
-                    </div>
-                    <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md" style="width: 38px; height: 38px;">
-                        <i class="fa-solid fa-rotate text-white text-sm opacity-10" style="margin-top: 10px;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Clean Navigation Tabs -->
+    <ul class="nav nav-tabs border-bottom mb-3" id="integrationTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active text-xs font-weight-bold py-2 px-3" id="round-robin-tab" data-bs-toggle="tab" data-bs-target="#round-robin-pane" type="button" role="tab">
+                <i class="fa-solid fa-users-gear text-primary me-1"></i> 1. Lead Assignment (Round-Robin)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-xs font-weight-bold py-2 px-3" id="meta-tab" data-bs-toggle="tab" data-bs-target="#meta-pane" type="button" role="tab">
+                <i class="fa-brands fa-facebook text-info me-1"></i> 2. Meta (Facebook / Instagram)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-xs font-weight-bold py-2 px-3" id="api-tab" data-bs-toggle="tab" data-bs-target="#api-pane" type="button" role="tab">
+                <i class="fa-solid fa-globe text-success me-1"></i> 3. Web Form & API Webhook
+            </button>
+        </li>
+    </ul>
 
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                    <div>
-                        <span class="text-xxs text-uppercase font-weight-bolder text-muted">Next Agent in Line</span>
-                        <h6 class="font-weight-bolder mb-0 mt-1 text-primary text-sm">
-                            <i class="fa-solid fa-user-tag me-1"></i> {{ $nextAgent ? $nextAgent->name : 'None Selected' }}
-                        </h6>
-                    </div>
-                    <div class="icon icon-shape bg-gradient-info shadow text-center border-radius-md" style="width: 38px; height: 38px;">
-                        <i class="fa-solid fa-user-clock text-white text-sm opacity-10" style="margin-top: 10px;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                    <div>
-                        <span class="text-xxs text-uppercase font-weight-bolder text-muted">Active Sales Team Pool</span>
-                        <h6 class="font-weight-bolder mb-0 mt-1 text-dark">
-                            {{ count($assignedIds) }} Agents In Cycle
-                        </h6>
-                    </div>
-                    <div class="icon icon-shape bg-gradient-dark shadow text-center border-radius-md" style="width: 38px; height: 38px;">
-                        <i class="fa-solid fa-users-gear text-white text-sm opacity-10" style="margin-top: 10px;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                    <div>
-                        <span class="text-xxs text-uppercase font-weight-bolder text-muted">Total Leads Processed</span>
-                        <h6 class="font-weight-bolder mb-0 mt-1 text-success">
-                            {{ number_format($settings->total_leads_processed ?? 0) }} Inquiries
-                        </h6>
-                    </div>
-                    <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md" style="width: 38px; height: 38px;">
-                        <i class="fa-solid fa-chart-line text-white text-sm opacity-10" style="margin-top: 10px;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Configuration Form -->
     <form action="{{ route('integration_settings.update') }}" method="POST">
         @csrf
 
-        <!-- SECTION 1: Round-Robin Automated Lead Distribution Engine -->
-        <div class="card shadow-sm border-0 mb-3">
-            <div class="card-header bg-gray-100 py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="text-xs font-weight-bolder text-uppercase text-dark mb-0">
-                    <i class="fa-solid fa-shuffle text-primary me-2"></i> 1. Round-Robin Lead Assignment & Sales Team Rotation
-                </h6>
-                <div class="form-check form-switch mb-0">
-                    <input class="form-check-input" type="checkbox" name="auto_assign_enabled" id="auto_assign_enabled" value="1" {{ $settings->auto_assign_enabled ? 'checked' : '' }}>
-                    <label class="form-check-label text-xs font-weight-bold text-dark mb-0 ms-1" for="auto_assign_enabled">Enable Auto-Assign</label>
-                </div>
-            </div>
-            <div class="card-body p-3">
-                <p class="text-xs text-secondary mb-3">
-                    Select sales team members who will receive direct leads in a continuous cycle (Lead 1 &rarr; Agent A, Lead 2 &rarr; Agent B, Lead 3 &rarr; Agent C &rarr; Agent A).
-                </p>
+        <div class="tab-content" id="integrationTabsContent">
+            <!-- TAB 1: Lead Assignment (Round-Robin) -->
+            <div class="tab-pane fade show active" id="round-robin-pane" role="tabpanel">
+                <div class="card shadow-none border mb-3">
+                    <div class="card-body p-3">
+                        <!-- Switch & Status bar -->
+                        <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 mb-3 border-bottom">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" name="auto_assign_enabled" id="auto_assign_enabled" value="1" {{ $settings->auto_assign_enabled ? 'checked' : '' }}>
+                                <label class="form-check-label text-xs font-weight-bold text-dark mb-0 ms-2" for="auto_assign_enabled">
+                                    Enable Automatic Lead Assignment (Cycle: 1st inquiry to Agent 1, 2nd to Agent 2...)
+                                </label>
+                            </div>
 
-                <div class="row g-2 mb-3">
-                    <div class="col-12">
-                        <label class="text-xxs font-weight-bolder text-uppercase text-muted d-block mb-2">Select Sales Representatives in Rotation Pool:</label>
-                        <div class="row g-2">
-                            @foreach($users as $user)
-                                @php
-                                    $isInPool = in_array($user->id, $assignedIds);
-                                    $position = $isInPool ? (array_search($user->id, $assignedIds) + 1) : null;
-                                @endphp
-                                <div class="col-md-3 col-sm-6">
-                                    <div class="border rounded p-2 d-flex align-items-center justify-content-between {{ $isInPool ? 'bg-gray-100 border-primary shadow-2xs' : 'bg-white' }}">
-                                        <div class="form-check mb-0 d-flex align-items-center">
-                                            <input class="form-check-input me-2 mt-0 user-pool-checkbox" type="checkbox" name="assigned_user_ids[]" value="{{ $user->id }}" id="user_{{ $user->id }}" {{ $isInPool ? 'checked' : '' }}>
-                                            <label class="form-check-label text-xs font-weight-bold text-dark mb-0 cursor-pointer" for="user_{{ $user->id }}">
-                                                {{ $user->name }}
-                                                <span class="d-block text-xxs text-muted font-weight-normal">{{ $user->email }}</span>
-                                            </label>
-                                        </div>
-                                        @if($position)
-                                            <span class="badge bg-primary text-xxs px-2 py-1 rounded-pill" title="Rotation order">#{{ $position }}</span>
-                                        @endif
-                                    </div>
+                            <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
+                                <span class="badge bg-light text-dark text-xxs border">
+                                    Next Agent in Line: <strong class="text-primary">{{ $nextAgent ? $nextAgent->name : 'None Selected' }}</strong>
+                                </span>
+                                <span class="badge bg-light text-dark text-xxs border">
+                                    Total Leads Processed: <strong class="text-success">{{ $settings->total_leads_processed ?? 0 }}</strong>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Sales Team Selection -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-0">
+                                    Select Sales Staff for Lead Rotation ({{ count($assignedIds) }} Selected):
+                                </label>
+                                <div>
+                                    <button type="button" class="btn btn-link text-xxs text-primary p-0 me-2" onclick="toggleAllUsers(true)">Select All</button>
+                                    <button type="button" class="btn btn-link text-xxs text-secondary p-0" onclick="toggleAllUsers(false)">Clear All</button>
                                 </div>
-                            @endforeach
+                            </div>
+
+                            <div class="row g-2" style="max-height: 280px; overflow-y: auto;">
+                                @foreach($users as $user)
+                                    @php
+                                        $isInPool = in_array($user->id, $assignedIds);
+                                        $order = $isInPool ? (array_search($user->id, $assignedIds) + 1) : null;
+                                    @endphp
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="border rounded p-2 d-flex align-items-center justify-content-between {{ $isInPool ? 'bg-light border-primary' : 'bg-white' }}">
+                                            <div class="form-check mb-0 d-flex align-items-center">
+                                                <input class="form-check-input me-2 mt-0 user-checkbox" type="checkbox" name="assigned_user_ids[]" value="{{ $user->id }}" id="user_{{ $user->id }}" {{ $isInPool ? 'checked' : '' }}>
+                                                <label class="form-check-label text-xs text-dark mb-0 cursor-pointer" for="user_{{ $user->id }}">
+                                                    {{ $user->name }}
+                                                </label>
+                                            </div>
+                                            @if($order)
+                                                <span class="badge bg-primary text-xxs px-1 py-0 rounded">#{{ $order }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Default Parameters -->
+                        <div class="row g-3 pt-3 border-top">
+                            <div class="col-md-4">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Default Source</label>
+                                <select name="default_sales_reference_id" class="form-select form-select-sm text-xs">
+                                    @foreach($salesReferences as $ref)
+                                        <option value="{{ $ref->type_id }}" {{ $settings->default_sales_reference_id == $ref->type_id ? 'selected' : '' }}>
+                                            {{ $ref->type_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Default Inquiry Type</label>
+                                <select name="default_inquiry_type_id" class="form-select form-select-sm text-xs">
+                                    @foreach($inquiryTypes as $type)
+                                        <option value="{{ $type->type_id }}" {{ $settings->default_inquiry_type_id == $type->type_id ? 'selected' : '' }}>
+                                            {{ $type->type_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Default Status</label>
+                                <select name="default_inquiry_status" class="form-select form-select-sm text-xs">
+                                    <option value="Open" {{ $settings->default_inquiry_status == 'Open' ? 'selected' : '' }}>Open</option>
+                                    <option value="In-Progress" {{ $settings->default_inquiry_status == 'In-Progress' ? 'selected' : '' }}>In-Progress</option>
+                                    <option value="Hold" {{ $settings->default_inquiry_status == 'Hold' ? 'selected' : '' }}>Hold</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="row g-3 pt-2 border-top">
-                    <div class="col-md-4">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Default Sales Reference / Source</label>
-                        <select name="default_sales_reference_id" class="form-select form-select-sm text-xs">
-                            @foreach($salesReferences as $ref)
-                                <option value="{{ $ref->type_id }}" {{ $settings->default_sales_reference_id == $ref->type_id ? 'selected' : '' }}>
-                                    {{ $ref->type_name }}
-                                </option>
-                            @endforeach
-                        </select>
+            <!-- TAB 2: Meta (Facebook / Instagram) -->
+            <div class="tab-pane fade" id="meta-pane" role="tabpanel">
+                <div class="card shadow-none border mb-3">
+                    <div class="card-body p-3">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta Webhook Callback URL</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control text-xs font-monospace bg-light" id="metaWebhookInput" value="{{ $metaWebhookUrl }}" readonly>
+                                    <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('metaWebhookInput')">
+                                        <i class="fa-solid fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta Verify Token</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control text-xs font-monospace" name="meta_verify_token" id="metaTokenInput" value="{{ $settings->meta_verify_token }}">
+                                    <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('metaTokenInput')">
+                                        <i class="fa-solid fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta Page / System User Access Token</label>
+                            <textarea class="form-control text-xs font-monospace" name="meta_page_access_token" rows="2" placeholder="Paste Page Access Token to automatically fetch customer lead answers">{{ $settings->meta_page_access_token }}</textarea>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta App ID (Optional)</label>
+                                <input type="text" class="form-control form-control-sm text-xs" name="meta_app_id" value="{{ $settings->meta_app_id }}" placeholder="e.g. 1234567890">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta App Secret (Optional)</label>
+                                <input type="password" class="form-control form-control-sm text-xs" name="meta_app_secret" value="{{ $settings->meta_app_secret }}" placeholder="••••••••••••••••••••">
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Default Inquiry Type</label>
-                        <select name="default_inquiry_type_id" class="form-select form-select-sm text-xs">
-                            @foreach($inquiryTypes as $type)
-                                <option value="{{ $type->type_id }}" {{ $settings->default_inquiry_type_id == $type->type_id ? 'selected' : '' }}>
-                                    {{ $type->type_name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+            <!-- TAB 3: Web Form & API Webhook -->
+            <div class="tab-pane fade" id="api-pane" role="tabpanel">
+                <div class="card shadow-none border mb-3">
+                    <div class="card-body p-3">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Public Inquiry Form URL</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control text-xs font-monospace bg-light" id="publicFormInput" value="{{ $publicFormUrl }}" readonly>
+                                    <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('publicFormInput')">
+                                        <i class="fa-solid fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Default Ingested Inquiry Status</label>
-                        <select name="default_inquiry_status" class="form-select form-select-sm text-xs">
-                            <option value="Open" {{ $settings->default_inquiry_status == 'Open' ? 'selected' : '' }}>Open</option>
-                            <option value="In-Progress" {{ $settings->default_inquiry_status == 'In-Progress' ? 'selected' : '' }}>In-Progress</option>
-                            <option value="Hold" {{ $settings->default_inquiry_status == 'Hold' ? 'selected' : '' }}>Hold</option>
-                        </select>
+                            <div class="col-md-6">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">REST API Secret Key (X-API-KEY)</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control text-xs font-monospace bg-light" id="apiKeyInput" value="{{ $settings->api_key }}" readonly>
+                                    <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('apiKeyInput')">
+                                        <i class="fa-solid fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Public Form Title</label>
+                                <input type="text" class="form-control form-control-sm text-xs" name="public_form_title" value="{{ $settings->public_form_title }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Public Form Subtitle</label>
+                                <input type="text" class="form-control form-control-sm text-xs" name="public_form_subtitle" value="{{ $settings->public_form_subtitle }}">
+                            </div>
+                        </div>
+
+                        <!-- Direct API Webhook URL -->
+                        <div class="mt-3 pt-3 border-top">
+                            <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Direct Webhook Endpoint (POST)</label>
+                            <div class="input-group input-group-sm mb-2">
+                                <input type="text" class="form-control text-xs font-monospace bg-light" id="directWebhookInput" value="{{ $webhookUrl }}" readonly>
+                                <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('directWebhookInput')">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                            </div>
+                            <small class="text-xxs text-muted">Send JSON payload with header <code>X-API-KEY</code> to automatically create inquiries from website forms or Zapier.</small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- SECTION 2: Meta / Facebook Lead Ads Webhook Integration -->
-        <div class="card shadow-sm border-0 mb-3">
-            <div class="card-header bg-gray-100 py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="text-xs font-weight-bolder text-uppercase text-dark mb-0">
-                    <i class="fa-brands fa-facebook text-primary me-2"></i> 2. Meta (Facebook & Instagram) Lead Ads Webhook
-                </h6>
-                <span class="badge bg-gradient-info text-xxs">Real-time Lead Sync</span>
-            </div>
-            <div class="card-body p-3">
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta Webhook Callback URL (Copy to Meta App)</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" class="form-control text-xs font-monospace bg-light" id="metaWebhookUrlInput" value="{{ $metaWebhookUrl }}" readonly>
-                            <button class="btn btn-outline-secondary mb-0 copy-btn" type="button" onclick="copyToClipboard('metaWebhookUrlInput')">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta Verify Token</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" class="form-control text-xs font-monospace" name="meta_verify_token" id="metaVerifyTokenInput" value="{{ $settings->meta_verify_token }}">
-                            <button class="btn btn-outline-secondary mb-0 copy-btn" type="button" onclick="copyToClipboard('metaVerifyTokenInput')">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-md-12">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">
-                            Meta Page / System User Access Token 
-                            <span class="text-muted font-weight-normal">(Required to automatically pull lead questions and form data)</span>
-                        </label>
-                        <textarea class="form-control text-xs font-monospace" name="meta_page_access_token" rows="2" placeholder="EAAG... (Paste permanent Page Access Token from Meta Developer Console)">{{ $settings->meta_page_access_token }}</textarea>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta App ID (Optional)</label>
-                        <input type="text" class="form-control form-control-sm text-xs" name="meta_app_id" value="{{ $settings->meta_app_id }}" placeholder="e.g. 123456789012345">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta App Secret (Optional)</label>
-                        <input type="password" class="form-control form-control-sm text-xs" name="meta_app_secret" value="{{ $settings->meta_app_secret }}" placeholder="••••••••••••••••••••">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECTION 3: Direct Webhook & REST API Ingestion -->
-        <div class="card shadow-sm border-0 mb-3">
-            <div class="card-header bg-gray-100 py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="text-xs font-weight-bolder text-uppercase text-dark mb-0">
-                    <i class="fa-solid fa-code text-primary me-2"></i> 3. Direct REST API & External Webhook Ingestion
-                </h6>
-                <span class="badge bg-gradient-dark text-xxs">Zapier / WordPress / Custom Forms</span>
-            </div>
-            <div class="card-body p-3">
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Webhook Endpoint (POST)</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" class="form-control text-xs font-monospace bg-light" id="directWebhookUrlInput" value="{{ $webhookUrl }}" readonly>
-                            <button class="btn btn-outline-secondary mb-0 copy-btn" type="button" onclick="copyToClipboard('directWebhookUrlInput')">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">API Secret Key (X-API-KEY)</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" class="form-control text-xs font-monospace bg-light" id="apiKeyInput" value="{{ $settings->api_key }}" readonly>
-                            <button class="btn btn-outline-secondary mb-0 copy-btn" type="button" onclick="copyToClipboard('apiKeyInput')">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sample JSON Payload Accordion / Code Snippet -->
-                <div class="border rounded p-2 bg-gray-100">
-                    <span class="text-xxs font-weight-bolder text-uppercase text-muted d-block mb-1">Sample JSON POST Payload:</span>
-                    <pre class="bg-dark text-white rounded p-2 text-xxs mb-0" style="max-height: 140px; overflow-y: auto;"><code>{
-  "name": "Muhammad Usman",
-  "phone": "+92 300 1234567",
-  "email": "usman@example.com",
-  "city": "Karachi",
-  "service_type": "Umrah Package",
-  "travel_date": "2026-10-15",
-  "adults": 2,
-  "children": 1,
-  "remarks": "Looking for 5-star hotel in Makkah and Madinah.",
-  "source": "Website Landing Page",
-  "campaign_name": "Ramzan 2026 Special"
-}</code></pre>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECTION 4: Public Embeddable / Shareable Web Inquiry Form -->
-        <div class="card shadow-sm border-0 mb-3">
-            <div class="card-header bg-gray-100 py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="text-xs font-weight-bolder text-uppercase text-dark mb-0">
-                    <i class="fa-solid fa-globe text-primary me-2"></i> 4. Public Web Form (Shareable URL & Embed Iframe)
-                </h6>
-                <div class="form-check form-switch mb-0">
-                    <input class="form-check-input" type="checkbox" name="public_form_enabled" id="public_form_enabled" value="1" {{ $settings->public_form_enabled ? 'checked' : '' }}>
-                    <label class="form-check-label text-xs font-weight-bold text-dark mb-0 ms-1" for="public_form_enabled">Enable Public Form</label>
-                </div>
-            </div>
-            <div class="card-body p-3">
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Direct Shareable Link</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" class="form-control text-xs font-monospace bg-light" id="publicFormUrlInput" value="{{ $publicFormUrl }}" readonly>
-                            <button class="btn btn-outline-secondary mb-0 copy-btn" type="button" onclick="copyToClipboard('publicFormUrlInput')">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Embed HTML Iframe Code</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" class="form-control text-xs font-monospace bg-light" id="embedIframeInput" value='<iframe src="{{ $publicFormUrl }}" width="100%" height="750" frameborder="0"></iframe>' readonly>
-                            <button class="btn btn-outline-secondary mb-0 copy-btn" type="button" onclick="copyToClipboard('embedIframeInput')">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Public Form Title</label>
-                        <input type="text" class="form-control form-control-sm text-xs" name="public_form_title" value="{{ $settings->public_form_title }}">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label text-xxs font-weight-bolder text-uppercase text-muted mb-1">Public Form Subtitle / Instructions</label>
-                        <input type="text" class="form-control form-control-sm text-xs" name="public_form_subtitle" value="{{ $settings->public_form_subtitle }}">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sticky Save Actions Bar -->
-        <div class="card shadow-sm border-0 sticky-bottom bg-white py-2 px-3 mt-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-xs text-secondary">
-                    <i class="fa-solid fa-shield-check text-success me-1"></i> Changes take effect immediately across all webhook listeners and intake forms.
-                </span>
-                <button type="submit" class="btn btn-sm btn-primary mb-0 px-4">
-                    <i class="fa-solid fa-floppy-disk me-1"></i> Save Integration Settings
-                </button>
-            </div>
+        <!-- Save Button -->
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-sm btn-primary px-4">
+                <i class="fa-solid fa-floppy-disk me-1"></i> Save Settings
+            </button>
         </div>
     </form>
 </div>
 
 <script>
-function copyToClipboard(elementId) {
-    const copyText = document.getElementById(elementId);
-    copyText.select();
-    copyText.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(copyText.value).then(() => {
-        alert("Copied to clipboard: " + copyText.value);
-    }).catch(err => {
+function copyValue(id) {
+    const input = document.getElementById(id);
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value).then(() => {
+        alert("Copied: " + input.value);
+    }).catch(() => {
         document.execCommand("copy");
-        alert("Copied: " + copyText.value);
+        alert("Copied: " + input.value);
+    });
+}
+
+function toggleAllUsers(select) {
+    document.querySelectorAll('.user-checkbox').forEach(cb => {
+        cb.checked = select;
     });
 }
 </script>
