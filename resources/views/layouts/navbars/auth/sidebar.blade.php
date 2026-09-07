@@ -247,11 +247,17 @@
                     </div>
                     <span class="nav-link-text">Inquiry</span>
                 </a>
-                <a class="nav-link {{ Request::is('followups') ? 'active' : '' }}" href="{{ route('followups.index') }}">
+                <a class="nav-link {{ Request::is('followups*') ? 'active' : '' }}" href="{{ route('followups.index') }}">
                     <div class="icon">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                     </div>
                     <span class="nav-link-text">Follow-up List</span>
+                </a>
+                <a class="nav-link {{ Request::is('pilgrimage*') ? 'active' : '' }}" href="{{ route('pilgrimage.index') }}">
+                    <div class="icon">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <span class="nav-link-text">Pilgrimage & Itinerary</span>
                 </a>
             </li>
 
@@ -297,6 +303,12 @@
                         <i class="fa-solid fa-building"></i>
                     </div>
                     <span class="nav-link-text">Organization Settings</span>
+                </a>
+                <a class="nav-link {{ Request::is('system-integration-settings*') ? 'active' : '' }}" href="{{ route('integration_settings.edit') }}">
+                    <div class="icon">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <span class="nav-link-text">Integration Settings</span>
                 </a>
                 <a class="nav-link {{ Request::is('roles') ? 'active' : '' }}" href="{{ url('roles') }}">
                     <div class="icon">

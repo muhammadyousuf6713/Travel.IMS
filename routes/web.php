@@ -11,6 +11,10 @@ use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\InquirytypesController;
 use App\Http\Controllers\OtherServiceController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PilgrimageBookingController;
+use App\Http\Controllers\PilgrimageVoucherController;
+use App\Http\Controllers\PilgrimageSettingsController;
+use App\Http\Controllers\SystemIntegrationSettingController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ResetController;
@@ -20,17 +24,11 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SessionsController;
 use App\Http\Controllers\UsersController;
 use Illuminate\Support\Facades\Route;
-use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 /*
  * |--------------------------------------------------------------------------
  * | Web Routes
  * |--------------------------------------------------------------------------
- * |
- * | Here is where you can register web routes for your application. These
- * | routes are loaded by the RouteServiceProvider within a group which
- * | contains the "web" middleware group. Now create something great!
- * |
  */
 
 Route::group(['middleware' => 'auth'], function () {
@@ -180,14 +178,14 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('services/create', [ServiceController::class, 'create'])->middleware(['permission:Services add']);
     Route::post('services/store', [ServiceController::class, 'store'])->middleware(['permission:Services add']);
     Route::get('services/edit/{id}', [ServiceController::class, 'edit'])->middleware(['permission:Services edit']);
-    Route::post('sercices/update/{id}', [ServiceController::class, 'update'])->middleware(['permission:Services edit']);
+    Route::post('services/update/{id}', [ServiceController::class, 'update'])->middleware(['permission:Services edit']);
     Route::delete('services/delete/{id}', [ServiceController::class, 'destroy'])->name('services.destroy')->middleware(['permission:Services delete']);
 
     // asign permission to role
     Route::get('roles/permission/{id?}', [PermissionController::class, 'permission_index']);
     Route::post('roles/permission/{role_id}', [PermissionController::class, 'assignPermissions']);
 
-    // Other Serviees
+    // Other Services
     Route::get('/other_services', [OtherServiceController::class, 'index']);
     Route::get('/other_services/edit/{id}', [OtherServiceController::class, 'edit']);
     Route::get('/other_services/create', [OtherServiceController::class, 'create']);
@@ -198,10 +196,30 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/followups', [App\Http\Controllers\FollowupController::class, 'index'])->name('followups.index');
     Route::get('/get-followups-data', [App\Http\Controllers\FollowupController::class, 'getData'])->name('followups.data');
 
+    // Pilgrimage & Dynamic Itinerary Operations Suite
+    Route::prefix('pilgrimage')->name('pilgrimage.')->group(function () {
+        Route::get('/', [PilgrimageBookingController::class, 'index'])->name('index');
+        Route::get('/create', [PilgrimageBookingController::class, 'create'])->name('create');
+        Route::post('/store', [PilgrimageBookingController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [PilgrimageBookingController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [PilgrimageBookingController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PilgrimageBookingController::class, 'destroy'])->name('destroy');
+
+        // Interactive AJAX Modal & Leg Status Toggle
+        Route::get('/{id}/modal-details', [PilgrimageBookingController::class, 'getDetailModal'])->name('modal.details');
+        Route::post('/legs/{legId}/toggle-status', [PilgrimageBookingController::class, 'toggleLegStatus'])->name('legs.toggle');
+
+        // Hotel Accommodation Voucher (PDF / Print View)
+        Route::get('/{id}/voucher', [PilgrimageVoucherController::class, 'show'])->name('voucher.show');
+    });
+
+    // System Integration Settings Module
+    Route::get('/system-integration-settings', [SystemIntegrationSettingController::class, 'edit'])->name('integration_settings.edit');
+    Route::post('/system-integration-settings', [SystemIntegrationSettingController::class, 'update'])->name('integration_settings.update');
+
 });
 
 Route::group(['middleware' => 'guest'], function () {
-
     Route::get('/login', [SessionsController::class, 'create']);
     Route::post('/session', [SessionsController::class, 'store']);
     Route::get('/login/forgot-password', [ResetController::class, 'create']);
@@ -214,4 +232,5 @@ Route::get('/login', function () {
     return view('session/login-session');
 })->name('login');
 
-Route::get('organization-settings', 'App\Http\Controllers\OrganizationSettingController@edit')->name('organization_settings.edit'); Route::post('organization-settings', 'App\Http\Controllers\OrganizationSettingController@update')->name('organization_settings.update');
+Route::get('organization-settings', 'App\Http\Controllers\OrganizationSettingController@edit')->name('organization_settings.edit'); 
+Route::post('organization-settings', 'App\Http\Controllers\OrganizationSettingController@update')->name('organization_settings.update');
