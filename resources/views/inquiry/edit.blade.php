@@ -1,8 +1,9 @@
 @extends('layouts.user_type.auth')
 
 @section('content')
-    <!-- Quill Editor -->
+    <!-- Quill Editor & SweetAlert2 -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
 
     <style>
@@ -17,13 +18,38 @@
         .select2-container--default .select2-selection--multiple .select2-selection__rendered li {
             color: #000 !important;
         }
+
+        .form-control.is-invalid, .form-select.is-invalid {
+            border-color: #dc3545 !important;
+            background-color: #fff8f8 !important;
+        }
     </style>
 
     <div class="col-md-12 col-lg-12 col-xl-12">
         <div class="az-content p-0">
             <div class="container-fluid p-0">
                 <div class="az-content-body d-flex flex-column">
-                    <form action="{{ url('update_inquiry', $inquiry->id_inquiry) }}" method="post" id="submit_inquiry">
+                    @if($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show text-white text-xs py-2 px-3 mb-3" role="alert">
+                            <i class="fa-solid fa-triangle-exclamation me-2"></i> 
+                            <strong>Validation Notice:</strong>
+                            <ul class="mb-0 ps-3 mt-1">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close text-xs text-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    @if(session('message'))
+                        <div class="alert alert-success alert-dismissible fade show text-white text-xs py-2 px-3 mb-3" role="alert">
+                            <i class="fa-solid fa-circle-check me-2"></i> {{ session('message') }}
+                            <button type="button" class="btn-close text-xs text-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    <form action="{{ url('update_inquiry', $inquiry->id_inquiry) }}" method="post" id="submit_inquiry" novalidate>
                         @csrf
                         <div class="card shadow-sm mb-4 border-0">
                             <div class="card-header bg-white border-bottom pb-3 pt-4 px-4 d-flex justify-content-between align-items-center">
@@ -223,7 +249,7 @@
                                     </div>
                                     <div class="col-lg-4 mg-t-20 mg-md-t-0">
                                         <label class="form-label">Inquiry Category:</label>
-                                        <select name="inquiry_category" class="form-control no-select2" required>
+                                        <select name="inquiry_category" id="inquiry_category" class="form-control no-select2">
                                             <option value="">Select Inquiry Category</option>
                                             <option value="Economy" {{ ($inquiry->inquiry_category == 'Economy') ? 'selected' : '' }}>Economy</option>
                                             <option value="Standard" {{ ($inquiry->inquiry_category == 'Standard') ? 'selected' : '' }}>Standard</option>
@@ -258,8 +284,8 @@
                                         <label class="form-label">Travel Date:
                                             <i class="fa fa-info-circle" style="color:red;" data-toggle="tooltip"
                                                 title="This field is required"></i></label>
-                                        <input type="text" readonly name="travel_date"
-                                            class="form-control fc-datepicker2" placeholder="MM/DD/YYYY" required
+                                        <input type="text" readonly name="travel_date" id="travel_date"
+                                            class="form-control fc-datepicker2" placeholder="YYYY-MM-DD" required
                                             value="{{ $inquiry->travel_date ?? '' }}" />
                                     </div>
 
@@ -268,7 +294,7 @@
                                             <label class="form-label">Sales Person
                                                 <i class="fa fa-info-circle" style="color:red;" data-toggle="tooltip"
                                                     title="This field is required"></i></label>
-                                            <select name="sale_person" class="form-control no-select2" id="sale_person">
+                                            <select name="sale_person" class="form-control no-select2" id="sale_person" required>
                                                 <option value="">Select Sales Person</option>
                                                 @forelse ($sale_persons as $sp)
                                                     <option value="{{ $sp['id'] }}" {{ ($sp['id'] == $inquiry->saleperson) ? 'selected' : '' }}>
@@ -325,7 +351,7 @@
                                 <a href="{{ url('inquiry') }}" class="btn btn-danger text-white shadow-sm mb-0 px-4 text-uppercase fw-bold">
                                    Cancel
                                 </a>
-                                <button type="button" onclick="check_validation()" class="btn btn-primary shadow-sm mb-0 px-4 text-uppercase fw-bold" style="background-color: var(--bs-primary) !important; border-color: var(--bs-primary) !important;">
+                                <button type="button" id="update_submit_btn" onclick="check_validation()" class="btn btn-primary shadow-sm mb-0 px-4 text-uppercase fw-bold" style="background-color: var(--bs-primary) !important; border-color: var(--bs-primary) !important;">
                                     <i class="fa fa-paper-plane me-2"></i> Update Inquiry
                                 </button>
                             </div>
@@ -338,8 +364,9 @@
 @endsection
 
 @push('scripts')
-    <!-- Quill Editor -->
+    <!-- Quill Editor & SweetAlert2 -->
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
@@ -374,8 +401,10 @@
         }, 100);
 
         function saveQuillContent() {
-            var remarks = quill.root.innerHTML;
-            document.getElementById('remarks').value = remarks;
+            if (quill && quill.root) {
+                var remarks = quill.root.innerHTML;
+                document.getElementById('remarks').value = remarks;
+            }
         }
 
         function clear_feilds() {
@@ -486,7 +515,6 @@
                 showOtherMonths: true,
                 selectOtherMonths: true,
                 dateFormat: 'yy-mm-dd',
-                minDate: 0,
             });
 
             $('#services').on('change', function() {
@@ -504,54 +532,92 @@
         });
 
         function check_validation() {
-            var count_errors = 0;
-            var message = "";
+            var errors = [];
+            $('.is-invalid').removeClass('is-invalid');
 
-            if ($('#customer_name').val().length < 1) {
-                message += "<li style='text-align:left;' class='text-danger'>Customer Name field is required</li>";
-                count_errors++;
-            }
-            if ($('#customer_cell').val().length < 1) {
-                message += "<li style='text-align:left;' class='text-danger'>Customer Cell field is required</li>";
-                count_errors++;
-            }
-            if (!$('#inquiry_type').val() || $('#inquiry_type').val() == "Select Inquiry Type") {
-                message += "<li style='text-align:left;' class='text-danger'>Inquiry Type field is required</li>";
-                count_errors++;
-            }
-            if (!$('#services').val() || $('#services').val() == "Select Services") {
-                message += "<li style='text-align:left;' class='text-danger'>Services field is required</li>";
-                count_errors++;
-            }
-            if ($('input[name="travel_date"]').val().length < 1) {
-                message += "<li style='text-align:left;' class='text-danger'>Travel Date field is required</li>";
-                count_errors++;
-            }
-            if (!$('#sale_person').val() || $('#sale_person').val() == "Select Sales Person") {
-                message += "<li style='text-align:left;' class='text-danger'>Sales Person field is required</li>";
-                count_errors++;
+            // 1. Customer Name
+            var custName = $.trim($('#customer_name').val());
+            if (custName.length < 1) {
+                errors.push("Customer Name is required");
+                $('#customer_name').addClass('is-invalid');
             }
 
+            // 2. Customer Cell
+            var custCell = $.trim($('#customer_cell').val());
+            if (custCell.length < 1) {
+                errors.push("Customer Cell / Contact is required");
+                $('#customer_cell').addClass('is-invalid');
+            }
+
+            // 3. Services
+            var servicesVal = $('#services').val();
+            if (!servicesVal || servicesVal === "" || servicesVal === "Select Services") {
+                errors.push("Please select a Service");
+                $('#services').addClass('is-invalid');
+            }
+
+            // 4. Inquiry Type
+            var inqTypeVal = $('#inquiry_type').val();
+            if (!inqTypeVal || inqTypeVal === "" || inqTypeVal === "Select Inquiry Type") {
+                errors.push("Please select an Inquiry Type");
+                $('#inquiry_type').addClass('is-invalid');
+            }
+
+            // 5. Travel Date
+            var travelDateVal = $.trim($('#travel_date').val());
+            if (travelDateVal.length < 1) {
+                errors.push("Travel Date is required");
+                $('#travel_date').addClass('is-invalid');
+            }
+
+            // 6. Sales Person
+            var salesPersonVal = $('#sale_person').val();
+            if (!salesPersonVal || salesPersonVal === "" || salesPersonVal === "Select Sales Person") {
+                errors.push("Please select a Sales Person");
+                $('#sale_person').addClass('is-invalid');
+            }
+
+            // 7. Remarks
             saveQuillContent();
-            var remarksContent = $('#remarks').val();
-            var strippedRemarks = remarksContent.replace(/<[^>]*>/g, '').trim();
+            var remarksHtml = $('#remarks').val();
+            var strippedRemarks = remarksHtml.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim();
 
             if (strippedRemarks.length < 1) {
-                message += "<li style='text-align:left;' class='text-danger'>Remarks field is required</li>";
-                count_errors++;
+                errors.push("Remarks field is required");
+                $('#editor-container').addClass('is-invalid border border-danger');
+            } else {
+                $('#editor-container').removeClass('is-invalid border border-danger');
             }
 
-            if (count_errors > 0) {
-                Swal.fire({
-                    icon: 'error',
-                    html: `<ul style="list-style: none; padding-left: 0;">${message}</ul>`,
-                    showCloseButton: false,
-                    focusConfirm: false,
-                });
+            if (errors.length > 0) {
+                var errorHtml = '<ul class="text-start mb-0 ps-3">' + errors.map(function(e) { return '<li>' + e + '</li>'; }).join('') + '</ul>';
+                
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Please Complete Required Fields',
+                        html: errorHtml,
+                        confirmButtonColor: '#0d6efd',
+                        confirmButtonText: 'OK, I will fix it'
+                    });
+                } else {
+                    alert("Please complete the following required fields:\n- " + errors.join("\n- "));
+                }
+
+                // Scroll to first invalid field
+                var firstInvalid = $('.is-invalid').first();
+                if (firstInvalid.length) {
+                    firstInvalid.focus();
+                    $('html, body').animate({
+                        scrollTop: firstInvalid.offset().top - 120
+                    }, 300);
+                }
             } else {
                 saveQuillContent();
-                $('#submit_inquiry').submit();
+                $('#update_submit_btn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-2"></i> Updating Inquiry...');
+                document.getElementById('submit_inquiry').submit();
             }
         }
     </script>
 @endpush
+
