@@ -1446,81 +1446,101 @@ class InquiryController extends Controller
     public function update(Request $request, $id)
     {
         $inquiry = Inquiry::findOrFail($id);
-        $customer = customer::findOrFail($inquiry->customer_id);
+        $customer = customer::find($inquiry->customer_id);
 
         $searched_customer_id = $request->searched_customer_id;
-        $service_name = other_service::where('id_other_services', $request['services'][0])->first();
+        if (!empty($searched_customer_id)) {
+            $inquiry->customer_id = $searched_customer_id;
+            $customer = customer::find($searched_customer_id);
+        }
 
-        if (empty($searched_customer_id)) {
-            if ($request->sp_assign_check == 'on') {
-                $this->validate($request, [
-                    'customer_name' => 'required',
-                    'customer_cell' => 'required',
-                    'inquiry_type' => 'required',
-                    'services' => 'required',
-                    'travel_date' => 'required',
-                    'sale_person' => 'required',
-                    'remarks' => ['required', function ($attribute, $value, $fail) {
-                        if (trim(strip_tags($value)) === '') {
-                            $fail('The ' . $attribute . ' field is required.');
-                        }
-                    }],
-                ]);
-            } else {
-                $this->validate($request, [
-                    'customer_name' => 'required',
-                    'customer_cell' => 'required',
-                    'sale_person' => 'required',
-                    'services' => 'required',
-                    'sub_services' => 'required',
-                    'inquiry_type' => 'required',
-                    'travel_date' => 'required',
-                    'remarks' => ['required', function ($attribute, $value, $fail) {
-                        if (trim(strip_tags($value)) === '') {
-                            $fail('The ' . $attribute . ' field is required.');
-                        }
-                    }],
-                ]);
+        // Validate required fields (matching the Create page)
+        $rules = [
+            'inquiry_type' => 'required',
+            'services'     => 'required',
+            'travel_date'  => 'required',
+            'remarks'      => ['required', function ($attribute, $value, $fail) {
+                if (trim(strip_tags($value)) === '') {
+                    $fail('The ' . $attribute . ' field is required.');
+                }
+            }],
+        ];
+
+        // If customer is present and editable, ensure basic customer details
+        if ($request->filled('customer_name')) {
+            $rules['customer_name'] = 'required';
+        }
+        if ($request->filled('customer_cell')) {
+            $rules['customer_cell'] = 'required';
+        }
+
+        $this->validate($request, $rules);
+
+        // Update Customer Details if customer exists
+        if ($customer) {
+            if ($request->filled('customer_name')) {
+                $customer->customer_name = $request->customer_name;
             }
-
-            $customer->customer_name = $request->customer_name;
-            $customer->customer_type = $request->customer_type;
-            $customer->customer_cell = $request->customer_cell;
-            $customer->whatsapp_number = $request->customer_whatsapp;
-            $customer->customer_address = $request->customer_address;
-            $customer->city = $request->customer_city;
-            $customer->customer_email = $request->customer_email;
-            $customer->customer_reference = $request->customer_reference;
-            $customer->customer_remarks = $request->customer_details;
-            // $customer->sale_person        = $request->sp_assign_check == "on" ? "un_assign" : $request->sale_person;
-            $customer->sale_person = Auth::user()->name;
+            if ($request->filled('customer_type')) {
+                $customer->customer_type = $request->customer_type;
+            }
+            if ($request->filled('customer_cell')) {
+                $customer->customer_cell = $request->customer_cell;
+            }
+            if ($request->has('customer_whatsapp')) {
+                $customer->whatsapp_number = $request->customer_whatsapp;
+            }
+            if ($request->has('customer_address')) {
+                $customer->customer_address = $request->customer_address;
+            }
+            if ($request->has('customer_city')) {
+                $customer->city = $request->customer_city;
+            }
+            if ($request->has('customer_email')) {
+                $customer->customer_email = $request->customer_email;
+            }
+            if ($request->has('customer_reference')) {
+                $customer->customer_reference = $request->customer_reference;
+            }
+            if ($request->has('customer_details')) {
+                $customer->customer_remarks = $request->customer_details;
+            }
             $customer->save();
         }
 
         // Prepare services and sub_services
         $services = [];
         $sub_services = [];
-        $services_count = count($request->services);
+        $reqServices = $request->input('services', []);
+        $services_count = is_array($reqServices) ? count($reqServices) : 0;
         $data = $request->all();
 
         for ($i = 0; $i < $services_count; $i++) {
-            $services[] = $data['services'][$i];
+            $services[] = $reqServices[$i];
             if ($i == 0) {
-                $sub = isset($data['sub_services']) ? implode(',', (array)$data['sub_services']) : '';
+                $sub = isset($data['sub_services']) ? (is_array($data['sub_services']) ? implode(',', $data['sub_services']) : $data['sub_services']) : '';
                 $sub_services[] = $services[$i] . '/' . $sub;
             } else {
-                $sub = isset($data['sub_services' . $i]) ? implode(',', (array)$data['sub_services' . $i]) : '';
+                $sub = isset($data['sub_services' . $i]) ? (is_array($data['sub_services' . $i]) ? implode(',', $data['sub_services' . $i]) : $data['sub_services' . $i]) : '';
                 $sub_services[] = $services[$i] . '/' . $sub;
             }
         }
 
-        // Update Inquiry
-        $inquiry->campaign_id = $request->campaign;
-        $inquiry->inquiry_category = $request->inquiry_category;
-        $inquiry->services = json_encode($request->services);
-        $inquiry->sub_services = json_encode($request->sub_services);
-        $inquiry->sales_reference = $request->sale_reference;
-        $inquiry->saleperson = $request->sp_assign_check == 'on' ? 'un_assign' : $request->sale_person;
+        // Update Inquiry Details
+        if ($request->filled('campaign')) {
+            $inquiry->campaign_id = $request->campaign;
+        }
+        if ($request->filled('inquiry_category')) {
+            $inquiry->inquiry_category = $request->inquiry_category;
+        }
+        $inquiry->services = json_encode($services);
+        $inquiry->sub_services = json_encode($request->input('sub_services', []));
+        if ($request->filled('sale_reference')) {
+            $inquiry->sales_reference = $request->sale_reference;
+        }
+        if ($request->filled('sale_person')) {
+            $inquiry->saleperson = ($request->sp_assign_check == 'on') ? 'un_assign' : $request->sale_person;
+        }
         $inquiry->inquiry_type = $request->inquiry_type;
         $inquiry->travel_date = $request->travel_date;
         $inquiry->remarks = $request->remarks;
@@ -1528,12 +1548,10 @@ class InquiryController extends Controller
         $inquiry->no_of_children = $request->no_of_children ?: 0;
         $inquiry->no_of_adults = $request->no_of_adults ?: 0;
         $inquiry->services_sub_services = json_encode($sub_services);
-        $inquiry->priority = $request->priority;
-        // $inquiry->updated_at               = now();
+        if ($request->filled('priority')) {
+            $inquiry->priority = $request->priority;
+        }
         $inquiry->save();
-
-        // You may want to update my_job or team_job records too if needed
-        // Optional: check if service has changed and reassign department/team
 
         Session::flash('message', 'Inquiry has been updated successfully!');
         return redirect()->route('inquiry.index');
