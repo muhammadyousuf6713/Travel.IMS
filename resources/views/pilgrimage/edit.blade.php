@@ -1,6 +1,57 @@
 @extends('layouts.user_type.auth')
 
 @section('content')
+<style>
+.custom-toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 0;
+}
+.custom-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+.custom-toggle-switch .toggle-slider {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 22px;
+    background-color: #cbd5e1;
+    border-radius: 22px;
+    transition: background-color 0.25s ease, box-shadow 0.25s ease;
+    flex-shrink: 0;
+}
+.custom-toggle-switch .toggle-slider::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.custom-toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+}
+.custom-toggle-switch input:checked + .toggle-slider::after {
+    transform: translateX(20px);
+}
+.custom-toggle-switch .toggle-label {
+    margin-left: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #2d3748;
+    cursor: pointer;
+}
+</style>
 <div class="container-fluid py-3">
 
     <!-- Page Header -->
@@ -267,12 +318,11 @@
                                 </div>
 
                                 <div class="col-md-4 d-flex align-items-center mt-3">
-                                    <div class="form-check form-switch mb-0">
-                                        <input class="form-check-input" type="checkbox" name="hotels[{{ $hIdx }}][schedule_ziyaraat]" value="1" id="ziyaraatToggleEdit{{ $hIdx }}" {{ $hotel->schedule_ziyaraat ? 'checked' : '' }}>
-                                        <label class="form-check-label text-xs text-dark font-weight-semibold" for="ziyaraatToggleEdit{{ $hIdx }}">
-                                            Auto-Schedule Ziyaraat (+48h)
-                                        </label>
-                                    </div>
+                                    <label class="custom-toggle-switch">
+                                        <input type="checkbox" name="hotels[{{ $hIdx }}][schedule_ziyaraat]" value="1" id="ziyaraatToggleEdit{{ $hIdx }}" {{ $hotel->schedule_ziyaraat ? 'checked' : '' }}>
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label">Auto-Schedule Ziyaraat (+48h)</span>
+                                    </label>
                                 </div>
                             </div>
                         </div>

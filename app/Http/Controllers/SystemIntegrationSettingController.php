@@ -46,7 +46,6 @@ class SystemIntegrationSettingController extends Controller
 
         $webhookUrl = url('/api/v1/integrations/lead-webhook');
         $metaWebhookUrl = url('/api/v1/integrations/meta-leadgen');
-        $publicFormUrl = url('/inquire-now');
 
         return view('integration_settings.edit', compact(
             'settings',
@@ -57,8 +56,7 @@ class SystemIntegrationSettingController extends Controller
             'activeRotationUsers',
             'nextAgent',
             'webhookUrl',
-            'metaWebhookUrl',
-            'publicFormUrl'
+            'metaWebhookUrl'
         ));
     }
 
@@ -80,14 +78,14 @@ class SystemIntegrationSettingController extends Controller
             'meta_page_access_token' => 'nullable|string',
             'meta_app_id' => 'nullable|string|max:100',
             'meta_app_secret' => 'nullable|string|max:100',
-            'public_form_enabled' => 'nullable',
-            'public_form_title' => 'nullable|string|max:191',
-            'public_form_subtitle' => 'nullable|string|max:255',
         ]);
 
         $settings->auto_assign_enabled = $request->has('auto_assign_enabled');
-        $settings->public_form_enabled = $request->has('public_form_enabled');
-        $settings->assigned_user_ids = $request->input('assigned_user_ids', []);
+        
+        // Preserve exact sequence of checked user IDs
+        $assignedUserIds = $request->input('assigned_user_ids', []);
+        $settings->assigned_user_ids = array_values(array_unique(array_filter(array_map('intval', $assignedUserIds))));
+
         $settings->default_sales_reference_id = $request->input('default_sales_reference_id');
         $settings->default_inquiry_type_id = $request->input('default_inquiry_type_id');
         $settings->default_inquiry_status = $request->input('default_inquiry_status', 'Open');
@@ -95,8 +93,6 @@ class SystemIntegrationSettingController extends Controller
         $settings->meta_page_access_token = $request->input('meta_page_access_token');
         $settings->meta_app_id = $request->input('meta_app_id');
         $settings->meta_app_secret = $request->input('meta_app_secret');
-        $settings->public_form_title = $request->input('public_form_title', 'Travel Inquiry & Booking Request');
-        $settings->public_form_subtitle = $request->input('public_form_subtitle', 'Submit your travel details and our specialist will contact you shortly.');
 
         $settings->save();
 

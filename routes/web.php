@@ -221,9 +221,7 @@ Route::group(['middleware' => 'auth'], function () {
 
 });
 
-// Public Lead Intake Web Form (Embeddable / Shareable)
-Route::get('/inquire-now', [\App\Http\Controllers\PublicInquiryFormController::class, 'showForm'])->name('public.inquiry.form');
-Route::post('/inquire-now', [\App\Http\Controllers\PublicInquiryFormController::class, 'submitForm'])->name('public.inquiry.submit');
+
 
 
 Route::group(['middleware' => 'guest'], function () {
