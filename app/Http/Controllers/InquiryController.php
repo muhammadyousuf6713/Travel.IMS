@@ -566,6 +566,9 @@ class InquiryController extends Controller
                 ->orderColumn('followup_date', function ($query, $order) {
                     $query->orderBy(\App\followup_remark::select('followup_date')->whereColumn('followup_remarks.inquiry_id', 'inquiry.id_inquiry')->orderByDesc('id_followup_remarks')->limit(1), $order);
                 })
+                ->orderColumn('created_by', function ($query, $order) {
+                    $query->orderBy(\App\Models\User::select('name')->whereColumn('users.id', 'inquiry.created_by')->limit(1), $order);
+                })
                 // ✅ Optional: search status (e.g., Open, Completed) text badge
                 ->filterColumn('status', function ($query, $keyword) {
                     $query->where('status', 'like', "%{$keyword}%");
@@ -577,10 +580,16 @@ class InquiryController extends Controller
                             $q
                                 ->where('inquiry.id_inquiry', 'like', "%$keyword%")
                                 ->orWhere('inquiry.status', 'like', "%$keyword%")
-                                ->orWhere('customers.customer_name', 'like', "%$keyword%")
-                                ->orWhere('customers.customer_cell', 'like', "%$keyword%")
-                                ->orWhere('sp.name', 'like', "%$keyword%")
-                                ->orWhere('cb.name', 'like', "%$keyword%");
+                                ->orWhereHas('customer', function ($cq) use ($keyword) {
+                                    $cq->where('customer_name', 'like', "%$keyword%")
+                                        ->orWhere('customer_cell', 'like', "%$keyword%");
+                                })
+                                ->orWhereHas('salesPerson', function ($sq) use ($keyword) {
+                                    $sq->where('name', 'like', "%$keyword%");
+                                })
+                                ->orWhereHas('createdBy', function ($cbq) use ($keyword) {
+                                    $cbq->where('name', 'like', "%$keyword%");
+                                });
                         });
                     }
                 })
@@ -885,6 +894,9 @@ class InquiryController extends Controller
         }
 
         $date = $inquiry->latestFollowup->followup_date;
+        if (!$date) {
+            return '<span class="badge rounded-pill bg-gradient-secondary shadow-sm">No Followup</span>';
+        }
         $followDate = date('Y-m-d', strtotime($date));
         $today = date('Y-m-d');
 
@@ -902,6 +914,9 @@ class InquiryController extends Controller
             return 'row-no-followup';
 
         $date = $inquiry->latestFollowup->followup_date;
+        if (!$date) {
+            return 'row-no-followup';
+        }
         $followDate = date('Y-m-d', strtotime($date));
         $currentDate = date('Y-m-d');
 

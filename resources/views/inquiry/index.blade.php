@@ -135,6 +135,12 @@
                     </div>
 
                     <div class="card-body px-2 pt-0 pb-2">
+                        <div id="inquiryTableAlert" class="alert alert-danger d-none d-flex align-items-center justify-content-between mx-2 mt-2" role="alert">
+                            <span><i class="fa fa-triangle-exclamation me-2"></i><span id="inquiryTableAlertMsg">Something went wrong while loading inquiries.</span></span>
+                            <button type="button" class="btn btn-sm btn-outline-danger ms-3" id="inquiryTableRetryBtn">
+                                <i class="fa fa-rotate-right me-1"></i> Retry
+                            </button>
+                        </div>
                         <div class="table-responsive p-0">
                             <table id="example23" class="table table-sm table-bordered nowrap align-middle"
                                 width="100%">
@@ -616,6 +622,9 @@
                 $('select[name="status"]').val(urlParams.get('status')).trigger('change.select2');
             }
 
+            // ✅ Show a friendly inline banner instead of the native alert() popup on Ajax errors
+            $.fn.dataTable.ext.errorMode = 'none';
+
             var table = $('#example23').DataTable({
                 responsive: {
                     details: {
@@ -685,7 +694,10 @@
                     paginate: {
                         previous: '<',
                         next: '>'
-                    }
+                    },
+                    processing: '<div class="d-flex align-items-center justify-content-center gap-2 py-3"><i class="fa fa-spinner fa-spin text-primary"></i><span class="text-secondary">Loading inquiries…</span></div>',
+                    emptyTable: 'No inquiries found.',
+                    zeroRecords: 'No matching inquiries found for the current filters/search.'
                 },
                 stateSave: true,
                 processing: true,
@@ -802,7 +814,7 @@
                     },
                     {
                         data: 'created_by',
-                        name: 'cb.name'
+                        name: 'created_by'
                     },
                     {
                         data: 'updated_at',
@@ -848,6 +860,33 @@
                         }
                     }
                 ]
+            });
+
+            // ✅ Friendly Ajax error handling — no native alert() popups
+            table.on('error.dt', function(e, settings, techNote, message) {
+                console.error('DataTables error:', message);
+                let friendlyMsg = 'We could not load the inquiries list. Please try again.';
+                try {
+                    const xhr = settings.jqXHR;
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.error) {
+                        friendlyMsg = xhr.responseJSON.error;
+                    }
+                } catch (err) {}
+                $('#inquiryTableAlertMsg').text(friendlyMsg);
+                $('#inquiryTableAlert').removeClass('d-none');
+                toastr.error(friendlyMsg, 'Failed to load inquiries');
+            });
+
+            table.on('xhr.dt', function() {
+                const xhr = table.ajax.xhr ? table.ajax.xhr() : null;
+                if (xhr && xhr.status >= 200 && xhr.status < 300) {
+                    $('#inquiryTableAlert').addClass('d-none');
+                }
+            });
+
+            $('#inquiryTableRetryBtn').on('click', function() {
+                $('#inquiryTableAlert').addClass('d-none');
+                table.ajax.reload();
             });
 
             // ✅ Per-column search (thead)

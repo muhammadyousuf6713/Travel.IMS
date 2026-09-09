@@ -16,7 +16,7 @@ use App\SubControlAccount;
 use App\TransactionAccount;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
-use Spatie\Permission\Models\Permission;
+use App\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class PermissionController extends Controller

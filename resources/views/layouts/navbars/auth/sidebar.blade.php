@@ -12,6 +12,16 @@
         transition: all 0.2s ease-in-out;
     }
 
+    /* The theme hardcodes the nav list to `height: calc(100vh - 360px)` with
+       its own `overflow: auto` — that reserves way more space than this
+       sidebar's actual header needs, squeezing all the links into a small
+       box so most of them only appeared after scrolling inside it. Let it
+       take its natural height instead; the sidebar's own scrollbar (set
+       above) still scrolls everything once it doesn't fit. */
+    #sidenav-main #sidenav-collapse-main {
+        height: auto !important;
+    }
+
     #sidenav-main .nav-item {
         transition: all 0.2s ease-in-out;
     }
