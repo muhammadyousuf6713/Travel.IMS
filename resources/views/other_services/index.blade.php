@@ -56,13 +56,12 @@
                                                         <td>{{ $type->status }}</td>
                                                         <td>{{ date('d-m-Y', strtotime($type['created_at'])) }}</td>
                                                         <td>
-                                                            <a class="btn rounded shadow-base"
+                                                            <a class="btn bg-gradient-info btn-sm mb-0 me-1" title="Edit"
                                                                 href="{{ url('/other_services/edit/' . \Crypt::encrypt($type->id_other_services)) }}">
-                                                                <i class="text-primary fa-regular fa-pen-to-square"></i></a>
-                                                            <button class="btn rounded shadow-base"
+                                                                <i class="fa-regular fa-pen-to-square"></i></a>
+                                                            <button class="btn bg-gradient-danger btn-sm mb-0" title="Delete"
                                                                 data-id="{{ $type->id_other_services }}"
-                                                                data-bs-toggle="modal" data-bs-target="#deleteModal"> <i
-                                                                    class="text-danger fa-solid fa-trash-can"></i> </button>
+                                                                data-bs-toggle="modal" data-bs-target="#deleteModal"> <i class="fa-solid fa-trash-can"></i></button>
                                                         </td>
                                                     </tr>
                                                     <tr id="demo{{ $type->id_other_services }}"

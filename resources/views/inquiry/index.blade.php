@@ -127,6 +127,11 @@
                                 <button type="button" class="btn btn-sm btn-info d-none" id="bulkAssignBtn">
                                     <i class="fa fa-users-cog"></i> Bulk Assign
                                 </button>
+                                @can('Reviews sync')
+                                <button type="button" class="btn btn-sm btn-success d-none" id="syncReviewsBtn">
+                                    <i class="fa fa-star"></i> Sync to Reviews
+                                </button>
+                                @endcan
                                 <a href="{{ url('inquiry/create') }}" class="btn btn-sm btn-primary">
                                     <i class="fa fa-plus"></i> New Inquiry
                                 </a>
@@ -358,6 +363,48 @@
 
 
 
+    @can('Reviews sync')
+    <div class="modal fade" id="syncReviewsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-3 shadow">
+                <div class="modal-header bg-light border-bottom">
+                    <h5 class="modal-title fw-semibold">
+                        <i class="fa fa-star me-1 text-warning"></i> Sync to Reviews
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="syncReviewsForm">
+                        @csrf
+                        <div id="syncReviewIds"></div>
+
+                        <div id="syncPreviewBox" class="mb-3"></div>
+
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold">Assign reviews to <span class="text-danger">*</span></label>
+                            <select class="form-select no-select2" name="assigned_to" id="syncAssignTo" required>
+                                <option value="auto">Auto: rotate among review officers (Integration Settings)</option>
+                                @foreach ($sales_person as $sp)
+                                    <option value="{{ $sp->id }}">{{ $sp->name }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted d-block mt-1" id="syncAutoHint"></small>
+                        </div>
+                        <small class="text-muted">Only <strong>Completed</strong> inquiries are synced. Review due date = completion date + days set in Integration Settings.</small>
+
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="submit" class="btn btn-success px-4" id="syncReviewsSubmit" disabled>
+                                <i class="fa fa-star me-1"></i> Sync
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcan
+
     {{-- 🎨 Styles: Loaded from public/assets/css/custom.css --}}
 @endsection
 @push('scripts')
@@ -376,6 +423,8 @@
                 'sales_person': 'select[name="sales_person"]',
                 'inquiry_type': 'select[name="inquiry_type"]',
                 'status': 'select[name="status"]',
+                'fud_filter': 'select[name="fud_filter"]',
+                'sales_reference': 'select[name="sales_reference"]',
                 'id_inquiry': 'input[name="id_inquiry"]',
                 'date_from': 'input[name="date_from"]',
                 'date_to': 'input[name="date_to"]'
@@ -553,8 +602,10 @@
             function toggleBulkButton() {
                 if ($('.inquiry-checkbox:checked').length > 0) {
                     $('#bulkAssignBtn').removeClass('d-none');
+                    $('#syncReviewsBtn').removeClass('d-none');
                 } else {
                     $('#bulkAssignBtn').addClass('d-none');
+                    $('#syncReviewsBtn').addClass('d-none');
                 }
             }
 
@@ -978,4 +1029,58 @@
             loadFollowups(id, offset, false);
         });
     </script>
+    @can('Reviews sync')
+    <script>
+        // Sync to Reviews (Reviews module)
+        $(function() {
+            $('#syncReviewsBtn').on('click', function() {
+                var ids = $('.inquiry-checkbox:checked').map(function() { return $(this).val(); }).get();
+                if (!ids.length) return;
+
+                $('#syncReviewIds').html(ids.map(function(id) {
+                    return '<input type="hidden" name="inquiry_ids[]" value="' + id + '">';
+                }).join(''));
+                $('#syncReviewsSubmit').prop('disabled', true);
+                $('#syncAutoHint').text('');
+                $('#syncPreviewBox').html('<div class="text-muted text-sm"><i class="fa fa-spinner fa-spin me-1"></i> Checking selected inquiries...</div>');
+                $('#syncReviewsModal').modal('show');
+
+                $.post('{{ route('reviews.sync_preview') }}', { _token: '{{ csrf_token() }}', inquiry_ids: ids })
+                    .done(function(r) {
+                        var html = '<div class="alert alert-info text-white mb-0">'
+                            + 'Selected: <strong>' + r.selected + '</strong> &nbsp;·&nbsp; Will be synced: <strong>' + r.eligible + '</strong>';
+                        if (r.already) html += '<br><small>Already in Reviews (skipped): ' + r.already + '</small>';
+                        if (r.not_completed) html += '<br><small>Not Completed (skipped): ' + r.not_completed + '</small>';
+                        html += '</div>';
+                        $('#syncPreviewBox').html(html);
+                        $('#syncReviewsSubmit').prop('disabled', r.eligible < 1);
+                        if (!r.rotation_count) {
+                            $('#syncAutoHint').text('No review officers are set in Integration Settings. With "Auto" the reviews will be Unassigned.');
+                        }
+                    })
+                    .fail(function(xhr) {
+                        var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Could not check the selected inquiries.';
+                        $('#syncPreviewBox').html('<div class="alert alert-danger text-white mb-0">' + $('<div>').text(msg).html() + '</div>');
+                    });
+            });
+
+            $('#syncReviewsForm').on('submit', function(e) {
+                e.preventDefault();
+                var $btn = $('#syncReviewsSubmit').prop('disabled', true);
+                $.post('{{ route('reviews.sync') }}', $(this).serialize())
+                    .done(function(r) {
+                        $('#syncReviewsModal').modal('hide');
+                        $('#checkAll').prop('checked', false);
+                        $('.inquiry-checkbox').prop('checked', false);
+                        $('#bulkAssignBtn, #syncReviewsBtn').addClass('d-none');
+                        toastr.success(r.message, 'Reviews');
+                    })
+                    .fail(function(xhr) {
+                        toastr.error((xhr.responseJSON && xhr.responseJSON.message) || 'Sync failed.', 'Error');
+                        $btn.prop('disabled', false);
+                    });
+            });
+        });
+    </script>
+    @endcan
 @endpush

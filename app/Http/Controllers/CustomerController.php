@@ -75,8 +75,17 @@ class CustomerController extends Controller
                     return $customer->customer_phone2;  // Not customer_cell
                 })
                 ->addColumn('action', function ($customer) {
-                    $editBtn = '<a href="' . route('customers.edit', $customer->id_customers) . '" class="btn btn-sm btn-primary me-2"><i class="fa fa-pen"></i></a>';
-                    $deleteBtn = '<a href="' . url('customers/destroy/' . $customer->id_customers) . '" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure?\')"><i class="fa fa-trash"></i></a>';
+                    $editBtn = '';
+                    $deleteBtn = '';
+                    if (auth()->user()?->can('Customers edit')) {
+                        $editBtn = '<a href="' . route('customers.edit', $customer->id_customers) . '" class="btn btn-sm btn-primary me-2"><i class="fa fa-pen"></i></a>';
+                    }
+                    if (auth()->user()?->can('Customers delete')) {
+                        // Delete is sent as a POST form with CSRF token (not a plain GET link)
+                        $deleteBtn = '<form method="POST" action="' . url('customers/destroy/' . $customer->id_customers) . '" class="d-inline m-0" onsubmit="return confirm(\'Are you sure?\')">'
+                            . '<input type="hidden" name="_token" value="' . csrf_token() . '">'
+                            . '<button type="submit" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button></form>';
+                    }
                     return '<div class="d-flex justify-content-center">' . $editBtn . $deleteBtn . '</div>';
                 })
                 ->rawColumns(['image', 'whatsapp_enabled', 'action'])

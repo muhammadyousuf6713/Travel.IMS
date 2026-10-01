@@ -33,6 +33,16 @@ class LeadWebhookController extends Controller
         }
 
         // 2. Event Notification (POST Request from Meta)
+        // Verify the request really comes from Meta (enabled once the App Secret is saved in Integration Settings)
+        if (!empty($settings->meta_app_secret)) {
+            $signature = (string) $request->header('X-Hub-Signature-256', '');
+            $expected = 'sha256=' . hash_hmac('sha256', $request->getContent(), $settings->meta_app_secret);
+            if ($signature === '' || !hash_equals($expected, $signature)) {
+                Log::warning('Meta Webhook rejected: invalid or missing X-Hub-Signature-256 header.');
+                return response()->json(['status' => 'INVALID_SIGNATURE'], 403);
+            }
+        }
+
         try {
             $payload = $request->all();
             Log::info('Meta Leadgen Webhook Received: ' . json_encode($payload));
@@ -41,7 +51,7 @@ class LeadWebhookController extends Controller
             return response()->json(['status' => 'EVENT_RECEIVED', 'result' => $result], 200);
         } catch (\Throwable $e) {
             Log::error('Meta Webhook Processing Error: ' . $e->getMessage());
-            return response()->json(['status' => 'ERROR', 'message' => $e->getMessage()], 500);
+            return response()->json(['status' => 'ERROR', 'message' => 'Internal error while processing the event.'], 500);
         }
     }
 
@@ -95,7 +105,7 @@ class LeadWebhookController extends Controller
             Log::error('Direct Webhook Lead Ingestion Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Lead ingestion failed: ' . $e->getMessage()
+                'message' => 'Lead ingestion failed due to an internal error.'
             ], 500);
         }
     }

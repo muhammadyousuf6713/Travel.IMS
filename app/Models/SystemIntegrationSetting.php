@@ -32,6 +32,12 @@ class SystemIntegrationSetting extends Model
         'public_form_subtitle',
         'total_leads_processed',
         'last_lead_at',
+        'review_auto_sync_enabled',
+        'review_assignee_ids',
+        'review_last_assigned_index',
+        'review_due_after_days',
+        'review_links',
+        'review_whatsapp_template',
     ];
 
     protected $casts = [
@@ -39,6 +45,9 @@ class SystemIntegrationSetting extends Model
         'public_form_enabled' => 'boolean',
         'assigned_user_ids' => 'array',
         'last_lead_at' => 'datetime',
+        'review_auto_sync_enabled' => 'boolean',
+        'review_assignee_ids' => 'array',
+        'review_links' => 'array',
     ];
 
     /**

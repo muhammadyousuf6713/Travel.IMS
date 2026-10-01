@@ -41,27 +41,25 @@
                                                         <td>
                                                             @if ($service->status == 1)
                                                                 <span
-                                                                    class="btn btn-rounded btn-success text-white">Active</span>
+                                                                    class="badge bg-success">Active</span>
                                                             @else
-                                                                <span class="btn btn-rounded btn-danger">In Active</span>
+                                                                <span class="badge bg-danger">Inactive</span>
                                                             @endif
                                                         </td>
                                                         <td>{{ date('d-m-Y', strtotime($service->created_at)) }}</td>
                                                         <td>
 
-                                                            <a class="btn rounded shadow-base"
+                                                            <a class="btn bg-gradient-info btn-sm mb-0 me-1"
                                                                 href="{{ url('services/edit/' . $service->id_other_services) }}">
-                                                                <i class="text-primary fa-regular fa-pen-to-square"></i>
-                                                                <span class="text-primary"> Edit </span>
+                                                                <i class="fa-regular fa-pen-to-square me-1"></i>Edit
                                                             </a>
 
 
 
-                                                            <a class="btn rounded shadow-base" data-bs-toggle="modal"
+                                                            <a class="btn bg-gradient-danger btn-sm mb-0" data-bs-toggle="modal"
                                                                 data-bs-target="#deleteModal"
                                                                 data-id="{{ $service->id_other_services }}">
-                                                                <i class="text-danger fa-solid fa-trash-can"></i> <span
-                                                                    class="text-danger">Remove</span>
+                                                                <i class="fa-solid fa-trash-can me-1"></i>Delete
                                                             </a>
 
 

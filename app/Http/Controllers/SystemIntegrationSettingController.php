@@ -44,6 +44,12 @@ class SystemIntegrationSettingController extends Controller
             $nextAgent = $nextAgentId ? User::find($nextAgentId) : null;
         }
 
+        // Review Sync tab
+        $reviewReady = \App\Services\ReviewService::isReady();
+        $reviewAssigneeIds = ($reviewReady && is_array($settings->review_assignee_ids)) ? array_map('intval', $settings->review_assignee_ids) : [];
+        $reviewLinks = ($reviewReady && is_array($settings->review_links)) ? $settings->review_links : [];
+        $reviewTemplate = ($reviewReady ? $settings->review_whatsapp_template : null) ?: \App\Http\Controllers\ReviewController::defaultTemplate();
+
         $webhookUrl = url('/api/v1/integrations/lead-webhook');
         $metaWebhookUrl = url('/api/v1/integrations/meta-leadgen');
 
@@ -56,7 +62,11 @@ class SystemIntegrationSettingController extends Controller
             'activeRotationUsers',
             'nextAgent',
             'webhookUrl',
-            'metaWebhookUrl'
+            'metaWebhookUrl',
+            'reviewReady',
+            'reviewAssigneeIds',
+            'reviewLinks',
+            'reviewTemplate'
         ));
     }
 
@@ -93,6 +103,29 @@ class SystemIntegrationSettingController extends Controller
         $settings->meta_page_access_token = $request->input('meta_page_access_token');
         $settings->meta_app_id = $request->input('meta_app_id');
         $settings->meta_app_secret = $request->input('meta_app_secret');
+
+        // Review Sync settings (only after the Reviews migrations have run)
+        if (\App\Services\ReviewService::isReady()) {
+            $request->validate([
+                'review_assignee_ids' => 'nullable|array',
+                'review_assignee_ids.*' => 'integer|exists:users,id',
+                'review_due_after_days' => 'nullable|integer|min:0|max:60',
+                'review_links' => 'nullable|array',
+                'review_links.*' => 'nullable|string|max:500',
+                'review_whatsapp_template' => 'nullable|string|max:2000',
+            ]);
+
+            $settings->review_auto_sync_enabled = $request->has('review_auto_sync_enabled');
+
+            $newPool = array_values(array_unique(array_filter(array_map('intval', (array) $request->input('review_assignee_ids', [])))));
+            if ($newPool !== array_values(array_map('intval', (array) ($settings->review_assignee_ids ?? [])))) {
+                $settings->review_last_assigned_index = -1; // restart rotation when the pool changes
+            }
+            $settings->review_assignee_ids = $newPool;
+            $settings->review_due_after_days = (int) $request->input('review_due_after_days', 3);
+            $settings->review_links = array_filter(array_map(fn ($v) => trim((string) $v), (array) $request->input('review_links', [])));
+            $settings->review_whatsapp_template = $request->input('review_whatsapp_template') ?: null;
+        }
 
         $settings->save();
 

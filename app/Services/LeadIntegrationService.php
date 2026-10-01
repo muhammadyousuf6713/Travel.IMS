@@ -45,7 +45,17 @@ class LeadIntegrationService
         $customer = null;
         if (!empty($phone)) {
             $cleanedPhone = preg_replace('/[^0-9]/', '', $phone);
-            $customer = customer::where('customer_cell', 'LIKE', '%' . substr($cleanedPhone, -9) . '%')->first();
+            if (strlen($cleanedPhone) >= 10) {
+                // Match on the last 10 digits with formatting stripped, so 0300-1234567,
+                // +92 300 1234567 and 923001234567 all resolve to the same customer.
+                $lastDigits = substr($cleanedPhone, -10);
+                $customer = customer::whereRaw(
+                    "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(customer_cell, ' ', ''), '-', ''), '+', ''), '(', ''), ')', '') LIKE ?",
+                    ['%' . $lastDigits]
+                )->first();
+            } elseif ($cleanedPhone !== '') {
+                $customer = customer::where('customer_cell', $phone)->first();
+            }
         }
         if (!$customer && !empty($email)) {
             $customer = customer::where('customer_email', $email)->first();

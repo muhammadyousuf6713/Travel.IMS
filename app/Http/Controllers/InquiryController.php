@@ -877,11 +877,13 @@ class InquiryController extends Controller
         }
 
         if (Auth::user()?->can('Inquiry delete')) {
-            $html .= '<a href="' . url('/inquiry/delete/' . $inquiry->id_inquiry) . '" 
-            class="btn btn-sm btn-danger p-2" 
-            style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;"
-            onclick="return confirm(\'Are you sure?\')" title="Delete">
-            <i class="fa fa-trash" style="font-size: 12px;"></i></a>';
+            // Delete is sent as a POST form with CSRF token (not a plain GET link)
+            $html .= '<form method="POST" action="' . url('/inquiry/delete/' . $inquiry->id_inquiry) . '" class="m-0"
+            onsubmit="return confirm(\'Are you sure?\')">
+            <input type="hidden" name="_token" value="' . csrf_token() . '">
+            <button type="submit" class="btn btn-sm btn-danger p-2 mb-0"
+            style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;" title="Delete">
+            <i class="fa fa-trash" style="font-size: 12px;"></i></button></form>';
         }
 
         return $html . '</div>';

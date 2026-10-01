@@ -141,7 +141,7 @@ class ReportController extends Controller
         if ($request->filled('city')) {
             $cities = $request->city;
             $query->whereHas('customer', function($q) use ($cities) {
-                $q->whereIn('city_id', $cities);
+                $q->whereIn('city', $cities);
             });
         }
         if ($request->filled('status')) {
@@ -191,7 +191,7 @@ class ReportController extends Controller
         if ($request->filled("city")) {
             $cities = $request->city;
             $query->whereHas("customer", function($q) use ($cities) {
-                $q->whereIn("city_id", $cities);
+                $q->whereIn("city", $cities);
             });
         }
         if ($request->filled("status")) {

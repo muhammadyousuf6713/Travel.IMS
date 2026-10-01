@@ -26,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
+        // Reviews module: automatic review sync when an inquiry becomes Completed (switch in Integration Settings)
+        \App\inquiry::observe(\App\Observers\InquiryReviewObserver::class);
+
         try {
             if (Schema::hasTable('organization_settings')) {
                 $orgSetting = \App\Models\OrganizationSetting::first();

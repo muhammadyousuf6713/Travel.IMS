@@ -263,6 +263,14 @@
                     </div>
                     <span class="nav-link-text">Follow-up List</span>
                 </a>
+                @can('Reviews list')
+                <a class="nav-link {{ Request::is('reviews*') ? 'active' : '' }}" href="{{ route('reviews.index') }}">
+                    <div class="icon">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <span class="nav-link-text">Reviews</span>
+                </a>
+                @endcan
                 <a class="nav-link {{ Request::is('pilgrimage*') ? 'active' : '' }}" href="{{ route('pilgrimage.index') }}">
                     <div class="icon">
                         <i class="fa-solid fa-map-location-dot"></i>

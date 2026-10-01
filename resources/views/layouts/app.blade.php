@@ -314,6 +314,8 @@
             color: var(--bs-primary) !important;
         }
     </style>
+    <!-- Shared UI layer (loaded last so it wins over theme + inline styles) -->
+    <link href="{{ asset('assets/css/ims-ui.css') }}?v={{ @filemtime(public_path('assets/css/ims-ui.css')) }}" rel="stylesheet">
     <script>
         function initializeAjaxCityDropdowns() {
             $('.ajax-city-select2').each(function() {

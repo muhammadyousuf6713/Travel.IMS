@@ -13,7 +13,6 @@ use App\Http\Controllers\OtherServiceController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PilgrimageBookingController;
 use App\Http\Controllers\PilgrimageVoucherController;
-use App\Http\Controllers\PilgrimageSettingsController;
 use App\Http\Controllers\SystemIntegrationSettingController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\RegisterController;
@@ -78,14 +77,12 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('customers/edit/{id}', [CustomerController::class, 'edit'])->name('customers.edit')->middleware(['permission:Customers edit']);
     Route::put('customers/{id}', [CustomerController::class, 'update'])->name('customers.update')->middleware(['permission:Customers edit']);
     Route::get('customers/view/{id}', [CustomerController::class, 'view'])->middleware(['permission:Customers view']);
-    Route::get('customers/destroy/{id}', [CustomerController::class, 'destroy'])->middleware(['permission:Customers delete']);
+    Route::post('customers/destroy/{id}', [CustomerController::class, 'destroy'])->middleware(['permission:Customers delete']);
 
     Route::get('get-data', [AjaxController::class, 'getData']);
     Route::get('get_customer_details', [AjaxController::class, 'get_customer_details']);
     Route::get('check_customer_number/{cell}', [AjaxController::class, 'check_customer_number']);
     Route::get('customer_list/{query?}', [AjaxController::class, 'customer_search']);
-    Route::get('customers/destroy/{id}', [CustomerController::class, 'destroy']);
-    Route::put('customers/{id}', [CustomerController::class, 'update'])->name('customers.update');
     Route::get('get_customer_data', [AjaxController::class, 'getCustomerData'])->name('get_customer_data');
 
     // Inquiry
@@ -93,7 +90,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/inquiry/create', [InquiryController::class, 'create'])->middleware(['permission:Inquiry add']);
     Route::get('/edit_inquiry/{id}', [InquiryController::class, 'edit'])->name('edit_inquiry')->middleware(['permission:Inquiry edit']);
     Route::post('/update_inquiry/{id}', [InquiryController::class, 'update'])->name('update_inquiry')->middleware(['permission:Inquiry edit']);
-    Route::get('/inquiry/delete/{id}', [InquiryController::class, 'destroy'])->name('delete_inquiry')->middleware(['permission:Inquiry delete']);
+    Route::post('/inquiry/delete/{id}', [InquiryController::class, 'destroy'])->name('delete_inquiry')->middleware(['permission:Inquiry delete']);
     Route::get('/inquiry/upload', [InquiryController::class, 'uploadView'])->name('csv.upload.view');
     Route::get('/inquiry/csv-template', [InquiryController::class, 'downloadTemplate'])->name('csv.template.download');
     Route::post('/inquiry/upload', [InquiryController::class, 'uploadCSV'])->name('csv.upload');
@@ -237,5 +234,20 @@ Route::get('/login', function () {
     return view('session/login-session');
 })->name('login');
 
-Route::get('organization-settings', 'App\Http\Controllers\OrganizationSettingController@edit')->name('organization_settings.edit'); 
-Route::post('organization-settings', 'App\Http\Controllers\OrganizationSettingController@update')->name('organization_settings.update');
+// Organization settings: login required
+Route::middleware('auth')->group(function () {
+    Route::get('organization-settings', 'App\Http\Controllers\OrganizationSettingController@edit')->name('organization_settings.edit');
+    Route::post('organization-settings', 'App\Http\Controllers\OrganizationSettingController@update')->name('organization_settings.update');
+});
+
+// Reviews module: customer reviews for completed inquiries
+Route::middleware('auth')->prefix('reviews')->name('reviews.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\ReviewController::class, 'index'])->name('index')->middleware(['permission:Reviews list']);
+    Route::get('/data', [\App\Http\Controllers\ReviewController::class, 'data'])->name('data')->middleware(['permission:Reviews list']);
+    Route::get('/counts', [\App\Http\Controllers\ReviewController::class, 'counts'])->name('counts')->middleware(['permission:Reviews list']);
+    Route::post('/sync-preview', [\App\Http\Controllers\ReviewController::class, 'syncPreview'])->name('sync_preview')->middleware(['permission:Reviews sync']);
+    Route::post('/sync', [\App\Http\Controllers\ReviewController::class, 'sync'])->name('sync')->middleware(['permission:Reviews sync']);
+    Route::post('/reassign', [\App\Http\Controllers\ReviewController::class, 'reassign'])->name('reassign')->middleware(['permission:Reviews all']);
+    Route::post('/{id}/followup', [\App\Http\Controllers\ReviewController::class, 'followup'])->name('followup')->whereNumber('id')->middleware(['permission:Reviews list']);
+    Route::get('/{id}/history', [\App\Http\Controllers\ReviewController::class, 'history'])->name('history')->whereNumber('id')->middleware(['permission:Reviews list']);
+});

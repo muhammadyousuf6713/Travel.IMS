@@ -2,380 +2,264 @@
 
 @section('content')
 <style>
-/* Custom Luxury iOS-Style Toggle Switch */
-.custom-toggle-switch {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-    margin-bottom: 0;
-}
-.custom-toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-}
-.custom-toggle-switch .toggle-slider {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-    background-color: #cbd5e1;
-    border-radius: 24px;
-    transition: background-color 0.25s ease, box-shadow 0.25s ease;
-    flex-shrink: 0;
-}
-.custom-toggle-switch .toggle-slider::after {
-    content: "";
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 20px;
-    height: 20px;
-    background-color: #ffffff;
-    border-radius: 50%;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.custom-toggle-switch input:checked + .toggle-slider {
-    background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
-}
-.custom-toggle-switch input:checked + .toggle-slider::after {
-    transform: translateX(20px);
-}
-.custom-toggle-switch .toggle-label {
-    margin-left: 10px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #2d3748;
-    cursor: pointer;
-}
+    .settings-nav .nav-link {
+        display: flex; align-items: center; gap: .65rem;
+        color: #344767; font-size: .85rem; font-weight: 600;
+        padding: .6rem .8rem; border-radius: .5rem; margin-bottom: 2px;
+        text-align: left; width: 100%; background: none; border: 0;
+    }
+    .settings-nav .nav-link i { width: 16px; text-align: center; color: #8392ab; }
+    .settings-nav .nav-link:hover { background: #f8f9fa; }
+    .settings-nav .nav-link.active { background: #eef2f7; color: #1e293b; }
+    .settings-nav .nav-link.active i { color: #1e293b; }
+    .settings-nav .nav-status { margin-left: auto; font-size: .7rem; font-weight: 600; color: #8392ab; }
+    .settings-nav .nav-status.on { color: #2dce89; }
 
-/* User Selection Card & Sequence Badge */
-.user-select-card {
-    transition: all 0.2s ease;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    border-radius: 8px;
-    position: relative;
-}
-.user-select-card:hover {
-    border-color: #93c5fd;
-    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.08);
-}
-.user-select-card.selected {
-    border-color: #0d6efd;
-    background: #f0f7ff;
-}
-.seq-badge {
-    min-width: 34px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.75rem;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-}
-.seq-badge.active {
-    background: #0d6efd;
-    color: #ffffff;
-    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
-}
-.seq-badge.inactive {
-    background: #e2e8f0;
-    color: #94a3b8;
-}
-.rotation-chain-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-.rotation-chain-item.is-next {
-    background: #0d6efd;
-    color: #ffffff;
-    border-color: #0d6efd;
-    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.35);
-}
+    .section-head { border-bottom: 1px solid #eef0f3; padding-bottom: .75rem; margin-bottom: 1.25rem; }
+    .section-head h6 { margin: 0; font-weight: 700; color: #1e293b; }
+    .section-head p { margin: .15rem 0 0; font-size: .8rem; color: #8392ab; }
+
+    .field-label { font-size: .75rem; font-weight: 700; color: #344767; margin-bottom: .3rem; display: block; }
+    .field-help { font-size: .72rem; color: #8392ab; margin-top: .25rem; }
+
+    .switch-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+        padding: .85rem 1rem; border: 1px solid #eef0f3; border-radius: .5rem; background: #fbfcfd; }
+    .switch-row .title { font-size: .85rem; font-weight: 700; color: #1e293b; }
+    .switch-row .desc { font-size: .75rem; color: #8392ab; }
+    .switch-row .form-switch { padding-left: 0; margin: 0; }
+    .switch-row .form-switch .form-check-input { width: 2.5rem; height: 1.3rem; margin: 0; float: none; cursor: pointer; }
+
+    .member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .5rem; max-height: 300px; overflow-y: auto; }
+    .member-item { display: flex; align-items: center; gap: .5rem; padding: .5rem .65rem; border: 1px solid #e9ecef;
+        border-radius: .5rem; cursor: pointer; margin: 0; font-size: .8rem; color: #344767; background: #fff; }
+    .member-item:hover { border-color: #cfd8e3; }
+    .member-item.checked { border-color: #344767; background: #f8f9fb; }
+    .member-item .form-check-input { margin: 0; flex-shrink: 0; }
+    .member-item .order { margin-left: auto; font-size: .7rem; font-weight: 700; color: #fff; background: #344767;
+        border-radius: 4px; padding: 1px 6px; }
+
+    .summary-line { font-size: .78rem; color: #67748e; background: #f8f9fa; border-radius: .5rem; padding: .6rem .8rem; }
+    .summary-line strong { color: #1e293b; }
+
+    .steps { counter-reset: step; list-style: none; padding: 0; margin: 0 0 1.25rem; }
+    .steps li { counter-increment: step; position: relative; padding-left: 1.9rem; font-size: .8rem; color: #67748e; margin-bottom: .4rem; }
+    .steps li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 1.3rem; height: 1.3rem; border-radius: 50%;
+        background: #eef2f7; color: #344767; font-size: .7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+    .save-bar { position: sticky; bottom: 0; z-index: 5; background: #fff; border-top: 1px solid #eef0f3;
+        padding: .75rem 1.25rem; display: flex; justify-content: flex-end; gap: .5rem; border-radius: 0 0 1rem 1rem; }
+    code.inline { font-size: .72rem; background: #f1f3f5; color: #344767; padding: 1px 5px; border-radius: 4px; }
 </style>
 
 <div class="container-fluid py-3 px-3">
-    <!-- Header -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-        <div>
-            <h6 class="font-weight-bolder mb-0 text-dark">
-                <i class="fa-solid fa-network-wired text-primary me-2"></i> System Integration & Lead Auto-Assignment
-            </h6>
-            <p class="text-xs text-secondary mb-0">Manage automatic lead distribution sequence (round-robin) and Meta Ads / API lead ingestion.</p>
-        </div>
 
-        <div class="d-flex gap-2 align-items-center">
-            <form action="{{ route('integration_settings.simulate_lead') }}" method="POST" class="d-inline">
-                @csrf
-                <button type="submit" class="btn btn-xs btn-primary mb-0 shadow-sm">
-                    <i class="fa-solid fa-vial me-1"></i> Test Lead Ingestion & Assign Next Agent
-                </button>
-            </form>
-        </div>
+    {{-- Page header --}}
+    <div class="mb-3">
+        <h5 class="mb-0 font-weight-bolder text-dark">Integration Settings</h5>
+        <p class="text-sm text-secondary mb-0">Lead assignment, Meta Lead Ads, API access and customer reviews.</p>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show text-white text-xs py-2 px-3 mb-3" role="alert">
-            <i class="fa-solid fa-circle-check me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close text-xs text-white" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show text-white text-xs py-2 px-3 mb-3" role="alert">
-            <i class="fa-solid fa-triangle-exclamation me-2"></i> {{ implode(', ', $errors->all()) }}
-            <button type="button" class="btn-close text-xs text-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-danger text-white text-sm py-2 px-3 mb-3" role="alert">
+            {{ implode(' ', $errors->all()) }}
         </div>
     @endif
 
-    <!-- Clean Navigation Tabs -->
-    <ul class="nav nav-tabs border-bottom mb-3" id="integrationTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active text-xs font-weight-bold py-2 px-3" id="round-robin-tab" data-bs-toggle="tab" data-bs-target="#round-robin-pane" type="button" role="tab">
-                <i class="fa-solid fa-users-gear text-primary me-1"></i> 1. Lead Assignment (Sequence & Staff Pool)
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link text-xs font-weight-bold py-2 px-3" id="meta-tab" data-bs-toggle="tab" data-bs-target="#meta-pane" type="button" role="tab">
-                <i class="fa-brands fa-facebook text-info me-1"></i> 2. Meta Ads (Facebook & Instagram Webhook)
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link text-xs font-weight-bold py-2 px-3" id="api-tab" data-bs-toggle="tab" data-bs-target="#api-pane" type="button" role="tab">
-                <i class="fa-solid fa-code text-success me-1"></i> 3. External API & Webhooks
-            </button>
-        </li>
-    </ul>
+    <div class="card">
+        <div class="row g-0">
 
-    <form action="{{ route('integration_settings.update') }}" method="POST" id="settingsForm">
-        @csrf
+            {{-- Side menu --}}
+            <div class="col-lg-3 border-end">
+                <div class="p-3 settings-nav nav flex-column" id="integrationTabs" role="tablist">
+                    <button class="nav-link active" id="round-robin-tab" data-bs-toggle="pill" data-bs-target="#round-robin-pane" type="button" role="tab">
+                        <i class="fa-solid fa-user-group"></i> Lead Assignment
+                        <span class="nav-status {{ $settings->auto_assign_enabled ? 'on' : '' }}">{{ $settings->auto_assign_enabled ? 'On' : 'Off' }}</span>
+                    </button>
+                    <button class="nav-link" id="meta-tab" data-bs-toggle="pill" data-bs-target="#meta-pane" type="button" role="tab">
+                        <i class="fa-brands fa-facebook"></i> Meta Lead Ads
+                        <span class="nav-status {{ $settings->meta_page_access_token ? 'on' : '' }}">{{ $settings->meta_page_access_token ? 'Connected' : 'Not set' }}</span>
+                    </button>
+                    <button class="nav-link" id="api-tab" data-bs-toggle="pill" data-bs-target="#api-pane" type="button" role="tab">
+                        <i class="fa-solid fa-plug"></i> API Access
+                    </button>
+                    <button class="nav-link" id="reviews-tab" data-bs-toggle="pill" data-bs-target="#reviews-pane" type="button" role="tab">
+                        <i class="fa-regular fa-star"></i> Reviews
+                        @if($reviewReady)
+                            <span class="nav-status {{ $settings->review_auto_sync_enabled ? 'on' : '' }}">{{ $settings->review_auto_sync_enabled ? 'Auto' : 'Manual' }}</span>
+                        @endif
+                    </button>
+                </div>
+            </div>
 
-        <!-- Container for ordered assigned user inputs -->
-        <div id="hiddenUserInputsContainer"></div>
+            {{-- Content --}}
+            <div class="col-lg-9">
+                <form action="{{ route('integration_settings.update') }}" method="POST" id="settingsForm">
+                    @csrf
+                    <div id="hiddenUserInputsContainer"></div>
 
-        <div class="tab-content" id="integrationTabsContent">
-            <!-- TAB 1: Lead Assignment (Round-Robin & Dynamic Sequence) -->
-            <div class="tab-pane fade show active" id="round-robin-pane" role="tabpanel">
-                <div class="card shadow-none border mb-3">
-                    <div class="card-body p-3">
-                        <!-- Switch & Status bar -->
-                        <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 mb-3 border-bottom">
-                            <label class="custom-toggle-switch">
-                                <input type="checkbox" name="auto_assign_enabled" id="auto_assign_enabled" value="1" {{ $settings->auto_assign_enabled ? 'checked' : '' }}>
-                                <span class="toggle-slider"></span>
-                                <span class="toggle-label">
-                                    Enable Automatic Lead Assignment (Sequential Rotation: 1st lead to #1, 2nd to #2, etc.)
-                                </span>
-                            </label>
+                    <div class="tab-content p-4">
 
-                            <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
-                                <span class="badge bg-light text-dark text-xxs border p-2">
-                                    Next Agent in Queue: 
-                                    <strong class="text-primary ms-1" id="nextAgentDisplay">{{ $nextAgent ? $nextAgent->name : 'None Selected' }}</strong>
-                                </span>
-                                <span class="badge bg-light text-dark text-xxs border p-2">
-                                    Total Leads Processed: <strong class="text-success ms-1">{{ $settings->total_leads_processed ?? 0 }}</strong>
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Live Rotation Chain Visualizer -->
-                        <div class="p-3 mb-3 bg-light rounded border">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="text-xxs font-weight-bolder text-uppercase text-secondary">
-                                    <i class="fa-solid fa-arrows-spin me-1 text-primary"></i> Live Allotment Rotation Sequence:
-                                </div>
-                                <div class="text-xxs text-muted">
-                                    Total in Rotation: <strong class="text-dark" id="totalActiveCount">{{ count($assignedIds) }}</strong> staff member(s)
-                                </div>
-                            </div>
-                            <div class="d-flex flex-wrap align-items-center gap-2" id="rotationChainContainer">
-                                <!-- Populated dynamically by JS -->
-                            </div>
-                        </div>
-
-                        <!-- Sales Team Selection List -->
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-0">
-                                    Check Sales Staff to Add to Rotation (Sequence numbers automatically allot in real-time order):
-                                </label>
+                        {{-- ============ Lead Assignment ============ --}}
+                        <div class="tab-pane fade show active" id="round-robin-pane" role="tabpanel">
+                            <div class="section-head d-flex justify-content-between align-items-start gap-3">
                                 <div>
-                                    <button type="button" class="btn btn-link text-xxs text-primary p-0 me-2" onclick="selectAllUsers()">Select All</button>
-                                    <span class="text-muted text-xxs me-2">|</span>
-                                    <button type="button" class="btn btn-link text-xxs text-danger p-0" onclick="clearAllUsers()">Clear All</button>
+                                    <h6>Lead Assignment</h6>
+                                    <p>New leads from Meta, the API or your website are shared between the selected team members in turn.</p>
+                                </div>
+                                <button type="submit" form="testLeadForm" class="btn btn-sm btn-outline-secondary mb-0 text-nowrap">
+                                    Send test lead
+                                </button>
+                            </div>
+
+                            <div class="switch-row mb-4">
+                                <div>
+                                    <div class="title">Assign new leads automatically</div>
+                                    <div class="desc">When off, every new lead goes to the default admin user.</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="auto_assign_enabled" id="auto_assign_enabled" value="1" {{ $settings->auto_assign_enabled ? 'checked' : '' }}>
                                 </div>
                             </div>
 
-                            <div class="row g-2" style="max-height: 360px; overflow-y: auto;" id="userCardList">
+                            <div class="d-flex justify-content-between align-items-end mb-2">
+                                <div>
+                                    <span class="field-label mb-0">Team members in rotation</span>
+                                    <div class="field-help mt-0">Leads are given out in the order you tick the names.</div>
+                                </div>
+                                <div class="text-xs">
+                                    <a href="javascript:;" class="text-secondary me-2" onclick="selectAllUsers()">Select all</a>
+                                    <a href="javascript:;" class="text-secondary" onclick="clearAllUsers()">Clear</a>
+                                </div>
+                            </div>
+
+                            <div class="member-grid mb-2">
                                 @foreach($users as $user)
-                                    @php
-                                        $isInPool = in_array($user->id, $assignedIds);
-                                        $orderIndex = $isInPool ? (array_search($user->id, $assignedIds) + 1) : null;
-                                    @endphp
-                                    <div class="col-lg-3 col-md-4 col-sm-6">
-                                        <div class="user-select-card p-2 d-flex align-items-center justify-content-between {{ $isInPool ? 'selected' : '' }}" id="card_user_{{ $user->id }}" onclick="handleCardClick(event, '{{ $user->id }}')">
-                                            <div class="form-check mb-0 d-flex align-items-center">
-                                                <input class="form-check-input me-2 mt-0 user-checkbox" 
-                                                       type="checkbox" 
-                                                       value="{{ $user->id }}" 
-                                                       id="user_{{ $user->id }}" 
-                                                       data-name="{{ $user->name }}"
-                                                       {{ $isInPool ? 'checked' : '' }}
-                                                       onchange="onUserCheckChange('{{ $user->id }}')">
-                                                <label class="form-check-label text-xs text-dark mb-0 cursor-pointer" for="user_{{ $user->id }}">
-                                                    {{ $user->name }}
-                                                </label>
-                                            </div>
-                                            <div class="d-flex align-items-center gap-1">
-                                                <span class="seq-badge {{ $isInPool ? 'active' : 'inactive' }}" id="seq_badge_{{ $user->id }}">
-                                                    {{ $orderIndex ? '#' . $orderIndex : '-' }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <label class="member-item" id="card_user_{{ $user->id }}">
+                                        <input class="form-check-input user-checkbox" type="checkbox" value="{{ $user->id }}" id="user_{{ $user->id }}"
+                                               onchange="onUserCheckChange('{{ $user->id }}')">
+                                        <span class="text-truncate">{{ $user->name }}</span>
+                                        <span class="order d-none" id="seq_badge_{{ $user->id }}"></span>
+                                    </label>
                                 @endforeach
                             </div>
-                        </div>
+                            <div class="summary-line mb-4" id="rotationSummary"></div>
 
-                        <!-- Default Parameters -->
-                        <div class="row g-3 pt-3 border-top">
-                            <div class="col-md-4">
-                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Default Lead Source</label>
-                                <select name="default_sales_reference_id" class="form-select form-select-sm text-xs">
-                                    @foreach($salesReferences as $ref)
-                                        <option value="{{ $ref->type_id }}" {{ $settings->default_sales_reference_id == $ref->type_id ? 'selected' : '' }}>
-                                            {{ $ref->type_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Default Inquiry Type</label>
-                                <select name="default_inquiry_type_id" class="form-select form-select-sm text-xs">
-                                    @foreach($inquiryTypes as $type)
-                                        <option value="{{ $type->type_id }}" {{ $settings->default_inquiry_type_id == $type->type_id ? 'selected' : '' }}>
-                                            {{ $type->type_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Default Inquiry Status</label>
-                                <select name="default_inquiry_status" class="form-select form-select-sm text-xs">
-                                    <option value="Open" {{ $settings->default_inquiry_status == 'Open' ? 'selected' : '' }}>Open</option>
-                                    <option value="In-Progress" {{ $settings->default_inquiry_status == 'In-Progress' ? 'selected' : '' }}>In-Progress</option>
-                                    <option value="Hold" {{ $settings->default_inquiry_status == 'Hold' ? 'selected' : '' }}>Hold</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 2: Meta (Facebook / Instagram Lead Ads) -->
-            <div class="tab-pane fade" id="meta-pane" role="tabpanel">
-                <div class="card shadow-none border mb-3">
-                    <div class="card-body p-3">
-                        <div class="alert alert-info text-white text-xs py-2 px-3 mb-3">
-                            <i class="fa-brands fa-meta me-2"></i> 
-                            <strong>Meta Ads Integration:</strong> Create Instant Forms in your Meta Ads Manager. Meta will post lead notifications directly to this Webhook URL, and the IMS will auto-assign each lead to your sales team in the configured sequence (#1 ➔ #2 ➔ #3).
-                        </div>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta Webhook Callback URL</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="text" class="form-control text-xs font-monospace bg-light" id="metaWebhookInput" value="{{ $metaWebhookUrl }}" readonly>
-                                    <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('metaWebhookInput')">
-                                        <i class="fa-solid fa-copy"></i> Copy
-                                    </button>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="field-label">Default lead source</label>
+                                    <select name="default_sales_reference_id" class="form-select form-select-sm">
+                                        @foreach($salesReferences as $ref)
+                                            <option value="{{ $ref->type_id }}" {{ $settings->default_sales_reference_id == $ref->type_id ? 'selected' : '' }}>{{ $ref->type_name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="field-help">Used when the lead doesn't say where it came from.</div>
                                 </div>
-                                <small class="text-xxs text-muted">Paste this URL in Meta App Dashboard under <strong>Webhooks > Page > Leadgen</strong>.</small>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta Verify Token</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="text" class="form-control text-xs font-monospace" name="meta_verify_token" id="metaTokenInput" value="{{ $settings->meta_verify_token }}">
-                                    <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('metaTokenInput')">
-                                        <i class="fa-solid fa-copy"></i> Copy
-                                    </button>
+                                <div class="col-md-4">
+                                    <label class="field-label">Default inquiry type</label>
+                                    <select name="default_inquiry_type_id" class="form-select form-select-sm">
+                                        @foreach($inquiryTypes as $type)
+                                            <option value="{{ $type->type_id }}" {{ $settings->default_inquiry_type_id == $type->type_id ? 'selected' : '' }}>{{ $type->type_name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
-                                <small class="text-xxs text-muted">Provide this exact token when Meta verifies your webhook subscription.</small>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta Page / System User Access Token</label>
-                            <textarea class="form-control text-xs font-monospace" name="meta_page_access_token" rows="3" placeholder="Paste your permanent Page Access Token or System User Token from Meta Business Manager">{{ $settings->meta_page_access_token }}</textarea>
-                            <small class="text-xxs text-muted">Used by the server to fetch field answers (name, phone, travel package, etc.) via Meta Graph API when a lead is captured.</small>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta App ID (Optional)</label>
-                                <input type="text" class="form-control form-control-sm text-xs" name="meta_app_id" value="{{ $settings->meta_app_id }}" placeholder="e.g. 1234567890">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Meta App Secret (Optional)</label>
-                                <input type="password" class="form-control form-control-sm text-xs" name="meta_app_secret" value="{{ $settings->meta_app_secret }}" placeholder="••••••••••••••••••••">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 3: External API & Webhooks -->
-            <div class="tab-pane fade" id="api-pane" role="tabpanel">
-                <div class="card shadow-none border mb-3">
-                    <div class="card-body p-3">
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">Direct REST API Ingestion Endpoint (POST)</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="text" class="form-control text-xs font-monospace bg-light" id="directWebhookInput" value="{{ $webhookUrl }}" readonly>
-                                    <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('directWebhookInput')">
-                                        <i class="fa-solid fa-copy"></i> Copy
-                                    </button>
+                                <div class="col-md-4">
+                                    <label class="field-label">Status for new leads</label>
+                                    <select name="default_inquiry_status" class="form-select form-select-sm">
+                                        @foreach(['Open', 'In-Progress', 'Hold'] as $st)
+                                            <option value="{{ $st }}" {{ $settings->default_inquiry_status == $st ? 'selected' : '' }}>{{ $st }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-1">REST API Secret Key (X-API-KEY)</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="text" class="form-control text-xs font-monospace bg-light" id="apiKeyInput" value="{{ $settings->api_key }}" readonly>
-                                    <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('apiKeyInput')">
-                                        <i class="fa-solid fa-copy"></i> Copy
-                                    </button>
+                            <div class="field-help mt-3">Leads received so far: <strong>{{ $settings->total_leads_processed ?? 0 }}</strong></div>
+                        </div>
+
+                        {{-- ============ Meta Lead Ads ============ --}}
+                        <div class="tab-pane fade" id="meta-pane" role="tabpanel">
+                            <div class="section-head">
+                                <h6>Meta Lead Ads</h6>
+                                <p>Receive leads from Facebook and Instagram instant forms.</p>
+                            </div>
+
+                            <ol class="steps">
+                                <li>In your Meta app, open <strong>Webhooks → Page</strong> and subscribe to <strong>leadgen</strong>.</li>
+                                <li>Paste the callback URL and verify token shown below.</li>
+                                <li>Paste a Page access token here so the system can read each lead's answers.</li>
+                            </ol>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-7">
+                                    <label class="field-label">Callback URL</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control font-monospace bg-light" id="metaWebhookInput" value="{{ $metaWebhookUrl }}" readonly>
+                                        <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('metaWebhookInput')">Copy</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="field-label">Verify token</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control font-monospace" name="meta_verify_token" id="metaTokenInput" value="{{ $settings->meta_verify_token }}">
+                                        <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('metaTokenInput')">Copy</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="field-label">Page access token</label>
+                                <textarea class="form-control form-control-sm font-monospace" name="meta_page_access_token" rows="3"
+                                          placeholder="Paste a long-lived Page or System User token from Meta Business Manager">{{ $settings->meta_page_access_token }}</textarea>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="field-label">App ID <span class="text-secondary fw-normal">(optional)</span></label>
+                                    <input type="text" class="form-control form-control-sm" name="meta_app_id" value="{{ $settings->meta_app_id }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="field-label">App secret <span class="text-secondary fw-normal">(recommended)</span></label>
+                                    <input type="password" class="form-control form-control-sm" name="meta_app_secret" value="{{ $settings->meta_app_secret }}" autocomplete="new-password">
+                                    <div class="field-help">When set, only requests that really come from Meta are accepted.</div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="p-3 bg-light rounded border">
-                            <label class="text-xxs font-weight-bolder text-uppercase text-muted mb-2">Example JSON Webhook Payload:</label>
-                            <pre class="bg-dark text-white p-3 rounded text-xs mb-0" style="overflow-x: auto;"><code>POST {{ $webhookUrl }}
-Headers:
-  Content-Type: application/json
-  X-API-KEY: {{ $settings->api_key }}
+                        {{-- ============ API Access ============ --}}
+                        <div class="tab-pane fade" id="api-pane" role="tabpanel">
+                            <div class="section-head">
+                                <h6>API Access</h6>
+                                <p>Send leads from your website or any other system with a simple POST request.</p>
+                            </div>
 
-Body:
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-7">
+                                    <label class="field-label">Endpoint (POST)</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control font-monospace bg-light" id="directWebhookInput" value="{{ $webhookUrl }}" readonly>
+                                        <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('directWebhookInput')">Copy</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="field-label">API key <span class="text-secondary fw-normal">(header X-API-KEY)</span></label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="password" class="form-control font-monospace bg-light" id="apiKeyInput" value="{{ $settings->api_key }}" readonly>
+                                        <button class="btn btn-outline-secondary mb-0" type="button" onclick="toggleKey()" id="apiKeyToggle">Show</button>
+                                        <button class="btn btn-outline-secondary mb-0" type="button" onclick="copyValue('apiKeyInput')">Copy</button>
+                                    </div>
+                                    <div class="field-help">
+                                        <a href="javascript:;" class="text-danger" onclick="regenerateKey()">Generate a new key</a>. The old key stops working immediately.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <a class="text-sm text-secondary" data-bs-toggle="collapse" href="#apiExample" role="button" aria-expanded="false">
+                                <i class="fa-solid fa-chevron-down me-1 text-xs"></i> Example request
+                            </a>
+                            <div class="collapse mt-2" id="apiExample">
+                                <pre class="bg-light border rounded p-3 text-xs mb-0" style="overflow-x: auto;"><code>POST {{ $webhookUrl }}
+Content-Type: application/json
+X-API-KEY: your-api-key
+
 {
   "customer_name": "Muhammad Ali",
   "customer_cell": "+92 300 1234567",
@@ -385,146 +269,170 @@ Body:
   "travel_date": "2026-10-15",
   "adults": 2,
   "children": 1,
-  "remarks": "Looking for 4-star hotel near Haram with transport included",
-  "source": "Meta Ads Campaign",
+  "remarks": "4-star hotel near Haram",
+  "source": "Website",
   "campaign_name": "Ramzan Umrah 2026"
 }</code></pre>
+                            </div>
                         </div>
+
+                        {{-- ============ Reviews ============ --}}
+                        <div class="tab-pane fade" id="reviews-pane" role="tabpanel">
+                            <div class="section-head">
+                                <h6>Reviews</h6>
+                                <p>Ask customers for a review after their inquiry is completed.</p>
+                            </div>
+
+                            @if(!$reviewReady)
+                                <div class="alert alert-warning text-white text-sm py-2 px-3 mb-0">
+                                    The Reviews module isn't set up yet. Run <code class="text-white">php artisan migrate</code>, then reload this page.
+                                </div>
+                            @else
+                                <div class="switch-row mb-4">
+                                    <div>
+                                        <div class="title">Sync completed inquiries automatically</div>
+                                        <div class="desc">When off, only inquiries sent with the <em>Sync to Reviews</em> button on the Inquiry list are added.</div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="review_auto_sync_enabled" id="review_auto_sync_enabled" value="1" {{ $settings->review_auto_sync_enabled ? 'checked' : '' }}>
+                                    </div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <span class="field-label mb-0">Review officers</span>
+                                    <div class="field-help mt-0">One person gets every review. With several, reviews are shared in turn. If none are selected, reviews stay unassigned.</div>
+                                </div>
+                                <div class="member-grid mb-4">
+                                    @foreach($users as $user)
+                                        @php $isReviewer = in_array((int) $user->id, $reviewAssigneeIds, true); @endphp
+                                        <label class="member-item {{ $isReviewer ? 'checked' : '' }}">
+                                            <input class="form-check-input review-user-checkbox" type="checkbox" name="review_assignee_ids[]" value="{{ $user->id }}" {{ $isReviewer ? 'checked' : '' }}>
+                                            <span class="text-truncate">{{ $user->name }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-4">
+                                        <label class="field-label">Ask for a review after</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" min="0" max="60" name="review_due_after_days" class="form-control" value="{{ $settings->review_due_after_days ?? 3 }}">
+                                            <span class="input-group-text">days</span>
+                                        </div>
+                                        <div class="field-help">Counted from the day the inquiry is completed.</div>
+                                    </div>
+                                </div>
+
+                                <label class="field-label">Review links</label>
+                                <div class="field-help mt-0 mb-2">Filled-in links are added to the WhatsApp message sent to the customer.</div>
+                                <div class="row g-2 mb-4">
+                                    @foreach(['google' => 'Google', 'facebook' => 'Facebook', 'instagram' => 'Instagram', 'website' => 'Website', 'tripadvisor' => 'TripAdvisor', 'other' => 'Other'] as $key => $label)
+                                        <div class="col-md-6">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text" style="min-width: 96px;">{{ $label }}</span>
+                                                <input type="text" name="review_links[{{ $key }}]" class="form-control" value="{{ $reviewLinks[$key] ?? '' }}" placeholder="https://">
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <label class="field-label">WhatsApp message</label>
+                                <textarea name="review_whatsapp_template" rows="7" class="form-control form-control-sm">{{ $reviewTemplate }}</textarea>
+                                <div class="field-help">
+                                    You can use <code class="inline">{customer_name}</code> <code class="inline">{company}</code>
+                                    <code class="inline">{inquiry_id}</code> <code class="inline">{review_links}</code>
+                                </div>
+                            @endif
+                        </div>
+
                     </div>
-                </div>
+
+                    <div class="save-bar">
+                        <button type="submit" class="btn btn-sm btn-primary mb-0 px-4" onclick="syncHiddenInputs()">Save changes</button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 
-        <!-- Save Button -->
-        <div class="d-flex justify-content-end mb-4">
-            <button type="submit" class="btn btn-sm btn-primary px-4 shadow-sm" onclick="syncHiddenInputsBeforeSubmit()">
-                <i class="fa-solid fa-floppy-disk me-1"></i> Save Allotment Sequence & Settings
-            </button>
-        </div>
-    </form>
+    {{-- Separate forms (buttons above point to these with the form="" attribute) --}}
+    <form id="testLeadForm" action="{{ route('integration_settings.simulate_lead') }}" method="POST" class="d-none">@csrf</form>
+    <form id="regenerateKeyForm" action="{{ route('integration_settings.regenerate_key') }}" method="POST" class="d-none">@csrf</form>
 </div>
 
 <script>
-// Keep active ordered array of user IDs
-let orderedUserIds = @json(array_values($assignedIds));
-const allUsersData = @json($users->keyBy('id'));
-const nextAgentId = {{ $nextAgent ? $nextAgent->id : 'null' }};
-
-document.addEventListener("DOMContentLoaded", function() {
-    refreshSequenceUI();
-});
-
-function handleCardClick(event, userId) {
-    if (event.target.tagName.toLowerCase() === 'input') {
-        return; // Checkbox change handler takes care of it
+// ---------- Remember the open section across save ----------
+(function () {
+    function showSection(btn) {
+        document.querySelectorAll('#integrationTabs .nav-link').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content > .tab-pane').forEach(p => p.classList.remove('show', 'active'));
+        btn.classList.add('active');
+        const pane = document.querySelector(btn.getAttribute('data-bs-target'));
+        if (pane) pane.classList.add('show', 'active');
     }
-    const checkbox = document.getElementById('user_' + userId);
-    if (checkbox) {
-        checkbox.checked = !checkbox.checked;
-        onUserCheckChange(userId);
-    }
-}
+    try {
+        document.querySelectorAll('#integrationTabs .nav-link').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                try { sessionStorage.setItem('integrationTab', btn.id); } catch (e) {}
+            });
+        });
+        const saved = sessionStorage.getItem('integrationTab');
+        const el = saved ? document.getElementById(saved) : null;
+        if (el) showSection(el);
+    } catch (e) {}
+})();
+
+// ---------- Lead rotation ----------
+let orderedUserIds = @json(array_values(array_map('intval', $assignedIds)));
+const userNames = @json($users->pluck('name', 'id'));
+const nextAgentId = {{ $nextAgent ? (int) $nextAgent->id : 'null' }};
+
+document.addEventListener('DOMContentLoaded', refreshSequenceUI);
 
 function onUserCheckChange(userId) {
     userId = parseInt(userId);
-    const checkbox = document.getElementById('user_' + userId);
-    
-    if (checkbox.checked) {
-        if (!orderedUserIds.includes(userId)) {
-            orderedUserIds.push(userId);
-        }
+    const cb = document.getElementById('user_' + userId);
+    if (cb.checked) {
+        if (!orderedUserIds.includes(userId)) orderedUserIds.push(userId);
     } else {
         orderedUserIds = orderedUserIds.filter(id => id !== userId);
     }
-
     refreshSequenceUI();
 }
 
 function selectAllUsers() {
-    orderedUserIds = [];
     document.querySelectorAll('.user-checkbox').forEach(cb => {
-        cb.checked = true;
-        orderedUserIds.push(parseInt(cb.value));
+        const id = parseInt(cb.value);
+        if (!orderedUserIds.includes(id)) orderedUserIds.push(id);
     });
     refreshSequenceUI();
 }
 
 function clearAllUsers() {
     orderedUserIds = [];
-    document.querySelectorAll('.user-checkbox').forEach(cb => {
-        cb.checked = false;
-    });
     refreshSequenceUI();
 }
 
 function refreshSequenceUI() {
-    // 1. Update each card and badge
     document.querySelectorAll('.user-checkbox').forEach(cb => {
         const uid = parseInt(cb.value);
+        const idx = orderedUserIds.indexOf(uid);
         const card = document.getElementById('card_user_' + uid);
         const badge = document.getElementById('seq_badge_' + uid);
-        const idx = orderedUserIds.indexOf(uid);
-
-        if (idx !== -1) {
-            cb.checked = true;
-            if (card) card.classList.add('selected');
-            if (badge) {
-                badge.className = 'seq-badge active';
-                badge.innerText = '#' + (idx + 1);
-            }
-        } else {
-            cb.checked = false;
-            if (card) card.classList.remove('selected');
-            if (badge) {
-                badge.className = 'seq-badge inactive';
-                badge.innerText = '-';
-            }
-        }
+        cb.checked = idx !== -1;
+        card.classList.toggle('checked', idx !== -1);
+        badge.classList.toggle('d-none', idx === -1);
+        badge.innerText = idx !== -1 ? (idx + 1) : '';
     });
 
-    // 2. Render Live Rotation Chain Visualizer
-    const chainContainer = document.getElementById('rotationChainContainer');
-    const totalActiveCount = document.getElementById('totalActiveCount');
-    const nextAgentDisplay = document.getElementById('nextAgentDisplay');
-    
-    totalActiveCount.innerText = orderedUserIds.length;
-    chainContainer.innerHTML = '';
-
+    const summary = document.getElementById('rotationSummary');
     if (orderedUserIds.length === 0) {
-        chainContainer.innerHTML = '<span class="text-xs text-muted fst-italic">No staff members currently selected in the rotation pool.</span>';
-        nextAgentDisplay.innerText = 'None Selected';
+        summary.innerHTML = 'No one selected. New leads will be shared among all sales users.';
     } else {
-        orderedUserIds.forEach((uid, index) => {
-            const user = allUsersData[uid];
-            if (!user) return;
-
-            const isNext = (nextAgentId === uid) || (nextAgentId === null && index === 0);
-            
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'rotation-chain-item ' + (isNext ? 'is-next' : '');
-            itemDiv.innerHTML = `
-                <span>#${index + 1}</span>
-                <strong>${user.name}</strong>
-                ${isNext ? '<span class="badge bg-success text-xxs px-1 py-0 ms-1">Next In Line</span>' : ''}
-            `;
-            chainContainer.appendChild(itemDiv);
-
-            if (index < orderedUserIds.length - 1) {
-                const arrow = document.createElement('i');
-                arrow.className = 'fa-solid fa-arrow-right text-muted text-xxs';
-                chainContainer.appendChild(arrow);
-            }
-        });
-
-        // Set Next Agent Display text
-        const currentNextUser = allUsersData[orderedUserIds[0]];
-        if (nextAgentId && allUsersData[nextAgentId] && orderedUserIds.includes(nextAgentId)) {
-            nextAgentDisplay.innerText = allUsersData[nextAgentId].name;
-        } else if (currentNextUser) {
-            nextAgentDisplay.innerText = currentNextUser.name;
-        }
+        const names = orderedUserIds.map(id => escapeHtml(userNames[id] || '')).filter(Boolean);
+        const next = orderedUserIds.includes(nextAgentId) ? nextAgentId : orderedUserIds[0];
+        summary.innerHTML = 'Order: ' + names.join(' → ') + '<br>Next lead goes to <strong>' + escapeHtml(userNames[next] || '') + '</strong>';
     }
-
     syncHiddenInputs();
 }
 
@@ -532,28 +440,58 @@ function syncHiddenInputs() {
     const container = document.getElementById('hiddenUserInputsContainer');
     container.innerHTML = '';
     orderedUserIds.forEach(uid => {
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'assigned_user_ids[]';
-        hiddenInput.value = uid;
-        container.appendChild(hiddenInput);
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'assigned_user_ids[]';
+        input.value = uid;
+        container.appendChild(input);
     });
 }
 
-function syncHiddenInputsBeforeSubmit() {
-    syncHiddenInputs();
+// ---------- Review officers: highlight checked ----------
+document.querySelectorAll('.review-user-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => cb.closest('.member-item').classList.toggle('checked', cb.checked));
+});
+
+// ---------- Helpers ----------
+function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s == null ? '' : s;
+    return d.innerHTML;
+}
+
+function notify(msg) {
+    if (window.toastr) { toastr.success(msg); } else { alert(msg); }
 }
 
 function copyValue(id) {
     const input = document.getElementById(id);
-    input.select();
-    input.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(input.value).then(() => {
-        alert("Copied: " + input.value);
-    }).catch(() => {
-        document.execCommand("copy");
-        alert("Copied: " + input.value);
-    });
+    const value = input.value;
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(value).then(() => notify('Copied'));
+    } else {
+        const tmp = document.createElement('textarea');
+        tmp.value = value;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+        notify('Copied');
+    }
+}
+
+function toggleKey() {
+    const input = document.getElementById('apiKeyInput');
+    const btn = document.getElementById('apiKeyToggle');
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.innerText = show ? 'Hide' : 'Show';
+}
+
+function regenerateKey() {
+    if (confirm('Generate a new API key? Any website or system using the current key will stop sending leads until you update it.')) {
+        document.getElementById('regenerateKeyForm').submit();
+    }
 }
 </script>
 @endsection

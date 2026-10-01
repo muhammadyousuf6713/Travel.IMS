@@ -32,7 +32,7 @@
                 <td>{{ $inquiry->id_inquiry }}</td>
                 <td>{{ optional($inquiry->customer)->customer_name }}</td>
                 <td>{{ optional($inquiry->customer)->customer_cell }}</td>
-                <td>{{ optional($inquiry->customer)->customer_city }}</td>
+                <td>{{ optional($inquiry->customer)->city }}</td>
                 <td>{{ optional($inquiry->inquiryType)->type_name }}</td>
                 <td>{{ optional($inquiry->salesPerson)->name }}</td>
                 <td>{{ optional($inquiry->salesReference)->type_name }}</td>
