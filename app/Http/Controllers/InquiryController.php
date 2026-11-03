@@ -447,11 +447,48 @@ class InquiryController extends Controller
                     'inquiry_type' => 'inquiry.inquiry_type',
                     'sales_person' => 'inquiry.saleperson',
                     'status' => 'inquiry.status',
-                    'id_inquiry' => 'inquiry.id_inquiry',
                 ] as $param => $column
             ) {
                 if ($v = request($param)) {
                     $query->where($column, $v);
+                }
+            }
+
+            // Comma-separated ID search (e.g. "01, 02, 30" or single "12")
+            if ($rawIdInput = request('id_inquiry')) {
+                $rawTokens = preg_split('/[,]+/', (string) $rawIdInput);
+                $numericIds = [];
+                $stringTokens = [];
+                foreach ($rawTokens as $tok) {
+                    $tok = trim($tok);
+                    if ($tok === '') continue;
+                    $clean = ltrim($tok, '#');
+                    if (is_numeric($clean)) {
+                        $numericIds[] = (int) $clean;
+                    } else {
+                        $stringTokens[] = $tok;
+                    }
+                }
+                $numericIds = array_values(array_unique($numericIds));
+                if (!empty($numericIds) && empty($stringTokens)) {
+                    if (count($numericIds) === 1) {
+                        $first = $numericIds[0];
+                        $query->where(function ($q) use ($first, $rawIdInput) {
+                            $q->where('inquiry.id_inquiry', $first)
+                              ->orWhere('inquiry.id_inquiry', 'like', "%{$rawIdInput}%");
+                        });
+                    } else {
+                        $query->whereIn('inquiry.id_inquiry', $numericIds);
+                    }
+                } elseif (!empty($numericIds) || !empty($stringTokens)) {
+                    $query->where(function ($q) use ($numericIds, $stringTokens) {
+                        if (!empty($numericIds)) {
+                            $q->whereIn('inquiry.id_inquiry', $numericIds);
+                        }
+                        foreach ($stringTokens as $st) {
+                            $q->orWhere('inquiry.id_inquiry', 'like', "%{$st}%");
+                        }
+                    });
                 }
             }
 
@@ -577,6 +614,20 @@ class InquiryController extends Controller
                 ->filter(function ($query) {
                     if ($keyword = request('search.value')) {
                         $query->where(function ($q) use ($keyword) {
+                            if (str_contains($keyword, ',')) {
+                                $rawTokens = preg_split('/[,]+/', (string) $keyword);
+                                $numIds = [];
+                                foreach ($rawTokens as $tok) {
+                                    $c = trim(ltrim(trim($tok), '#'));
+                                    if ($c !== '' && is_numeric($c)) {
+                                        $numIds[] = (int) $c;
+                                    }
+                                }
+                                if (!empty($numIds)) {
+                                    $q->whereIn('inquiry.id_inquiry', $numIds);
+                                    return;
+                                }
+                            }
                             $q
                                 ->where('inquiry.id_inquiry', 'like', "%$keyword%")
                                 ->orWhere('inquiry.status', 'like', "%$keyword%")

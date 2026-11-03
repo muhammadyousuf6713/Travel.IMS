@@ -56,7 +56,7 @@
                             </div>
                             <div class="col-6 col-md-3">
                                 <label class="form-label">ID #</label>
-                                <input type="text" class="form-control" name="id_inquiry" placeholder="e.g. 1234">
+                                <input type="text" class="form-control" name="id_inquiry" placeholder="e.g. 01, 02, 30">
                             </div>
                             <div class="col-6 col-md-3">
                                 <label class="form-label">Follow Up Date</label>
@@ -157,28 +157,36 @@
                                         <th>Number</th>
                                         <th>Inquiry Type</th>
                                         <th>SP</th>
-                                        <th class="">SR</th>
-                                        <th class="">FUD</th>
-                                        <th class="">TD</th>
+                                        <th>SR</th>
+                                        <th>FUD</th>
+                                        <th>TD</th>
                                         <th>Status</th>
                                         <th class="none">Services</th>
                                         <th class="none">City</th>
-                                        <th class="">Created At</th>
+                                        <th class="none">Created At</th>
                                         <th class="none">Remarks</th>
-                                        <th class="none">Progress Remarks HTML</th>
                                         <th class="none">Created By</th>
                                         <th class="none">Updated At</th>
-                                        <th class="all" style="width:14%;">Action</th>
+                                        <th class="all" style="width: 130px; min-width: 130px; text-align: center;">Action</th>
                                     </tr>
                                     <tr>
                                         <th></th>
-                                        @foreach (range(1, 17) as $i)
-                                            <th class="{{ in_array($i, [10, 11, 13, 14, 15, 16]) ? 'none' : '' }}" {!! in_array($i, [10, 11, 13, 14, 15, 16]) ? 'style="display: none;"' : '' !!}>
-                                                @if(in_array($i, [1, 2, 3, 4, 5, 6, 7, 8, 9, 12]))
-                                                    <input type="text" class="form-control form-control-sm" placeholder="Search..." />
-                                                @endif
-                                            </th>
-                                        @endforeach
+                                        <th><input type="text" class="form-control form-control-sm" placeholder="Search..." /></th>
+                                        <th><input type="text" class="form-control form-control-sm" placeholder="Search..." /></th>
+                                        <th><input type="text" class="form-control form-control-sm" placeholder="Search..." /></th>
+                                        <th><input type="text" class="form-control form-control-sm" placeholder="Search..." /></th>
+                                        <th><input type="text" class="form-control form-control-sm" placeholder="Search..." /></th>
+                                        <th><input type="text" class="form-control form-control-sm" placeholder="Search..." /></th>
+                                        <th><input type="text" class="form-control form-control-sm" placeholder="Search..." /></th>
+                                        <th><input type="text" class="form-control form-control-sm" placeholder="Search..." /></th>
+                                        <th><input type="text" class="form-control form-control-sm" placeholder="Search..." /></th>
+                                        <th class="none"></th>
+                                        <th class="none"></th>
+                                        <th class="none"></th>
+                                        <th class="none"></th>
+                                        <th class="none"></th>
+                                        <th class="none"></th>
+                                        <th class="all"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -194,7 +202,7 @@
 
     {{-- 📝 Modals (Follow-up & Progress) --}}
     <div class="modal fade" id="followUpModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Inquiry Follow-up</h5>
@@ -414,37 +422,89 @@
             $('[data-bs-toggle="tooltip"]').tooltip();
         });
 
-        $(document).ready(function() {
-            // Apply URL parameters as filters
-            const urlParams = new URLSearchParams(window.location.search);
-            let hasFilters = false;
+        const INQ_SESSION_KEY = 'ims_filters_inquiry_state';
 
-            const filters = {
-                'sales_person': 'select[name="sales_person"]',
-                'inquiry_type': 'select[name="inquiry_type"]',
-                'status': 'select[name="status"]',
-                'fud_filter': 'select[name="fud_filter"]',
-                'sales_reference': 'select[name="sales_reference"]',
-                'id_inquiry': 'input[name="id_inquiry"]',
-                'date_from': 'input[name="date_from"]',
-                'date_to': 'input[name="date_to"]'
-            };
+        function saveInquiryFilters() {
+            try {
+                var state = {
+                    inquiry_type: $('select[name="inquiry_type"]').val() || '',
+                    sales_person: $('select[name="sales_person"]').val() || '',
+                    status: $('select[name="status"]').val() || '',
+                    id_inquiry: $('input[name="id_inquiry"]').val() || '',
+                    fud_filter: $('select[name="fud_filter"]').val() || '',
+                    customer_name: $('input[name="customer_name"]').val() || '',
+                    customer_cell: $('input[name="customer_cell"]').val() || '',
+                    customer_email: $('input[name="customer_email"]').val() || '',
+                    sales_reference: $('select[name="sales_reference"]').val() || '',
+                    date_from: $('input[name="date_from"]').val() || '',
+                    date_to: $('input[name="date_to"]').val() || '',
+                    table_search: $('#example23_filter input').length ? $('#example23_filter input').val() : ''
+                };
+                sessionStorage.setItem(INQ_SESSION_KEY, JSON.stringify(state));
+            } catch (e) {}
+        }
 
-            for (const [param, selector] of Object.entries(filters)) {
-                if (urlParams.has(param)) {
-                    const value = urlParams.get(param);
-                    const $el = $(selector);
-                    if ($el.length) {
-                        $el.val(value);
-                        hasFilters = true;
-                    }
-                }
+        function restoreInquiryFilters() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var hasUrlParams = urlParams.toString().length > 0;
+            var state = null;
+
+            if (!hasUrlParams) {
+                try {
+                    var raw = sessionStorage.getItem(INQ_SESSION_KEY);
+                    if (raw) state = JSON.parse(raw);
+                } catch (e) {}
             }
 
-            if (hasFilters) {
+            var hasActiveFilters = false;
+
+            if (state) {
+                if (state.inquiry_type) { $('select[name="inquiry_type"]').val(state.inquiry_type).trigger('change.select2'); hasActiveFilters = true; }
+                if (state.sales_person) { $('select[name="sales_person"]').val(state.sales_person).trigger('change.select2'); hasActiveFilters = true; }
+                if (state.status) { $('select[name="status"]').val(state.status).trigger('change.select2'); hasActiveFilters = true; }
+                if (state.id_inquiry) { $('input[name="id_inquiry"]').val(state.id_inquiry); hasActiveFilters = true; }
+                if (state.fud_filter) { $('select[name="fud_filter"]').val(state.fud_filter).trigger('change.select2'); hasActiveFilters = true; }
+                if (state.customer_name) { $('input[name="customer_name"]').val(state.customer_name); hasActiveFilters = true; }
+                if (state.customer_cell) { $('input[name="customer_cell"]').val(state.customer_cell); hasActiveFilters = true; }
+                if (state.customer_email) { $('input[name="customer_email"]').val(state.customer_email); hasActiveFilters = true; }
+                if (state.sales_reference) { $('select[name="sales_reference"]').val(state.sales_reference).trigger('change.select2'); hasActiveFilters = true; }
+                if (state.date_from) { $('input[name="date_from"]').val(state.date_from); hasActiveFilters = true; }
+                if (state.date_to) { $('input[name="date_to"]').val(state.date_to); hasActiveFilters = true; }
+            } else if (hasUrlParams) {
+                const filters = {
+                    'sales_person': 'select[name="sales_person"]',
+                    'salesperson_id': 'select[name="sales_person"]',
+                    'inquiry_type': 'select[name="inquiry_type"]',
+                    'status': 'select[name="status"]',
+                    'fud_filter': 'select[name="fud_filter"]',
+                    'sales_reference': 'select[name="sales_reference"]',
+                    'id_inquiry': 'input[name="id_inquiry"]',
+                    'date_from': 'input[name="date_from"]',
+                    'date_to': 'input[name="date_to"]'
+                };
+                for (const [param, selector] of Object.entries(filters)) {
+                    if (urlParams.has(param)) {
+                        const val = urlParams.get(param);
+                        const $el = $(selector);
+                        if ($el.length && val) {
+                            $el.val(val).trigger('change.select2');
+                            hasActiveFilters = true;
+                        }
+                    }
+                }
+                saveInquiryFilters();
+            }
+
+            if (hasActiveFilters) {
                 $('#filterCollapse').show();
                 $('#filterIcon').removeClass('fa-chevron-down').addClass('fa-chevron-up');
             }
+
+            return state;
+        }
+
+        $(document).ready(function() {
+            restoreInquiryFilters();
 
             // Click progress remarks button
             $(document).on('click', '.view-progress', function() {
@@ -708,7 +768,7 @@
                             rightCol += '<h6 class="fw-bold mb-3 border-bottom pb-2">Remarks & History</h6>';
                             rightCol += '<div class="mb-3"><strong><i class="fa fa-comment text-secondary me-2"></i>Remarks:</strong><br><div class="text-muted mt-1" style="word-wrap: break-word; white-space: normal; overflow-wrap: break-word;">' + (data.initial_remarks || '-') + '</div></div><hr class="my-2">';
                             rightCol += '<div class="mt-3"><strong><i class="fa fa-history text-secondary me-2"></i>Follow-Up History:</strong><br>';
-                            rightCol += '<div id="followup-container-' + rowId + '" class="mt-2">';
+                            rightCol += '<div id="followup-container-' + rowId + '" class="mt-2 followup-history-scrollbox">';
                             rightCol += '<div class="text-center my-3"><i class="fa fa-spinner fa-spin fa-lg text-primary"></i></div>';
                             rightCol += '</div>';
                             rightCol += '<div class="text-center mt-2 mb-3"><button type="button" class="btn btn-sm btn-outline-primary load-more-followups" data-id="' + rowId + '" data-offset="0" style="display:none;">Show More</button></div><hr class="my-2">';
@@ -858,12 +918,6 @@
                         className: 'remarks-content'
                     },
                     {
-                        data: 'progress_remarks_html',
-                        name: 'progress_remarks_html',
-                        visible: false,
-                        searchable: false
-                    },
-                    {
                         data: 'created_by',
                         name: 'created_by'
                     },
@@ -955,13 +1009,60 @@
             // ✅ Custom filter form (top)
             $('#filterForm').on('submit', function(e) {
                 e.preventDefault();
+                saveInquiryFilters();
                 table.ajax.reload();
+            });
+
+            // Auto save on any filter change
+            $('#filterForm').on('change input', 'input, select', function() {
+                saveInquiryFilters();
+            });
+
+            // Auto save search term on keyup
+            $(document).on('keyup input search', '#example23_filter input', function() {
+                saveInquiryFilters();
             });
 
             // ✅ Reset filters button
             $('#resetFilters').on('click', function() {
+                try {
+                    sessionStorage.removeItem(INQ_SESSION_KEY);
+                } catch (e) {}
                 $('#filterForm')[0].reset();
+                $('#filterForm select').val('').trigger('change.select2');
+                table.search('').draw();
                 table.ajax.reload();
+            });
+
+            // Restore saved search on initial load
+            try {
+                var savedState = JSON.parse(sessionStorage.getItem(INQ_SESSION_KEY) || '{}');
+                if (savedState.table_search) {
+                    table.search(savedState.table_search).draw();
+                }
+            } catch (e) {}
+
+            // Isolate wheel scrolling so cursor hovering over followups/remarks scrolls ONLY that box, NEVER the screen
+            $(document).on('wheel', '.followup-history-scrollbox, .followup-modal-list, #progressRemarksList', function(e) {
+                var el = this;
+                var scrollTop = el.scrollTop;
+                var scrollHeight = el.scrollHeight;
+                var height = el.clientHeight;
+                var delta = e.originalEvent.deltaY;
+                var up = delta < 0;
+
+                if (!up && delta > (scrollHeight - height - scrollTop)) {
+                    el.scrollTop = scrollHeight;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                } else if (up && -delta > scrollTop) {
+                    el.scrollTop = 0;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                e.stopPropagation();
             });
         });
     </script>
@@ -988,15 +1089,11 @@
             var container = $('#followup-container-' + inquiryId);
             var btn = container.siblings('.text-center').find('.load-more-followups');
             
+            // Always ensure the container has the scrollbox class and styles applied
+            container.addClass('followup-history-scrollbox');
+
             if (!initial) {
                 btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
-                // Add scrolling when "Show More" is clicked
-                container.css({
-                    'max-height': '400px',
-                    'overflow-y': 'auto',
-                    'overflow-x': 'hidden',
-                    'padding-right': '5px'
-                });
             }
 
             $.ajax({

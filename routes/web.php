@@ -14,6 +14,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PilgrimageBookingController;
 use App\Http\Controllers\PilgrimageVoucherController;
 use App\Http\Controllers\SystemIntegrationSettingController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ResetController;
@@ -42,9 +43,11 @@ Route::group(['middleware' => 'auth'], function () {
         return view('billing');
     })->name('billing');
 
-    Route::get('profile', function () {
-        return view('profile');
-    })->name('profile');
+    Route::get('/profile', [InfoUserController::class, 'view'])->name('profile.view');
+    Route::get('/profile/view', [InfoUserController::class, 'view']);
+    Route::get('/profile/edit', [InfoUserController::class, 'create'])->name('profile.edit');
+    Route::get('/profile/password', [InfoUserController::class, 'passwordForm'])->name('profile.password');
+    Route::post('/profile/password', [InfoUserController::class, 'updatePassword'])->name('profile.password.update');
 
     Route::get('rtl', function () {
         return view('rtl');
@@ -67,8 +70,8 @@ Route::group(['middleware' => 'auth'], function () {
     })->name('sign-up');
 
     Route::get('/logout', [SessionsController::class, 'destroy'])->name('logout');
-    Route::get('/user-profile', [InfoUserController::class, 'create']);
-    Route::post('/user-profile', [InfoUserController::class, 'store']);
+    Route::get('/user-profile', [InfoUserController::class, 'create'])->name('user-profile');
+    Route::post('/user-profile', [InfoUserController::class, 'store'])->name('user-profile.update');
 
     // Customers
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index')->middleware(['permission:Customers list']);
@@ -169,6 +172,13 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('sales-reference/edit/{id}', [SalesReferenceController::class, 'edit'])->middleware(['permission:Sales References edit']);
     Route::post('sales-reference/update/{id}', [SalesReferenceController::class, 'update'])->middleware(['permission:Sales References edit']);
     Route::delete('sales-reference/delete/{id}', [SalesReferenceController::class, 'destroy'])->middleware(['permission:Sales References delete'])->name('sales-reference.destroy');
+
+    // Currencies & Exchange Rates
+    Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
+    Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store');
+    Route::put('/currencies/{id}', [CurrencyController::class, 'update'])->name('currencies.update');
+    Route::delete('/currencies/{id}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
+    Route::get('/currencies/rates-json', [CurrencyController::class, 'ratesJson'])->name('currencies.rates');
 
     // Services
     Route::get('/services', [ServiceController::class, 'index'])->middleware(['permission:Services list']);

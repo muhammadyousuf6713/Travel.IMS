@@ -165,8 +165,15 @@
             <div class="card-body p-3">
                 <div id="pilgrimsContainer">
                     @foreach($booking->pilgrims as $idx => $pilgrim)
-                        <div class="pilgrim-row card border border-radius-md p-2 mb-2 bg-light position-relative">
-                            <button type="button" class="btn-close text-dark position-absolute top-0 end-0 m-2 btn-remove-row" style="font-size: 9px;"></button>
+                        <div class="pilgrim-row card border border-radius-md p-3 mb-3 bg-light shadow-none position-relative">
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                                <span class="badge bg-white text-dark text-xxs font-weight-bolder text-uppercase border">
+                                    <i class="fa-solid fa-user-plus text-primary me-1"></i> Co-Traveler #{{ $loop->iteration }}
+                                </span>
+                                <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Traveler">
+                                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                                </button>
+                            </div>
                             <div class="row g-2 align-items-center">
                                 <div class="col-md-4">
                                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Full Name <span class="text-danger">*</span></label>
@@ -211,8 +218,15 @@
             <div class="card-body p-3">
                 <div id="flightsContainer">
                     @foreach($booking->flights as $fIdx => $flight)
-                        <div class="flight-row card border border-radius-md p-2 mb-2 bg-light position-relative">
-                            <button type="button" class="btn-close text-dark position-absolute top-0 end-0 m-2 btn-remove-row" style="font-size: 9px;"></button>
+                        <div class="flight-row card border border-radius-md p-3 mb-3 bg-light shadow-none position-relative">
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                                <span class="badge bg-white text-dark text-xxs font-weight-bolder text-uppercase border">
+                                    <i class="fa-solid fa-plane-departure text-primary me-1"></i> Flight Segment #{{ $loop->iteration }}
+                                </span>
+                                <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Flight">
+                                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                                </button>
+                            </div>
                             <div class="row g-2 align-items-center">
                                 <div class="col-md-2">
                                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Flight No <span class="text-danger">*</span></label>
@@ -258,8 +272,15 @@
             <div class="card-body p-3">
                 <div id="hotelsContainer">
                     @foreach($booking->hotels as $hIdx => $hotel)
-                        <div class="hotel-row card border border-radius-md p-3 mb-2 bg-white shadow-none position-relative">
-                            <button type="button" class="btn-close text-dark position-absolute top-0 end-0 m-2 btn-remove-row" style="font-size: 9px;"></button>
+                        <div class="hotel-row card border border-radius-md p-3 mb-3 bg-white shadow-none position-relative">
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                                <span class="badge bg-light text-dark text-xxs font-weight-bolder text-uppercase border">
+                                    <i class="fa-solid fa-hotel text-primary me-1"></i> Hotel Stay #{{ $loop->iteration }}
+                                </span>
+                                <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Hotel">
+                                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                                </button>
+                            </div>
                             <div class="row g-2">
                                 <div class="col-md-2">
                                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">City <span class="text-danger">*</span></label>
@@ -341,4 +362,228 @@
 
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    let pilgrimCount = {{ count($booking->pilgrims) }};
+    let flightCount = {{ count($booking->flights) }};
+    let hotelCount = {{ count($booking->hotels) }};
+
+    const pilgrimsContainer = document.getElementById('pilgrimsContainer');
+    const flightsContainer = document.getElementById('flightsContainer');
+    const hotelsContainer = document.getElementById('hotelsContainer');
+    const totalPaxDisplay = document.getElementById('totalPaxDisplay');
+
+    function updatePaxCount() {
+        const count = 1 + document.querySelectorAll('.pilgrim-row').length;
+        if (totalPaxDisplay) {
+            totalPaxDisplay.value = `${count} ${count === 1 ? 'Person (Lead)' : 'Persons (1 Lead + ' + (count - 1) + ' Co-Travelers)'}`;
+        }
+    }
+
+    document.getElementById('btnAddPilgrim').addEventListener('click', function () {
+        pilgrimCount++;
+        const row = document.createElement('div');
+        row.className = 'pilgrim-row card border border-radius-md p-3 mb-3 bg-light shadow-none position-relative';
+        row.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                <span class="badge bg-white text-dark text-xxs font-weight-bolder text-uppercase border">
+                    <i class="fa-solid fa-user-plus text-primary me-1"></i> Co-Traveler #${pilgrimCount}
+                </span>
+                <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Traveler">
+                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Full Name <span class="text-danger">*</span></label>
+                    <input type="text" name="pilgrims[${pilgrimCount}][name]" class="form-control form-control-sm" placeholder="Full Name" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Passport No</label>
+                    <input type="text" name="pilgrims[${pilgrimCount}][passport_no]" class="form-control form-control-sm" placeholder="Passport No">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Gender</label>
+                    <select name="pilgrims[${pilgrimCount}][gender]" class="form-select form-select-sm">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Age Category</label>
+                    <select name="pilgrims[${pilgrimCount}][age_type]" class="form-select form-select-sm">
+                        <option value="adult" selected>Adult</option>
+                        <option value="child">Child</option>
+                        <option value="infant">Infant</option>
+                    </select>
+                </div>
+            </div>
+        `;
+        pilgrimsContainer.appendChild(row);
+        updatePaxCount();
+    });
+
+    document.getElementById('btnAddFlight').addEventListener('click', function () {
+        flightCount++;
+        const row = document.createElement('div');
+        row.className = 'flight-row card border border-radius-md p-3 mb-3 bg-light shadow-none position-relative';
+        row.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                <span class="badge bg-white text-dark text-xxs font-weight-bolder text-uppercase border">
+                    <i class="fa-solid fa-plane-departure text-primary me-1"></i> Flight Segment #${flightCount}
+                </span>
+                <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Flight">
+                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
+            <div class="row g-2 align-items-center">
+                <div class="col-md-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Flight No <span class="text-danger">*</span></label>
+                    <input type="text" name="flights[${flightCount}][flight_no]" class="form-control form-control-sm font-weight-bold" placeholder="SV-702" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Airline</label>
+                    <input type="text" name="flights[${flightCount}][airline]" class="form-control form-control-sm" placeholder="Saudia">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">From City <span class="text-danger">*</span></label>
+                    <input type="text" name="flights[${flightCount}][from_city]" class="form-control form-control-sm" placeholder="Madinah (MED)" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">To City <span class="text-danger">*</span></label>
+                    <input type="text" name="flights[${flightCount}][to_city]" class="form-control form-control-sm" placeholder="Karachi (KHI)" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">ETD <span class="text-danger">*</span></label>
+                    <input type="datetime-local" name="flights[${flightCount}][etd]" class="form-control form-control-sm" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">PNR</label>
+                    <input type="text" name="flights[${flightCount}][pnr]" class="form-control form-control-sm" placeholder="PNR Ref">
+                </div>
+            </div>
+        `;
+        flightsContainer.appendChild(row);
+    });
+
+    document.getElementById('btnAddHotel').addEventListener('click', function () {
+        hotelCount++;
+        const row = document.createElement('div');
+        row.className = 'hotel-row card border border-radius-md p-3 mb-3 bg-white shadow-none position-relative';
+        row.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                <span class="badge bg-light text-dark text-xxs font-weight-bolder text-uppercase border">
+                    <i class="fa-solid fa-hotel text-primary me-1"></i> Hotel Stay #${hotelCount}
+                </span>
+                <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Hotel">
+                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
+            <div class="row g-2">
+                <div class="col-md-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">City <span class="text-danger">*</span></label>
+                    <select name="hotels[${hotelCount}][city]" class="form-select form-select-sm hotel-city-select" required>
+                        <option value="Madinah" selected>Madinah</option>
+                        <option value="Makkah">Makkah</option>
+                        <option value="Jeddah">Jeddah</option>
+                        <option value="Riyadh">Riyadh</option>
+                        <option value="Taif">Taif</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Hotel Name <span class="text-danger">*</span></label>
+                    <input type="text" name="hotels[${hotelCount}][hotel_name]" class="form-control form-control-sm" placeholder="Hotel Name" required>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Voucher / Res Ref</label>
+                    <input type="text" name="hotels[${hotelCount}][voucher_no]" class="form-control form-control-sm" placeholder="Res Ref">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Room Type <span class="text-danger">*</span></label>
+                    <select name="hotels[${hotelCount}][room_type]" class="form-select form-select-sm" required>
+                        <option value="Double" selected>Double</option>
+                        <option value="Triple">Triple</option>
+                        <option value="Quad">Quad</option>
+                        <option value="Quint">Quint</option>
+                        <option value="Hexa">Hexa</option>
+                        <option value="Penta">Penta</option>
+                        <option value="Suite">Suite</option>
+                        <option value="Sharing">Sharing</option>
+                    </select>
+                </div>
+
+                <div class="col-md-1">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Qty</label>
+                    <input type="number" name="hotels[${hotelCount}][room_qty]" class="form-control form-control-sm text-center" value="1" min="1" required>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Duration</label>
+                    <input type="text" class="form-control form-control-sm text-center bg-light hotel-nights-display" value="—" readonly>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Check-In <span class="text-danger">*</span></label>
+                    <input type="datetime-local" name="hotels[${hotelCount}][check_in]" class="form-control form-control-sm hotel-checkin-input" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Check-Out <span class="text-danger">*</span></label>
+                    <input type="datetime-local" name="hotels[${hotelCount}][check_out]" class="form-control form-control-sm hotel-checkout-input" required>
+                </div>
+
+                <div class="col-md-4 d-flex align-items-center mt-3">
+                    <label class="custom-toggle-switch">
+                        <input type="checkbox" name="hotels[${hotelCount}][schedule_ziyaraat]" value="1" id="ziyaraatToggleEdit${hotelCount}" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Auto-Schedule Ziyaraat (+48h)</span>
+                    </label>
+                </div>
+            </div>
+        `;
+        hotelsContainer.appendChild(row);
+        attachDateChangeListeners(row);
+    });
+
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.btn-remove-row');
+        if (btn) {
+            const card = btn.closest('.pilgrim-row, .flight-row, .hotel-row');
+            if (card) {
+                card.remove();
+                updatePaxCount();
+            }
+        }
+    });
+
+    function attachDateChangeListeners(parent) {
+        const inInput = parent.querySelector('.hotel-checkin-input');
+        const outInput = parent.querySelector('.hotel-checkout-input');
+        const display = parent.querySelector('.hotel-nights-display');
+
+        function recalc() {
+            if (inInput.value && outInput.value) {
+                const d1 = new Date(inInput.value);
+                const d2 = new Date(outInput.value);
+                const diffTime = d2 - d1;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                display.value = `${diffDays > 0 ? diffDays : 1} ${diffDays === 1 ? 'Night' : 'Nights'}`;
+            }
+        }
+
+        if (inInput && outInput) {
+            inInput.addEventListener('change', recalc);
+            outInput.addEventListener('change', recalc);
+        }
+    }
+
+    document.querySelectorAll('.hotel-row').forEach(attachDateChangeListeners);
+    updatePaxCount();
+});
+</script>
 @endsection

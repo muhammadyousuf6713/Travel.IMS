@@ -173,8 +173,69 @@
                 });
             });
 
-            $('#filterForm').on('submit', function(e) { e.preventDefault(); table.ajax.reload(); });
-            $('#resetFilters').on('click', function() { $('#filterForm')[0].reset(); table.ajax.reload(); });
+            // Session-based filter persistence for Customers
+            const CUST_SESSION_KEY = 'ims_filters_customers_state';
+
+            function saveCustomerFilters() {
+                try {
+                    var state = {
+                        customer_name: $('input[name="customer_name"]').val() || '',
+                        customer_cell: $('input[name="customer_cell"]').val() || '',
+                        customer_email: $('input[name="customer_email"]').val() || '',
+                        city: $('input[name="city"]').val() || '',
+                        customer_type: $('select[name="customer_type"]').val() || '',
+                        customer_category: $('select[name="customer_category"]').val() || '',
+                        table_search: $('.dataTables_filter input').length ? $('.dataTables_filter input').val() : ''
+                    };
+                    sessionStorage.setItem(CUST_SESSION_KEY, JSON.stringify(state));
+                } catch(e) {}
+            }
+
+            function restoreCustomerFilters() {
+                try {
+                    var raw = sessionStorage.getItem(CUST_SESSION_KEY);
+                    if (!raw) return;
+                    var state = JSON.parse(raw);
+                    var hasActive = false;
+                    if (state.customer_name) { $('input[name="customer_name"]').val(state.customer_name); hasActive = true; }
+                    if (state.customer_cell) { $('input[name="customer_cell"]').val(state.customer_cell); hasActive = true; }
+                    if (state.customer_email) { $('input[name="customer_email"]').val(state.customer_email); hasActive = true; }
+                    if (state.city) { $('input[name="city"]').val(state.city); hasActive = true; }
+                    if (state.customer_type) { $('select[name="customer_type"]').val(state.customer_type).trigger('change.select2'); hasActive = true; }
+                    if (state.customer_category) { $('select[name="customer_category"]').val(state.customer_category).trigger('change.select2'); hasActive = true; }
+
+                    if (hasActive) {
+                        $('#filterCollapse').show();
+                        $('#filterIcon').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                    }
+                    if (state.table_search) {
+                        table.search(state.table_search).draw();
+                    }
+                } catch(e) {}
+            }
+            restoreCustomerFilters();
+
+            $('#filterForm').on('submit', function(e) { 
+                e.preventDefault(); 
+                saveCustomerFilters();
+                table.ajax.reload(); 
+            });
+
+            $('#filterForm').on('change input', 'input, select', function() {
+                saveCustomerFilters();
+            });
+
+            $(document).on('keyup input search', '.dataTables_filter input', function() {
+                saveCustomerFilters();
+            });
+
+            $('#resetFilters').on('click', function() { 
+                try { sessionStorage.removeItem(CUST_SESSION_KEY); } catch(e) {}
+                $('#filterForm')[0].reset(); 
+                $('#filterForm select').val('').trigger('change.select2');
+                table.search('').draw();
+                table.ajax.reload(); 
+            });
             $('#toggleFilterBtn').on('click', function() { $('#filterCollapse').slideToggle(200); $('#filterIcon').toggleClass('fa-chevron-down fa-chevron-up'); });
         });
     </script>

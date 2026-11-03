@@ -67,6 +67,7 @@
 <div class="row">
     <div class="col-md-12">
         <h6 class="fw-bold border-bottom pb-1 mb-2">Follow-up Remarks:</h6>
+        <div class="followup-modal-list followup-history-scrollbox" style="max-height: 320px; overflow-y: auto; overscroll-behavior: contain; padding-right: 6px;">
         @forelse ($followup_remarks as $fremark)
             <div class="mb-2 p-2 bg-white border rounded shadow-sm">
                 <div class="fw-semibold mb-1">{{ $fremark->remarks }}</div>
@@ -94,5 +95,6 @@
 
             <p class="text-muted">No follow-up remarks yet.</p>
         @endforelse
+        </div>
     </div>
 </div>

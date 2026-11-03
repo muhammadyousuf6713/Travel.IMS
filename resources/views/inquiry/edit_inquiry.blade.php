@@ -96,7 +96,7 @@
                                 <!-- <div class="col-lg-6 mg-t-20 mg-lg-t-0">
                                     <div class="form-group">
 
-                                        <label class="form-control-label">Sub Services:</label>
+                                        <label class="form-control-label" style="display:none !important;">Sub Services:</label>
                                         <select style="width: 100%" name="sub_services[]" id="sub_services"
                                             class="js-example-basic-multiple" multiple="multiple">
                                             <option>Select Sub Service</option>

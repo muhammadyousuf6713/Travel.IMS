@@ -145,7 +145,7 @@
                 <div class="col-md-5">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-secondary"></i></span>
-                        <input type="text" name="search" class="form-control form-control-sm border-start-0 ps-0" placeholder="Search CRM ID, Passenger, Passport..." value="{{ request('search') }}">
+                        <input type="text" name="search" class="form-control form-control-sm border-start-0 ps-0" placeholder="Search CRM ID (e.g. 01, 02, 30), Passenger, Passport..." value="{{ request('search') }}">
                     </div>
                 </div>
 
@@ -171,8 +171,8 @@
                     <button type="submit" class="btn btn-sm btn-primary w-100 mb-0">
                         Filter
                     </button>
-                    @if(request()->hasAny(['search', 'service_type', 'status']))
-                        <a href="{{ route('pilgrimage.index') }}" class="btn btn-sm btn-outline-secondary mb-0 px-2" title="Reset">
+                    @if(request()->hasAny(['search', 'service_type', 'status']) || session()->has('pilgrimage_filter_search') || session()->has('pilgrimage_filter_status') || session()->has('pilgrimage_filter_service_type'))
+                        <a href="{{ route('pilgrimage.index', ['reset_filters' => 1]) }}" class="btn btn-sm btn-outline-secondary mb-0 px-2" title="Reset Filters">
                             <i class="fa-solid fa-rotate-left"></i>
                         </a>
                     @endif

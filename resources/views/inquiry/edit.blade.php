@@ -219,12 +219,9 @@
                                     </div>
                                     
                                     {{-- Sub Services hidden matching Add Inquiry layout --}}
-                                    <div class="rmv_service col-lg-6 mg-t-20 mg-lg-t-0 d-none">
-                                        <div class="form-group">
-                                            <label class="form-label">Sub Services:</label>
-                                            <select style="width: 100%" name="sub_services[]" id="sub_services"
-                                                class="js-example-basic-multiple service_dis" multiple="multiple">
-                                                <option>Select Sub Service</option>
+                                    <div class="rmv_service col-lg-6 mg-t-20 mg-lg-t-0" style="display: none !important;">
+                                        <div class="form-group" style="display: none !important;">
+                                            <select style="display: none !important;" name="sub_services[]" id="sub_services" multiple="multiple">
                                             </select>
                                         </div>
                                     </div>

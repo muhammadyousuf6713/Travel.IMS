@@ -2,24 +2,62 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
 <style>
-    /* Sidebar enhancements */
+    /* Sidebar enhancements & clean bounded scrolling */
     #sidenav-main {
         background: #fff;
         border-radius: 15px;
-        overflow-y: auto;
-        max-height: 100vh;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important; /* Prevent outer container scrolling */
+        height: calc(100vh - 32px) !important;
+        max-height: calc(100vh - 32px) !important;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         transition: all 0.2s ease-in-out;
+        z-index: 1040;
     }
 
-    /* The theme hardcodes the nav list to `height: calc(100vh - 360px)` with
-       its own `overflow: auto` — that reserves way more space than this
-       sidebar's actual header needs, squeezing all the links into a small
-       box so most of them only appeared after scrolling inside it. Let it
-       take its natural height instead; the sidebar's own scrollbar (set
-       above) still scrolls everything once it doesn't fit. */
+    #sidenav-main .sidenav-header {
+        flex: 0 0 75px !important;
+        height: 75px !important;
+        min-height: 75px !important;
+        max-height: 75px !important;
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        overflow: hidden;
+    }
+
+    #sidenav-main hr {
+        flex: 0 0 1px !important;
+        margin: 0 !important;
+    }
+
     #sidenav-main #sidenav-collapse-main {
+        display: block !important; /* MUST stay visible */
+        flex: 1 1 0% !important;
+        min-height: 0 !important;
         height: auto !important;
+        max-height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain !important;
+        padding-bottom: 2rem !important;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+    }
+
+    #sidenav-main #sidenav-collapse-main::-webkit-scrollbar {
+        width: 5px;
+    }
+    #sidenav-main #sidenav-collapse-main::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    #sidenav-main #sidenav-collapse-main::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 4px;
+    }
+    #sidenav-main #sidenav-collapse-main::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.45);
     }
 
     #sidenav-main .nav-item {
@@ -188,7 +226,26 @@
             document.addEventListener("DOMContentLoaded", initSidebar);
         })();
 
+        function lockSidenavScroll() {
+            const sideCollapse = document.getElementById("sidenav-collapse-main");
+            if (sideCollapse) {
+                sideCollapse.style.display = "block";
+            }
+            const sideMain = document.getElementById("sidenav-main");
+            if (sideMain) {
+                sideMain.scrollTop = 0;
+                sideMain.style.overflow = "hidden";
+                sideMain.classList.remove("ps", "ps--active-y", "ps--active-x");
+                sideMain.querySelectorAll(".ps__rail-y, .ps__rail-x").forEach(function(r) {
+                    r.remove();
+                });
+            }
+        }
+
+        lockSidenavScroll();
+
         document.addEventListener("DOMContentLoaded", function() {
+            lockSidenavScroll();
             const body = document.body;
             const toggleIcon = document.getElementById("sidebarToggleIcon");
             
@@ -208,7 +265,24 @@
                     toggleIcon.classList.add("fa-bars");
                 }
             }
+
+            const sideMain = document.getElementById("sidenav-main");
+            if (sideMain) {
+                sideMain.addEventListener("scroll", function() {
+                    if (this.scrollTop !== 0) this.scrollTop = 0;
+                });
+                sideMain.addEventListener("wheel", function(e) {
+                    const collapse = document.getElementById("sidenav-collapse-main");
+                    if (collapse && !collapse.contains(e.target)) {
+                        collapse.scrollTop += e.deltaY;
+                        e.preventDefault();
+                    }
+                    this.scrollTop = 0;
+                }, { passive: false });
+            }
         });
+
+        window.addEventListener("load", lockSidenavScroll);
 
         // Handle clicking icons when sidebar is collapsed (Event Delegation)
         document.addEventListener("click", function(e) {
@@ -228,7 +302,7 @@
     
     <hr class="horizontal dark mt-0">
 
-    <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
+    <div class="collapse show navbar-collapse w-auto" id="sidenav-collapse-main" style="display: block !important;">
         <ul class="navbar-nav">
 
             <!-- Dashboard -->
@@ -302,6 +376,12 @@
                         <i class="fa-solid fa-concierge-bell"></i>
                     </div>
                     <span class="nav-link-text">Sales Reference</span>
+                </a>
+                <a class="nav-link {{ Request::is('currencies*') ? 'active' : '' }}" href="{{ route('currencies.index') }}">
+                    <div class="icon">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <span class="nav-link-text">Currencies & Rates</span>
                 </a>
             </li>
 

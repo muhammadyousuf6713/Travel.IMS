@@ -20,14 +20,14 @@
                     @include('layouts.footers.auth.footer')
                 </div>
             </main>
-        @elseif (\Request::is('profile'))
-            @include('lay  outs.navbars.auth.sidebar')
+        @elseif (\Request::is('profile*') || \Request::is('user-profile'))
+            @include('layouts.navbars.auth.sidebar')
             <div class="main-content position-relative bg-gray-100 max-height-vh-100 h-100">
                 @include('layouts.navbars.auth.nav')
                 @yield('content')
             </div>
         @elseif (\Request::is('virtual-reality'))
-            @include('layouts.na vbars.auth.nav')
+            @include('layouts.navbars.auth.nav')
             <div class="border-radius-xl mt-3 mx-3 position-relative"
                 style="background-image: url('../assets/img/vr-bg.jpg') ; background-size: cover;">
                 @include('layouts.navbars.auth.sidebar')

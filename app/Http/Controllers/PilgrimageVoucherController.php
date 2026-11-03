@@ -2,22 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\OrganizationSetting;
 use App\Models\PilgrimageBooking;
+use App\Models\OrganizationSetting;
 use App\Models\PilgrimageSetting;
+use App\Models\Currency;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PilgrimageVoucherController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
-     * View or Print Hotel Accommodation Voucher.
+     * Display the official Hajj/Umrah Service Voucher for printing / PDF view.
      */
     public function show($id)
     {
@@ -41,6 +37,7 @@ class PilgrimageVoucherController extends Controller
         $settings = PilgrimageSetting::getSettings();
         $voucherNo = 'HV-' . $booking->crm_id;
         $printDate = Carbon::now();
+        $currencies = Currency::getActiveCurrencies();
 
         return view('pilgrimage.voucher.print', compact(
             'booking',
@@ -48,7 +45,8 @@ class PilgrimageVoucherController extends Controller
             'settings',
             'voucherNo',
             'printDate',
-            'user'
+            'user',
+            'currencies'
         ));
     }
 }

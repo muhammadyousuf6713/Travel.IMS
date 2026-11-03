@@ -211,10 +211,48 @@ $(function () {
         $('#previewSub').text(parts.length ? parts.join(' · ') : 'All inquiries');
     }
 
+    const REP_SESSION_KEY = 'ims_filters_reports_state';
+    function saveReportFilters() {
+        try {
+            sessionStorage.setItem(REP_SESSION_KEY, $('#reportFilterForm').serialize());
+        } catch(e) {}
+    }
+    function restoreReportFilters() {
+        try {
+            const raw = sessionStorage.getItem(REP_SESSION_KEY);
+            if (!raw) return;
+            const params = new URLSearchParams(raw);
+            for (const [key, val] of params.entries()) {
+                const cleanKey = key.replace('[]', '');
+                const $el = $('[name="' + key + '"], [name="' + cleanKey + '[]"], [name="' + cleanKey + '"]');
+                if ($el.length) {
+                    if ($el.is('select[multiple]')) {
+                        const cur = $el.val() || [];
+                        if (!cur.includes(val)) {
+                            cur.push(val);
+                            $el.val(cur).trigger('change.select2');
+                        }
+                    } else if ($el.is('select')) {
+                        $el.val(val).trigger('change.select2');
+                    } else {
+                        $el.val(val);
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+    restoreReportFilters();
+
     let timer;
-    const refresh = () => { clearTimeout(timer); timer = setTimeout(() => table.ajax.reload(), 300); };
+    const refresh = () => { 
+        clearTimeout(timer); 
+        timer = setTimeout(() => {
+            saveReportFilters();
+            table.ajax.reload();
+        }, 300); 
+    };
     $('#reportFilterForm').on('change', 'select, input', refresh);
-    $('#previewBtn').on('click', () => table.ajax.reload());
+    $('#previewBtn').on('click', () => { saveReportFilters(); table.ajax.reload(); });
 
     $('.quick-range').on('click', function () {
         const r = $(this).data('range');
@@ -228,6 +266,7 @@ $(function () {
     });
 
     $('#resetReportFilters').on('click', function () {
+        try { sessionStorage.removeItem(REP_SESSION_KEY); } catch(e) {}
         $('#reportFilterForm')[0].reset();
         $('.select2, .ajax-city-select2').val(null).trigger('change.select2');
         table.ajax.reload();

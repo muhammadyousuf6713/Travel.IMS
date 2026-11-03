@@ -25,11 +25,59 @@
                         <span class="d-sm-inline d-none">Dark Mode</span>
                     </a>
                 </li>
-                <li class="nav-item d-flex align-items-center">
-                    <a href="{{ url('/logout') }}" class="nav-link text-body font-weight-bold px-0">
-                        <i class="fa fa-user me-sm-1"></i>
-                        <span class="d-sm-inline d-none">Sign Out</span>
+                <li class="nav-item dropdown d-flex align-items-center">
+                    <a href="javascript:;" class="nav-link text-body font-weight-bold px-0 dropdown-toggle d-flex align-items-center" id="navbarProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="avatar avatar-xs rounded-circle bg-gradient-dark text-white font-weight-bold d-inline-flex align-items-center justify-content-center me-1" style="width: 28px; height: 28px; font-size: 12px;">
+                            {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                        </div>
+                        <span class="d-sm-inline d-none text-xs font-weight-bold me-1">{{ auth()->user()->name ?? 'User' }}</span>
                     </a>
+                    <ul class="dropdown-menu dropdown-menu-end px-2 py-3 shadow-lg border-0 border-radius-md" aria-labelledby="navbarProfileDropdown" style="min-width: 230px; margin-top: 10px; z-index: 1050;">
+                        <li class="px-2 py-2 mb-2 bg-gray-100 border-radius-md">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar avatar-sm rounded-circle bg-gradient-primary text-white font-weight-bold d-flex align-items-center justify-content-center me-2 shadow-xs" style="width: 36px; height: 36px; font-size: 14px;">
+                                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                                </div>
+                                <div class="d-flex flex-column justify-content-center text-truncate">
+                                    <span class="text-xs font-weight-bolder text-dark mb-0 text-truncate" style="max-width: 150px;">{{ auth()->user()->name }}</span>
+                                    <span class="text-xxs text-secondary mb-1 text-truncate" style="max-width: 150px;">{{ auth()->user()->email }}</span>
+                                    @php
+                                        $userRoleName = auth()->user()->roles->first()->name ?? (auth()->user()->role->name ?? 'Staff');
+                                    @endphp
+                                    <span class="badge bg-white text-dark text-xxs font-weight-bold border align-self-start px-2 py-0">
+                                        {{ $userRoleName }}
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="dropdown-item border-radius-md py-2 d-flex align-items-center" href="{{ route('profile.view') }}">
+                                <i class="fa-solid fa-user me-2 text-primary" style="width: 16px;"></i>
+                                <span class="text-xs font-weight-bold">View Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item border-radius-md py-2 d-flex align-items-center" href="{{ route('profile.edit') }}">
+                                <i class="fa-solid fa-user-pen me-2 text-info" style="width: 16px;"></i>
+                                <span class="text-xs font-weight-bold">Edit Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item border-radius-md py-2 d-flex align-items-center" href="{{ route('profile.password') }}">
+                                <i class="fa-solid fa-key me-2 text-warning" style="width: 16px;"></i>
+                                <span class="text-xs font-weight-bold">Update Password</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider my-2">
+                        </li>
+                        <li>
+                            <a class="dropdown-item border-radius-md py-2 d-flex align-items-center text-danger" href="{{ url('/logout') }}">
+                                <i class="fa-solid fa-arrow-right-from-bracket me-2 text-danger" style="width: 16px;"></i>
+                                <span class="text-xs font-weight-bold">Sign Out</span>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
             </ul>
         </div>

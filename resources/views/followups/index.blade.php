@@ -139,7 +139,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label fw-bold small">Inquiry ID</label>
-                                <input type="text" class="form-control form-control-sm" name="id_inquiry" placeholder="Inquiry ID">
+                                <input type="text" class="form-control form-control-sm" name="id_inquiry" placeholder="e.g. 01, 02, 30">
                             </div>
                         </div>
                         <div class="d-flex justify-content-end gap-2 mt-3">
@@ -396,9 +396,81 @@
                 });
             });
 
-            // Filters
-            $('#filterForm').on('submit', function(e) { e.preventDefault(); table.ajax.reload(); });
-            $('#resetFilters').on('click', function() { $('#filterForm')[0].reset(); table.ajax.reload(); });
+            // Session-based filter persistence for Follow-ups
+            const FOL_SESSION_KEY = 'ims_filters_followups_state';
+
+            function saveFollowupFilters() {
+                try {
+                    var state = {
+                        sales_person: $('select[name="sales_person"]').val() || '',
+                        status: $('select[name="status"]').val() || '',
+                        date_from: $('input[name="date_from"]').val() || '',
+                        date_to: $('input[name="date_to"]').val() || '',
+                        customer_name: $('input[name="customer_name"]').val() || '',
+                        customer_cell: $('input[name="customer_cell"]').val() || '',
+                        id_inquiry: $('input[name="id_inquiry"]').val() || '',
+                        table_search: $('.dataTables_filter input').length ? $('.dataTables_filter input').val() : ''
+                    };
+                    sessionStorage.setItem(FOL_SESSION_KEY, JSON.stringify(state));
+                } catch(e) {}
+            }
+
+            function restoreFollowupFilters() {
+                var urlParams = new URLSearchParams(window.location.search);
+                var hasUrl = urlParams.toString().length > 0;
+                var state = null;
+                if (!hasUrl) {
+                    try {
+                        var raw = sessionStorage.getItem(FOL_SESSION_KEY);
+                        if (raw) state = JSON.parse(raw);
+                    } catch(e) {}
+                }
+
+                var hasActive = false;
+                if (state) {
+                    if (state.sales_person) { $('select[name="sales_person"]').val(state.sales_person).trigger('change.select2'); hasActive = true; }
+                    if (state.status) { $('select[name="status"]').val(state.status).trigger('change.select2'); hasActive = true; }
+                    if (state.date_from) { $('input[name="date_from"]').val(state.date_from); hasActive = true; }
+                    if (state.date_to) { $('input[name="date_to"]').val(state.date_to); hasActive = true; }
+                    if (state.customer_name) { $('input[name="customer_name"]').val(state.customer_name); hasActive = true; }
+                    if (state.customer_cell) { $('input[name="customer_cell"]').val(state.customer_cell); hasActive = true; }
+                    if (state.id_inquiry) { $('input[name="id_inquiry"]').val(state.id_inquiry); hasActive = true; }
+                }
+
+                if (hasActive) {
+                    $('#filterCollapse').show();
+                    $('#filterIcon').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                }
+                return state;
+            }
+
+            var savedFolState = restoreFollowupFilters();
+            if (savedFolState && savedFolState.table_search) {
+                table.search(savedFolState.table_search).draw();
+            }
+
+            // Filters form events
+            $('#filterForm').on('submit', function(e) {
+                e.preventDefault();
+                saveFollowupFilters();
+                table.ajax.reload();
+            });
+
+            $('#filterForm').on('change input', 'input, select', function() {
+                saveFollowupFilters();
+            });
+
+            $(document).on('keyup input search', '.dataTables_filter input', function() {
+                saveFollowupFilters();
+            });
+
+            $('#resetFilters').on('click', function() {
+                try { sessionStorage.removeItem(FOL_SESSION_KEY); } catch(e) {}
+                $('#filterForm')[0].reset();
+                $('#filterForm select').val('').trigger('change.select2');
+                table.search('').draw();
+                table.ajax.reload();
+            });
             $('#toggleFilterBtn').on('click', function() { $('#filterCollapse').slideToggle(200); $('#filterIcon').toggleClass('fa-chevron-down fa-chevron-up'); });
 
             // Follow-up & Progress Modals (Similar to inquiry index)

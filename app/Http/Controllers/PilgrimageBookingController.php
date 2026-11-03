@@ -38,15 +38,67 @@ class PilgrimageBookingController extends Controller
             $query->where('submitting_agent_id', $user->id);
         }
 
-        // Search Filter (CRM ID, Leader Name, Passport No)
+        // Handle Reset Filters
+        if ($request->has('reset_filters')) {
+            session()->forget([
+                'pilgrimage_filter_search',
+                'pilgrimage_filter_status',
+                'pilgrimage_filter_service_type',
+            ]);
+            return redirect()->route('pilgrimage.index');
+        }
+
+        // Remember filters in session or restore when returning
+        if ($request->has('search') || $request->has('status') || $request->has('service_type')) {
+            session([
+                'pilgrimage_filter_search' => $request->search,
+                'pilgrimage_filter_status' => $request->status,
+                'pilgrimage_filter_service_type' => $request->service_type,
+            ]);
+        } elseif (!$request->has('page')) {
+            if ($request->search === null && session()->has('pilgrimage_filter_search') && session('pilgrimage_filter_search') !== null) {
+                $request->merge(['search' => session('pilgrimage_filter_search')]);
+            }
+            if ($request->status === null && session()->has('pilgrimage_filter_status') && session('pilgrimage_filter_status') !== null) {
+                $request->merge(['status' => session('pilgrimage_filter_status')]);
+            }
+            if ($request->service_type === null && session()->has('pilgrimage_filter_service_type') && session('pilgrimage_filter_service_type') !== null) {
+                $request->merge(['service_type' => session('pilgrimage_filter_service_type')]);
+            }
+        }
+
+        // Search Filter (CRM ID, Leader Name, Passport No, or comma-separated CRM IDs e.g. 01, 02, 30)
         if ($request->filled('search')) {
             $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
-                $q->where('crm_id', 'like', "%{$search}%")
-                  ->orWhere('leader_name', 'like', "%{$search}%")
-                  ->orWhere('leader_passport_no', 'like', "%{$search}%")
-                  ->orWhere('leader_contact_no', 'like', "%{$search}%");
-            });
+            if (str_contains($search, ',')) {
+                $rawTokens = preg_split('/[,]+/', $search);
+                $crmTokens = [];
+                foreach ($rawTokens as $tok) {
+                    $c = trim($tok);
+                    if ($c !== '') {
+                        $crmTokens[] = $c;
+                        $cleanedNum = ltrim($c, '#');
+                        if (is_numeric($cleanedNum)) {
+                            $crmTokens[] = (int) $cleanedNum;
+                            $crmTokens[] = (string) $cleanedNum;
+                        }
+                    }
+                }
+                $crmTokens = array_values(array_unique($crmTokens));
+                $query->where(function ($q) use ($crmTokens, $search) {
+                    $q->whereIn('crm_id', $crmTokens);
+                    foreach ($crmTokens as $ct) {
+                        $q->orWhere('crm_id', 'like', "%{$ct}%");
+                    }
+                });
+            } else {
+                $query->where(function ($q) use ($search) {
+                    $q->where('crm_id', 'like', "%{$search}%")
+                      ->orWhere('leader_name', 'like', "%{$search}%")
+                      ->orWhere('leader_passport_no', 'like', "%{$search}%")
+                      ->orWhere('leader_contact_no', 'like', "%{$search}%");
+                });
+            }
         }
 
         // Status Filter

@@ -158,6 +158,93 @@
         .footer-copyright a:hover {
             text-decoration: underline;
         }
+
+        /* Executive Slide Switch ("Slide Radio") */
+        .remember-switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            margin-bottom: 16px;
+        }
+
+        .remember-switch-container:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .remember-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #334155;
+            margin: 0;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remember-label i {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .slide-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            margin: 0;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .slide-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        .slide-switch .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 24px;
+        }
+
+        .slide-switch .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #ffffff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .slide-switch input:checked + .slider {
+            background-color: #0f172a;
+        }
+
+        .slide-switch input:checked + .slider:before {
+            transform: translateX(20px);
+        }
     </style>
 
     <div class="main-container">
@@ -217,6 +304,16 @@
                             @enderror
                         </div>
 
+                        <div class="remember-switch-container" onclick="document.getElementById('remember').click();">
+                            <label class="remember-label" for="remember" onclick="event.stopPropagation();">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span>Remember me on this device</span>
+                            </label>
+                            <label class="slide-switch" for="remember" onclick="event.stopPropagation();">
+                                <input type="checkbox" id="remember" name="remember" value="1" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                         <button type="submit" class="btn btn-login">Sign in</button>
                         
                         <div class="text-center mt-4 pt-4" style="border-top: 1px solid #e2e8f0;">
@@ -232,4 +329,4 @@
             Copyright © {{ date('Y') }} <a href="https://nyrogentechnologies.com" target="_blank" rel="noopener noreferrer">Nyrogen Technologies</a> - Travel Management System
         </div>
     </div>
-@endsectionn
+@endsection

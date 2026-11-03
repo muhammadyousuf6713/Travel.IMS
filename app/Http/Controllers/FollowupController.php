@@ -81,8 +81,23 @@ class FollowupController extends Controller
         if ($v = request('customer_cell')) {
             $query->where('customers.customer_cell', 'like', "%{$v}%");
         }
-        if ($v = request('id_inquiry')) {
-            $query->where('followup_remarks.inquiry_id', $v);
+        if ($rawIdInput = request('id_inquiry')) {
+            $rawTokens = preg_split('/[,]+/', (string) $rawIdInput);
+            $ids = [];
+            foreach ($rawTokens as $tok) {
+                $c = trim(ltrim(trim($tok), '#'));
+                if ($c !== '' && is_numeric($c)) {
+                    $ids[] = (int) $c;
+                }
+            }
+            $ids = array_values(array_unique($ids));
+            if (count($ids) > 1) {
+                $query->whereIn('followup_remarks.inquiry_id', $ids);
+            } elseif (count($ids) === 1) {
+                $query->where('followup_remarks.inquiry_id', $ids[0]);
+            } else {
+                $query->where('followup_remarks.inquiry_id', $rawIdInput);
+            }
         }
 
         // If "Follow-up Today" filter is requested

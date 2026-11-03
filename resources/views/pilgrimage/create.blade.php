@@ -186,8 +186,15 @@
             <div class="card-body p-3">
                 <div id="flightsContainer">
                     <!-- Default Flight Row -->
-                    <div class="flight-row card border border-radius-md p-2 mb-2 bg-light position-relative">
-                        <button type="button" class="btn-close text-dark position-absolute top-0 end-0 m-2 btn-remove-row" style="font-size: 9px;"></button>
+                    <div class="flight-row card border border-radius-md p-3 mb-3 bg-light shadow-none position-relative">
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                            <span class="badge bg-white text-dark text-xxs font-weight-bolder text-uppercase border">
+                                <i class="fa-solid fa-plane-departure text-primary me-1"></i> Flight Segment
+                            </span>
+                            <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Flight">
+                                <i class="fa-solid fa-trash-can me-1"></i> Delete
+                            </button>
+                        </div>
                         <div class="row g-2 align-items-center">
                             <div class="col-md-2">
                                 <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Flight No <span class="text-danger">*</span></label>
@@ -232,8 +239,15 @@
             <div class="card-body p-3">
                 <div id="hotelsContainer">
                     <!-- Default Hotel Row -->
-                    <div class="hotel-row card border border-radius-md p-3 mb-2 bg-white shadow-none position-relative">
-                        <button type="button" class="btn-close text-dark position-absolute top-0 end-0 m-2 btn-remove-row" style="font-size: 9px;"></button>
+                    <div class="hotel-row card border border-radius-md p-3 mb-3 bg-white shadow-none position-relative">
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                            <span class="badge bg-light text-dark text-xxs font-weight-bolder text-uppercase border">
+                                <i class="fa-solid fa-hotel text-primary me-1"></i> Hotel Stay
+                            </span>
+                            <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Hotel">
+                                <i class="fa-solid fa-trash-can me-1"></i> Delete
+                            </button>
+                        </div>
                         <div class="row g-2">
                             <div class="col-md-2">
                                 <label class="form-label text-xxs font-weight-bold text-secondary mb-1">City <span class="text-danger">*</span></label>
@@ -355,9 +369,16 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('btnAddPilgrim').addEventListener('click', function () {
         pilgrimCount++;
         const row = document.createElement('div');
-        row.className = 'pilgrim-row card border border-radius-md p-2 mb-2 bg-light position-relative';
+        row.className = 'pilgrim-row card border border-radius-md p-3 mb-3 bg-light shadow-none position-relative';
         row.innerHTML = `
-            <button type="button" class="btn-close text-dark position-absolute top-0 end-0 m-2 btn-remove-row" style="font-size: 9px;"></button>
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                <span class="badge bg-white text-dark text-xxs font-weight-bolder text-uppercase border">
+                    <i class="fa-solid fa-user-plus text-primary me-1"></i> Co-Traveler #${pilgrimCount}
+                </span>
+                <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Traveler">
+                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Full Name <span class="text-danger">*</span></label>
@@ -391,9 +412,16 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('btnAddFlight').addEventListener('click', function () {
         flightCount++;
         const row = document.createElement('div');
-        row.className = 'flight-row card border border-radius-md p-2 mb-2 bg-light position-relative';
+        row.className = 'flight-row card border border-radius-md p-3 mb-3 bg-light shadow-none position-relative';
         row.innerHTML = `
-            <button type="button" class="btn-close text-dark position-absolute top-0 end-0 m-2 btn-remove-row" style="font-size: 9px;"></button>
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                <span class="badge bg-white text-dark text-xxs font-weight-bolder text-uppercase border">
+                    <i class="fa-solid fa-plane-departure text-primary me-1"></i> Flight Segment #${flightCount}
+                </span>
+                <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Flight">
+                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
             <div class="row g-2 align-items-center">
                 <div class="col-md-2">
                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Flight No <span class="text-danger">*</span></label>
@@ -427,9 +455,16 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('btnAddHotel').addEventListener('click', function () {
         hotelCount++;
         const row = document.createElement('div');
-        row.className = 'hotel-row card border border-radius-md p-3 mb-2 bg-white shadow-none position-relative';
+        row.className = 'hotel-row card border border-radius-md p-3 mb-3 bg-white shadow-none position-relative';
         row.innerHTML = `
-            <button type="button" class="btn-close text-dark position-absolute top-0 end-0 m-2 btn-remove-row" style="font-size: 9px;"></button>
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                <span class="badge bg-light text-dark text-xxs font-weight-bolder text-uppercase border">
+                    <i class="fa-solid fa-hotel text-primary me-1"></i> Hotel Stay #${hotelCount}
+                </span>
+                <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Hotel">
+                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
             <div class="row g-2">
                 <div class="col-md-2">
                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">City <span class="text-danger">*</span></label>
@@ -503,9 +538,16 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('btnAddCustomLeg').addEventListener('click', function () {
         customCount++;
         const row = document.createElement('div');
-        row.className = 'custom-leg-row card border border-radius-md p-2 mb-2 bg-light position-relative';
+        row.className = 'custom-leg-row card border border-radius-md p-3 mb-3 bg-light shadow-none position-relative';
         row.innerHTML = `
-            <button type="button" class="btn-close text-dark position-absolute top-0 end-0 m-2 btn-remove-row" style="font-size: 9px;"></button>
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                <span class="badge bg-white text-dark text-xxs font-weight-bolder text-uppercase border">
+                    <i class="fa-solid fa-train text-primary me-1"></i> Extra Service / Transfer #${customCount}
+                </span>
+                <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Service">
+                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Service Title <span class="text-danger">*</span></label>
@@ -532,8 +574,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.addEventListener('click', function (e) {
-        if (e.target.classList.contains('btn-remove-row')) {
-            const card = e.target.closest('.pilgrim-row, .flight-row, .hotel-row, .custom-leg-row');
+        const btn = e.target.closest('.btn-remove-row');
+        if (btn) {
+            const card = btn.closest('.pilgrim-row, .flight-row, .hotel-row, .custom-leg-row');
             if (card) {
                 card.remove();
                 updatePaxCount();

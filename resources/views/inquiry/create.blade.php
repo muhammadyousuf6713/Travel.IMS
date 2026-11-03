@@ -299,13 +299,9 @@
                                             @endforelse
                                         </select>
                                     </div>
-                                    <div class="rmv_service col-lg-6 mg-t-20 mg-lg-t-0 d-none">
-                                        <div class="form-group" style="display: nosne;">
-                                            <label class="form-label">Sub
-                                                Services:</label>
-                                            <select style="width: 100%" name="sub_services[]" id="sub_services"
-                                                class="js-example-basic-multiple service_dis" multiple="multiple">
-                                                <option>Select Sub Service</option>
+                                    <div class="rmv_service col-lg-6 mg-t-20 mg-lg-t-0" style="display: none !important;">
+                                        <div class="form-group" style="display: none !important;">
+                                            <select style="display: none !important;" name="sub_services[]" id="sub_services" multiple="multiple">
                                             </select>
                                         </div>
                                     </div>
@@ -1097,22 +1093,11 @@
                 var val = $(this).val();
                 var val_text = $("#services option:selected").text();
                 var val_text_res = $.trim(val_text);
-                $.ajax({
-                    url: "{{ url('get_sub_services') }}/" + val,
-                    type: "GET",
-                    success: function(data) {
-                        $('#sub_services').html(data);
-                        // Make sub_services visible once it's populated
-                        $('#sub_services').closest('.d-none').removeClass('d-none');
-                        
-                        $('#inquiry_type  option').each(function(element) {
-                            var get_text = $(this).text()
-                            var get_text_res = $.trim($(this).text())
-                            if (get_text_res == val_text_res) {
-                                exists = true;
-                                $(this).attr('selected', true);
-                            }
-                        });
+                
+                $('#inquiry_type option').each(function() {
+                    var get_text_res = $.trim($(this).text());
+                    if (get_text_res == val_text_res) {
+                        $(this).prop('selected', true);
                     }
                 });
             });

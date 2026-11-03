@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-
 class SessionsController extends Controller
 {
     public function create()
@@ -16,26 +15,24 @@ class SessionsController extends Controller
     public function store()
     {
         $attributes = request()->validate([
-            'email'=>'required|email',
-            'password'=>'required' 
+            'email' => 'required|email',
+            'password' => 'required',
         ]);
 
-        if(Auth::attempt($attributes))
-        {
-            session()->regenerate();
-            return redirect('inquiry')->with(['success'=>'You are logged in.']);
-        }
-        else{
+        $remember = request()->has('remember') ? (bool) request('remember') : true;
 
-            return back()->withErrors(['email'=>'Email or password invalid.']);
+        if (Auth::attempt($attributes, $remember)) {
+            session()->regenerate();
+            return redirect('inquiry')->with(['success' => 'You are logged in.']);
+        } else {
+            return back()->withErrors(['email' => 'Email or password invalid.']);
         }
     }
-    
+
     public function destroy()
     {
-
         Auth::logout();
 
-        return redirect('/login')->with(['success'=>'You\'ve been logged out.']);
+        return redirect('/login')->with(['success' => "You've been logged out."]);
     }
 }
