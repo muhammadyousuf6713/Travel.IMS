@@ -19,6 +19,11 @@ class OrganizationSetting extends Model
         'email',
         'phone',
         'address',
-        'city'
+        'city',
+        'logo_height',
+        'logo_width',
+        'logo_padding',
+        'logo_margin_top',
+        'logo_margin_bottom'
     ];
 }

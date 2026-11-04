@@ -1,4 +1,4 @@
-@can('Sidebar')
+@if(Auth::check())
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
 <style>
@@ -165,10 +165,10 @@
 
 <aside class="card sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3"
     id="sidenav-main">
-    <div class="sidenav-header d-flex align-items-center position-relative">
-        <a class="navbar-brand m-0 d-flex align-items-center justify-content-center mx-auto" href="{{ url('dashboard') }}" style="z-index: 1;">
+    <div class="sidenav-header d-flex align-items-center position-relative" style="min-height: {{ max(70, ($orgSetting->logo_height ?? 55) + 15) }}px; height: auto; padding: 8px 12px;">
+        <a class="navbar-brand m-0 d-flex align-items-center justify-content-center mx-auto" href="{{ url('dashboard') }}" style="z-index: 1; margin-top: {{ $orgSetting->logo_margin_top ?? 0 }}px !important; margin-bottom: {{ $orgSetting->logo_margin_bottom ?? 0 }}px !important;">
             @if(!empty($orgSetting) && $orgSetting->logo)
-                <img src="{{ asset($orgSetting->logo) }}" style="max-height: 18vh !important; width: auto;" alt="main_logo">
+                <img src="{{ asset($orgSetting->logo) }}" style="max-height: {{ $orgSetting->logo_height ?? 55 }}px !important; max-width: {{ $orgSetting->logo_width ?? 180 }}px !important; padding: {{ $orgSetting->logo_padding ?? 4 }}px !important; object-fit: contain !important; transition: all 0.2s ease;" alt="main_logo">
             @else
                 <!-- <img src="{{ asset('assets/img/logo-ct.png') }}" style="max-height: 50px !important; width: auto;" alt="main_logo"> -->
                 <span class="ms-1 font-weight-bold sidenav-text">{{ $orgSetting->name ?? 'Travel IMS' }}</span>
@@ -325,6 +325,7 @@
                     </div>
                     <span class="nav-link-text">Customers</span>
                 </a>
+                @can('Inquiry list')
                 <a class="nav-link {{ Request::is('inquiry') ? 'active' : '' }}" href="{{ url('inquiry') }}">
                     <div class="icon">
                         <i class="fa-solid fa-question-circle"></i>
@@ -337,6 +338,7 @@
                     </div>
                     <span class="nav-link-text">Follow-up List</span>
                 </a>
+                @endcan
                 @can('Reviews list')
                 <a class="nav-link {{ Request::is('reviews*') ? 'active' : '' }}" href="{{ route('reviews.index') }}">
                     <div class="icon">
@@ -345,14 +347,17 @@
                     <span class="nav-link-text">Reviews</span>
                 </a>
                 @endcan
+                @can('Pilgrimage list')
                 <a class="nav-link {{ Request::is('pilgrimage*') ? 'active' : '' }}" href="{{ route('pilgrimage.index') }}">
                     <div class="icon">
                         <i class="fa-solid fa-map-location-dot"></i>
                     </div>
                     <span class="nav-link-text">Pilgrimage & Itinerary</span>
                 </a>
+                @endcan
             </li>
 
+            @can('view reports')
             <!-- Reports -->
             <li class="nav-item">
                 <a class="nav-link {{ Request::is('reports') ? 'active' : '' }}" href="{{ route('reports.index') }}">
@@ -362,33 +367,40 @@
                     <span class="nav-link-text">Reports</span>
                 </a>
             </li>
+            @endcan
             <!-- Preferences -->
             <li class="nav-item mt-3">
                 <h6 class="ps-4 text-uppercase">Preferences</h6>
+                @can('Inquiry Type list')
                 <a class="nav-link {{ Request::is('inquiry-type') ? 'active' : '' }}" href="{{ url('inquiry-type') }}">
                     <div class="icon">
                         <i class="fa-solid fa-list"></i>
                     </div>
                     <span class="nav-link-text">Inquiry Types</span>
                 </a>
+                @endcan
+                @can('Sales References list')
                 <a class="nav-link {{ Request::is('sales-reference') ? 'active' : '' }}" href="{{ url('sales-reference') }}">
                     <div class="icon">
                         <i class="fa-solid fa-concierge-bell"></i>
                     </div>
                     <span class="nav-link-text">Sales Reference</span>
                 </a>
+                @endcan
+                @can('Currencies list')
                 <a class="nav-link {{ Request::is('currencies*') ? 'active' : '' }}" href="{{ route('currencies.index') }}">
                     <div class="icon">
                         <i class="fa-solid fa-coins"></i>
                     </div>
                     <span class="nav-link-text">Currencies & Rates</span>
                 </a>
+                @endcan
             </li>
 
             <!-- Admin -->
             <li class="nav-item mt-3">
                 <h6 class="ps-4 text-uppercase">Administration</h6>
-                @can('Customers list')
+                @can('Users Management list')
                     <a class="nav-link {{ Request::is('user-management') ? 'active' : '' }}" href="{{ url('user-management') }}">
                         <div class="icon">
                             <i class="fa-solid fa-user-shield"></i>
@@ -396,24 +408,30 @@
                         <span class="nav-link-text">User Management</span>
                     </a>
                 @endcan
+                @can('Organization Settings edit')
                 <a class="nav-link {{ Request::is('organization-settings') ? 'active' : '' }}" href="{{ route('organization_settings.edit') }}">
                     <div class="icon">
                         <i class="fa-solid fa-building"></i>
                     </div>
                     <span class="nav-link-text">Organization Settings</span>
                 </a>
+                @endcan
+                @can('Super-Admin')
                 <a class="nav-link {{ Request::is('system-integration-settings*') ? 'active' : '' }}" href="{{ route('integration_settings.edit') }}">
                     <div class="icon">
                         <i class="fa-solid fa-sliders"></i>
                     </div>
                     <span class="nav-link-text">Integration Settings</span>
                 </a>
+                @endcan
+                @can('Roles Management list')
                 <a class="nav-link {{ Request::is('roles') ? 'active' : '' }}" href="{{ url('roles') }}">
                     <div class="icon">
                         <i class="fa-solid fa-user-tag"></i>
                     </div>
                     <span class="nav-link-text">Roles Management</span>
                 </a>
+                @endcan
                 @can('Super-Admin')
                     <a class="nav-link {{ Request::is('permission') ? 'active' : '' }}" href="{{ url('permission') }}">
                         <div class="icon">
@@ -427,4 +445,4 @@
         </ul>
     </div>
 </aside>
-@endcan
+@endif

@@ -34,10 +34,10 @@ use Illuminate\Support\Facades\Route;
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/', [HomeController::class, 'home']);
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('reports/data', [ReportController::class, 'getData'])->name('reports.data');
-    Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
-    Route::get('reports/count', [ReportController::class, 'count'])->name('reports.count');
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware(['permission:view reports']);
+    Route::get('reports/data', [ReportController::class, 'getData'])->name('reports.data')->middleware(['permission:view reports']);
+    Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export')->middleware(['permission:view reports']);
+    Route::get('reports/count', [ReportController::class, 'count'])->name('reports.count')->middleware(['permission:view reports']);
 
     Route::get('billing', function () {
         return view('billing');
@@ -94,9 +94,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/edit_inquiry/{id}', [InquiryController::class, 'edit'])->name('edit_inquiry')->middleware(['permission:Inquiry edit']);
     Route::post('/update_inquiry/{id}', [InquiryController::class, 'update'])->name('update_inquiry')->middleware(['permission:Inquiry edit']);
     Route::post('/inquiry/delete/{id}', [InquiryController::class, 'destroy'])->name('delete_inquiry')->middleware(['permission:Inquiry delete']);
-    Route::get('/inquiry/upload', [InquiryController::class, 'uploadView'])->name('csv.upload.view');
-    Route::get('/inquiry/csv-template', [InquiryController::class, 'downloadTemplate'])->name('csv.template.download');
-    Route::post('/inquiry/upload', [InquiryController::class, 'uploadCSV'])->name('csv.upload');
+    Route::get('/inquiry/upload', [InquiryController::class, 'uploadView'])->name('csv.upload.view')->middleware(['permission:Inquiry add']);
+    Route::get('/inquiry/csv-template', [InquiryController::class, 'downloadTemplate'])->name('csv.template.download')->middleware(['permission:Inquiry add']);
+    Route::post('/inquiry/upload', [InquiryController::class, 'uploadCSV'])->name('csv.upload')->middleware(['permission:Inquiry add']);
 
 
     Route::get('/get_followup_details/{id}', [AjaxController::class, 'get_followup_details']);
@@ -104,57 +104,56 @@ Route::group(['middleware' => 'auth'], function () {
     // Route::get('/inquiry_edit/{inquiry_id}', [InquiryController::class, 'edit_inquiry_index']);
     Route::get('/inquiry_ajax_list', [InquiryController::class, 'getdata']);
     Route::get('/inquiry_test/create', [InquiryController::class, 'create_test']);
-    Route::post('/inquiry/store', [InquiryController::class, 'store']);
+    Route::post('/inquiry/store', [InquiryController::class, 'store'])->middleware(['permission:Inquiry add']);
     Route::post('/add_inquiry_remarks', [InquiryController::class, 'add_inquiry_remarks']);
     Route::post('/add_followup_remarks', [InquiryController::class, 'add_followup_remarks']);
     Route::get('/get_follow_up/{id}', [InquiryController::class, 'get_follow_up']);
-    Route::post('/inquiry_edit_update', [InquiryController::class, 'inquiry_edit_update']);
+    Route::post('/inquiry_edit_update', [InquiryController::class, 'inquiry_edit_update'])->middleware(['permission:Inquiry edit']);
     Route::get('/append_services_edit/{inq_id}', [InquiryController::class, 'append_services_edit']);
     Route::get('/get_sub_services/{id}', [AjaxController::class, 'get_sub_services'])->name('get_sub_services');
     Route::get('/get_sub_services_id/{id}/{inq_id}', [AjaxController::class, 'get_sub_services_id']);
     Route::get('/add_more_services/{count}', [AjaxController::class, 'add_more_services'])->name('add_more_services');
     Route::get('/add_more_services_users/{count}', [AjaxController::class, 'add_more_services_users'])->name('add_more_services_users');
     Route::get('/get_campaign_data/{id}', [AjaxController::class, 'get_campaign_data'])->name('get_campaign_data');
-    Route::get('/follow_up/{id}', [InquiryController::class, 'follow_up']);
+    Route::get('/follow_up/{id}', [InquiryController::class, 'follow_up'])->middleware(['permission:Inquiry list']);
     Route::post('add_progress_remark', [App\Http\Controllers\InquiryController::class, 'add_progress_remark']);
     Route::get('get_progress_remarks/{id}', [App\Http\Controllers\InquiryController::class, 'get_progress_remarks']);
-    Route::post('update_sales_person', [App\Http\Controllers\InquiryController::class, 'updateSalesPerson']);
-    Route::post('bulk_update_sales_person', [App\Http\Controllers\InquiryController::class, 'bulkUpdateSalesPerson']);
+    Route::post('update_sales_person', [App\Http\Controllers\InquiryController::class, 'updateSalesPerson'])->middleware(['permission:Inquiry edit']);
+    Route::post('bulk_update_sales_person', [App\Http\Controllers\InquiryController::class, 'bulkUpdateSalesPerson'])->middleware(['permission:Inquiry edit']);
 
-    Route::get('/create_quotation/{id}', [QuotationController::class, 'create_quotation']);
+    Route::get('/create_quotation/{id}', [QuotationController::class, 'create_quotation'])->middleware(['permission:Inquiry edit']);
     Route::get('autocomplete_country', [AjaxController::class, 'autocomplete'])->name('autocomplete_country');
     Route::get('autocomplete_city', [AjaxController::class, 'autocomplete_city'])->name('autocomplete_city');
 
 
-    Route::get('user-management', [UsersController::class, 'index']);
-    Route::get('users/create', [UsersController::class, 'create']);
-    Route::post('users/store', [UsersController::class, 'store']);
-    Route::get('users/edit/{id}', [UsersController::class, 'edit']);
-    Route::post('users/update/{id}', [UsersController::class, 'update']);
-    Route::delete('users/delete/{id}', [UsersController::class, 'destroy']);
+    // User Management
+    Route::get('user-management', [UsersController::class, 'index'])->middleware(['permission:Users Management list']);
+    Route::get('users/create', [UsersController::class, 'create'])->middleware(['permission:Users Management add']);
+    Route::post('users/store', [UsersController::class, 'store'])->middleware(['permission:Users Management add']);
+    Route::get('users/edit/{id}', [UsersController::class, 'edit'])->middleware(['permission:Users Management edit']);
+    Route::post('users/update/{id}', [UsersController::class, 'update'])->middleware(['permission:Users Management edit']);
+    Route::delete('users/delete/{id}', [UsersController::class, 'destroy'])->middleware(['permission:Users Management delete']);
 
-    // Roles
+    // Roles Management
     Route::group(['prefix' => 'roles', 'middleware' => ['auth']], function () {
-        Route::get('', [RoleController::class, 'index']);
-        Route::get('/add', [RoleController::class, 'create']);
-        Route::post('/store/', [RoleController::class, 'store']);
-        Route::get('/edit/{id}', [RoleController::class, 'edit']);
-        Route::post('/edit/{id}', [RoleController::class, 'update']);
-        Route::post('/delete', [RoleController::class, 'destroy']);
+        Route::get('', [RoleController::class, 'index'])->middleware(['permission:Roles Management list']);
+        Route::get('/add', [RoleController::class, 'create'])->middleware(['permission:Roles Management add']);
+        Route::post('/store', [RoleController::class, 'store'])->middleware(['permission:Roles Management add']);
+        Route::get('/edit/{id}', [RoleController::class, 'edit'])->middleware(['permission:Roles Management edit']);
+        Route::post('/edit/{id}', [RoleController::class, 'update'])->middleware(['permission:Roles Management edit']);
+        Route::post('/delete', [RoleController::class, 'destroy'])->middleware(['permission:Roles Management delete']);
     });
 
-    // create permission
+    // Permission Management (Super-Admin only)
     Route::prefix('permission')->middleware(['permission:Super-Admin'])->group(function () {
-        Route::get('/', [PermissionController::class, 'index'])->name('permission.index');  // List permission
-        Route::get('/create', [PermissionController::class, 'create'])->name('permission.create');  // Create form
+        Route::get('/', [PermissionController::class, 'index'])->name('permission.index');
+        Route::get('/create', [PermissionController::class, 'create'])->name('permission.create');
         Route::get('/get-sub-modules', [PermissionController::class, 'getSubModules'])->name('get.sub.modules');
-        Route::post('/', [PermissionController::class, 'store'])->name('permission.store');  // Store permission
-        Route::get('/{permission}/edit', [PermissionController::class, 'edit'])->name('permission.edit');  // Edit form
-        Route::put('/{permission}', [PermissionController::class, 'update'])->name('permission.update');  // Update permission
-        Route::delete('/{permission}', [PermissionController::class, 'destroy'])->name('permission.destroy');  // Delete permission
+        Route::post('/', [PermissionController::class, 'store'])->name('permission.store');
+        Route::get('/{permission}/edit', [PermissionController::class, 'edit'])->name('permission.edit');
+        Route::put('/{permission}', [PermissionController::class, 'update'])->name('permission.update');
+        Route::delete('/{permission}', [PermissionController::class, 'destroy'])->name('permission.destroy');
     });
-
-    // Aslam Work
 
     // Inquiry Type
     Route::get('/inquiry-type', [InquirytypesController::class, 'index'])->middleware(['permission:Inquiry Type list']);
@@ -164,7 +163,6 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('inquiry-type/update/{id}', [InquirytypesController::class, 'update'])->middleware(['permission:Inquiry Type edit']);
     Route::delete('/inquiry-type/delete/{id}', [InquirytypesController::class, 'destroy'])->name('inquiry-type.destroy')->middleware(['permission:Inquiry Type delete']);
 
-    // SalesReference
     // Sales References
     Route::get('/sales-reference', [SalesReferenceController::class, 'index'])->middleware(['permission:Sales References list']);
     Route::get('sales-reference/create', [SalesReferenceController::class, 'create'])->middleware(['permission:Sales References add']);
@@ -174,10 +172,10 @@ Route::group(['middleware' => 'auth'], function () {
     Route::delete('sales-reference/delete/{id}', [SalesReferenceController::class, 'destroy'])->middleware(['permission:Sales References delete'])->name('sales-reference.destroy');
 
     // Currencies & Exchange Rates
-    Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
-    Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store');
-    Route::put('/currencies/{id}', [CurrencyController::class, 'update'])->name('currencies.update');
-    Route::delete('/currencies/{id}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
+    Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index')->middleware(['permission:Currencies list']);
+    Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store')->middleware(['permission:Currencies edit']);
+    Route::put('/currencies/{id}', [CurrencyController::class, 'update'])->name('currencies.update')->middleware(['permission:Currencies edit']);
+    Route::delete('/currencies/{id}', [CurrencyController::class, 'destroy'])->name('currencies.destroy')->middleware(['permission:Currencies edit']);
     Route::get('/currencies/rates-json', [CurrencyController::class, 'ratesJson'])->name('currencies.rates');
 
     // Services
@@ -188,48 +186,46 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('services/update/{id}', [ServiceController::class, 'update'])->middleware(['permission:Services edit']);
     Route::delete('services/delete/{id}', [ServiceController::class, 'destroy'])->name('services.destroy')->middleware(['permission:Services delete']);
 
-    // asign permission to role
-    Route::get('roles/permission/{id?}', [PermissionController::class, 'permission_index']);
-    Route::post('roles/permission/{role_id}', [PermissionController::class, 'assignPermissions']);
+    // Assign permission to role
+    Route::get('roles/permission/{id?}', [PermissionController::class, 'permission_index'])->middleware(['permission:Roles Permissions list']);
+    Route::post('roles/permission/{role_id}', [PermissionController::class, 'assignPermissions'])->middleware(['permission:Roles Permissions edit']);
 
     // Other Services
-    Route::get('/other_services', [OtherServiceController::class, 'index']);
-    Route::get('/other_services/edit/{id}', [OtherServiceController::class, 'edit']);
-    Route::get('/other_services/create', [OtherServiceController::class, 'create']);
-    Route::post('/other_services/store', [OtherServiceController::class, 'store']);
-    Route::post('/other_services/update/{id}', [OtherServiceController::class, 'update']);
-    Route::post('/other_services/delete/{id}', [OtherServiceController::class, 'destroy']);
+    Route::get('/other_services', [OtherServiceController::class, 'index'])->middleware(['permission:Services list']);
+    Route::get('/other_services/edit/{id}', [OtherServiceController::class, 'edit'])->middleware(['permission:Services edit']);
+    Route::get('/other_services/create', [OtherServiceController::class, 'create'])->middleware(['permission:Services add']);
+    Route::post('/other_services/store', [OtherServiceController::class, 'store'])->middleware(['permission:Services add']);
+    Route::post('/other_services/update/{id}', [OtherServiceController::class, 'update'])->middleware(['permission:Services edit']);
+    Route::post('/other_services/delete/{id}', [OtherServiceController::class, 'destroy'])->middleware(['permission:Services delete']);
 
-    Route::get('/followups', [App\Http\Controllers\FollowupController::class, 'index'])->name('followups.index');
-    Route::get('/get-followups-data', [App\Http\Controllers\FollowupController::class, 'getData'])->name('followups.data');
+    // Follow-ups
+    Route::get('/followups', [App\Http\Controllers\FollowupController::class, 'index'])->name('followups.index')->middleware(['permission:Inquiry list']);
+    Route::get('/get-followups-data', [App\Http\Controllers\FollowupController::class, 'getData'])->name('followups.data')->middleware(['permission:Inquiry list']);
 
     // Pilgrimage & Dynamic Itinerary Operations Suite
     Route::prefix('pilgrimage')->name('pilgrimage.')->group(function () {
-        Route::get('/', [PilgrimageBookingController::class, 'index'])->name('index');
-        Route::get('/create', [PilgrimageBookingController::class, 'create'])->name('create');
-        Route::post('/store', [PilgrimageBookingController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [PilgrimageBookingController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [PilgrimageBookingController::class, 'update'])->name('update');
-        Route::delete('/{id}', [PilgrimageBookingController::class, 'destroy'])->name('destroy');
+        Route::get('/', [PilgrimageBookingController::class, 'index'])->name('index')->middleware(['permission:Pilgrimage list']);
+        Route::get('/create', [PilgrimageBookingController::class, 'create'])->name('create')->middleware(['permission:Pilgrimage create']);
+        Route::post('/store', [PilgrimageBookingController::class, 'store'])->name('store')->middleware(['permission:Pilgrimage create']);
+        Route::get('/{id}/edit', [PilgrimageBookingController::class, 'edit'])->name('edit')->middleware(['permission:Pilgrimage edit']);
+        Route::put('/{id}', [PilgrimageBookingController::class, 'update'])->name('update')->middleware(['permission:Pilgrimage edit']);
+        Route::delete('/{id}', [PilgrimageBookingController::class, 'destroy'])->name('destroy')->middleware(['permission:Pilgrimage delete']);
 
         // Interactive AJAX Modal & Leg Status Toggle
-        Route::get('/{id}/modal-details', [PilgrimageBookingController::class, 'getDetailModal'])->name('modal.details');
-        Route::post('/legs/{legId}/toggle-status', [PilgrimageBookingController::class, 'toggleLegStatus'])->name('legs.toggle');
+        Route::get('/{id}/modal-details', [PilgrimageBookingController::class, 'getDetailModal'])->name('modal.details')->middleware(['permission:Pilgrimage list']);
+        Route::post('/legs/{legId}/toggle-status', [PilgrimageBookingController::class, 'toggleLegStatus'])->name('legs.toggle')->middleware(['permission:Pilgrimage edit']);
 
         // Hotel Accommodation Voucher (PDF / Print View)
-        Route::get('/{id}/voucher', [PilgrimageVoucherController::class, 'show'])->name('voucher.show');
+        Route::get('/{id}/voucher', [PilgrimageVoucherController::class, 'show'])->name('voucher.show')->middleware(['permission:Pilgrimage list']);
     });
 
     // System Integration Settings & Auto Lead Assignment Module
-    Route::get('/system-integration-settings', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'edit'])->name('integration_settings.edit');
-    Route::post('/system-integration-settings', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'update'])->name('integration_settings.update');
-    Route::post('/system-integration-settings/regenerate-api-key', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'regenerateApiKey'])->name('integration_settings.regenerate_key');
-    Route::post('/system-integration-settings/simulate-lead', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'simulateLead'])->name('integration_settings.simulate_lead');
+    Route::get('/system-integration-settings', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'edit'])->name('integration_settings.edit')->middleware(['permission:Super-Admin']);
+    Route::post('/system-integration-settings', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'update'])->name('integration_settings.update')->middleware(['permission:Super-Admin']);
+    Route::post('/system-integration-settings/regenerate-api-key', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'regenerateApiKey'])->name('integration_settings.regenerate_key')->middleware(['permission:Super-Admin']);
+    Route::post('/system-integration-settings/simulate-lead', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'simulateLead'])->name('integration_settings.simulate_lead')->middleware(['permission:Super-Admin']);
 
 });
-
-
-
 
 Route::group(['middleware' => 'guest'], function () {
     Route::get('/login', [SessionsController::class, 'create']);
@@ -244,10 +240,10 @@ Route::get('/login', function () {
     return view('session/login-session');
 })->name('login');
 
-// Organization settings: login required
+// Organization settings: login required & permission
 Route::middleware('auth')->group(function () {
-    Route::get('organization-settings', 'App\Http\Controllers\OrganizationSettingController@edit')->name('organization_settings.edit');
-    Route::post('organization-settings', 'App\Http\Controllers\OrganizationSettingController@update')->name('organization_settings.update');
+    Route::get('organization-settings', 'App\Http\Controllers\OrganizationSettingController@edit')->name('organization_settings.edit')->middleware(['permission:Organization Settings edit']);
+    Route::post('organization-settings', 'App\Http\Controllers\OrganizationSettingController@update')->name('organization_settings.update')->middleware(['permission:Organization Settings edit']);
 });
 
 // Reviews module: customer reviews for completed inquiries

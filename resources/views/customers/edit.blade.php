@@ -51,7 +51,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label class="form-control-label">Customer Type</label>
-                                <select name="customer_type" class="form-control" required>
+                                <select name="customer_type" class="form-control no-select2" required>
                                     <option value="Individual" {{ $customer->customer_type == 'Individual' ? 'selected' : '' }}>Individual</option>
                                     <option value="Group" {{ $customer->customer_type == 'Group' ? 'selected' : '' }}>Group</option>
                                     <option value="Corporate" {{ $customer->customer_type == 'Corporate' ? 'selected' : '' }}>Corporate</option>

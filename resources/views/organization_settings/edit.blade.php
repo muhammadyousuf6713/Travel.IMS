@@ -67,11 +67,11 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="city" class="form-control-label">City</label>
-                                <select class="form-control select2-city" id="city" name="city" style="width: 100%;">
+                                <select class="form-control ajax-city-select2" id="city" name="city" data-placeholder="Search City..." style="width: 100%;">
                                     <option value="">Select City</option>
-                                    @foreach($cities as $c)
-                                        <option value="{{ $c->name }}" {{ $setting->city == $c->name ? 'selected' : '' }}>{{ $c->name }}</option>
-                                    @endforeach
+                                    @if(!empty($setting->city))
+                                        <option value="{{ $setting->city }}" selected>{{ $setting->city }}</option>
+                                    @endif
                                 </select>
                             </div>
                         </div>
@@ -84,7 +84,7 @@
                                 <input class="form-control" type="file" id="logo" name="logo" accept="image/*">
                                 @if($setting->logo)
                                     <div class="mt-2">
-                                        <img src="{{ asset($setting->logo) }}" alt="Logo" class="img-fluid rounded border shadow-sm" style="max-height: 150px;">
+                                        <img src="{{ asset($setting->logo) }}" alt="Logo" class="img-fluid rounded border shadow-sm" style="max-height: 120px;">
                                     </div>
                                 @endif
                             </div>
@@ -95,7 +95,7 @@
                                 <input class="form-control" type="file" id="login_bg" name="login_bg" accept="image/*">
                                 @if($setting->login_bg)
                                     <div class="mt-2">
-                                        <img src="{{ asset($setting->login_bg) }}" alt="Login Bg" class="img-fluid rounded border shadow-sm" style="max-height: 150px;">
+                                        <img src="{{ asset($setting->login_bg) }}" alt="Login Bg" class="img-fluid rounded border shadow-sm" style="max-height: 120px;">
                                     </div>
                                 @endif
                             </div>
@@ -110,6 +110,56 @@
                                     </div>
                                 @endif
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar Logo Custom Styling Controls -->
+                    <div class="card mt-4 border border-light shadow-xs bg-gray-100">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fa fa-sliders text-primary me-2"></i>
+                                <h6 class="mb-0 text-dark fw-bold">Sidebar Logo Sizing & Spacing Adjustments</h6>
+                            </div>
+                            <p class="text-xs text-muted mb-3">Adjust these settings to perfectly size and center your logo in the left sidebar without touching any code.</p>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-3 col-6">
+                                    <label class="form-label text-xs fw-bold">Max Height (px)</label>
+                                    <input type="number" name="logo_height" id="logo_height_input" class="form-control form-control-sm" value="{{ $setting->logo_height ?? 55 }}" min="30" max="150" placeholder="55">
+                                    <span class="text-xxs text-muted">Default: 55px</span>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <label class="form-label text-xs fw-bold">Max Width (px)</label>
+                                    <input type="number" name="logo_width" id="logo_width_input" class="form-control form-control-sm" value="{{ $setting->logo_width ?? 180 }}" min="50" max="250" placeholder="180">
+                                    <span class="text-xxs text-muted">Default: 180px</span>
+                                </div>
+                                <div class="col-md-2 col-4">
+                                    <label class="form-label text-xs fw-bold">Padding (px)</label>
+                                    <input type="number" name="logo_padding" id="logo_padding_input" class="form-control form-control-sm" value="{{ $setting->logo_padding ?? 4 }}" min="0" max="30" placeholder="4">
+                                    <span class="text-xxs text-muted">Default: 4px</span>
+                                </div>
+                                <div class="col-md-2 col-4">
+                                    <label class="form-label text-xs fw-bold">Margin Top (px)</label>
+                                    <input type="number" name="logo_margin_top" id="logo_margin_top_input" class="form-control form-control-sm" value="{{ $setting->logo_margin_top ?? 0 }}" min="-30" max="50" placeholder="0">
+                                    <span class="text-xxs text-muted">Default: 0px</span>
+                                </div>
+                                <div class="col-md-2 col-4">
+                                    <label class="form-label text-xs fw-bold">Margin Bottom (px)</label>
+                                    <input type="number" name="logo_margin_bottom" id="logo_margin_bottom_input" class="form-control form-control-sm" value="{{ $setting->logo_margin_bottom ?? 0 }}" min="-30" max="50" placeholder="0">
+                                    <span class="text-xxs text-muted">Default: 0px</span>
+                                </div>
+                            </div>
+
+                            @if($setting->logo)
+                                <div class="mt-3 p-3 bg-white rounded border d-flex flex-column align-items-center justify-content-center">
+                                    <span class="text-xxs text-uppercase fw-bold text-muted mb-2"><i class="fa fa-eye me-1"></i> Live Sidebar Header Preview</span>
+                                    <div id="preview_sidebar_box" class="d-flex align-items-center justify-content-center border border-dashed rounded p-2" style="width: 230px; background: #fff; min-height: 80px;">
+                                        <img id="preview_logo_img" src="{{ asset($setting->logo) }}" 
+                                             style="max-height: {{ $setting->logo_height ?? 55 }}px; max-width: {{ $setting->logo_width ?? 180 }}px; padding: {{ $setting->logo_padding ?? 4 }}px; margin-top: {{ $setting->logo_margin_top ?? 0 }}px; margin-bottom: {{ $setting->logo_margin_bottom ?? 0 }}px; object-fit: contain;" 
+                                             alt="Sidebar Logo Preview">
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -128,28 +178,23 @@
 @section('scripts')
 <script>
     $(document).ready(function() {
-        $('.select2-city').select2({
-            placeholder: 'Search for a city...',
-            ajax: {
-                url: '{{ route("autocomplete_city") }}',
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
-                        q: params.term,
-                        page: params.page || 1
-                    };
-                },
-                processResults: function(data, params) {
-                    params.page = params.page || 1;
-                    return {
-                        results: data.results,
-                        pagination: data.pagination
-                    };
-                },
-                cache: true
-            }
-        });
+        function updateLogoPreview() {
+            var h = $('#logo_height_input').val() || 55;
+            var w = $('#logo_width_input').val() || 180;
+            var p = $('#logo_padding_input').val() || 4;
+            var mt = $('#logo_margin_top_input').val() || 0;
+            var mb = $('#logo_margin_bottom_input').val() || 0;
+
+            $('#preview_logo_img').css({
+                'max-height': h + 'px',
+                'max-width': w + 'px',
+                'padding': p + 'px',
+                'margin-top': mt + 'px',
+                'margin-bottom': mb + 'px'
+            });
+        }
+
+        $('#logo_height_input, #logo_width_input, #logo_padding_input, #logo_margin_top_input, #logo_margin_bottom_input').on('input change', updateLogoPreview);
     });
 </script>
 @endsection

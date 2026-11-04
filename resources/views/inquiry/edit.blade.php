@@ -139,7 +139,7 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Customer Type</label>
-                                            <select name="customer_type" id="customer_type" class="form-select">
+                                            <select name="customer_type" id="customer_type" class="form-select no-select2">
                                                 <option value="Individual" {{ (($inquiry->customer->customer_type ?? '') == 'Individual') ? 'selected' : '' }}>Individual</option>
                                                 <option value="Group" {{ (($inquiry->customer->customer_type ?? '') == 'Group') ? 'selected' : '' }}>Group</option>
                                                 <option value="Corporate" {{ (($inquiry->customer->customer_type ?? '') == 'Corporate') ? 'selected' : '' }}>Corporate</option>

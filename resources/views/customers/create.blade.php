@@ -48,7 +48,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-control-label">Customer Type</label>
-                                    <select name="customer_type" class="form-control" required>
+                                    <select name="customer_type" class="form-control no-select2" required>
                                         <option value="Individual">Individual</option>
                                         <option value="Group">Group</option>
                                         <option value="Corporate">Corporate </option>

@@ -288,23 +288,24 @@ class AjaxController extends Controller
     public function autocomplete_city(Request $request)
     {
         $data = [];
+        $search = $request->input('q', $request->input('term', ''));
 
-        if ($request->has('q')) {
-            $search = $request->q;
-            // dd($search);
-            $data = DB::table('cities')->where('name', 'LIKE', '%' . $search . '%')->select('cities.name')->get();
-            // dd($data);
+        if (!empty($search)) {
+            $rows = DB::table('cities')
+                ->where('name', 'LIKE', '%' . $search . '%')
+                ->select('cities.name')
+                ->limit(50)
+                ->get();
+
+            foreach ($rows as $row) {
+                $data[] = [
+                    'id' => $row->name,
+                    'text' => $row->name,
+                    'name' => $row->name,
+                ];
+            }
         }
         return response()->json($data);
-        // $query = $request->get('query');
-        // // dd($query);
-        // $data=Countries::join('cities','countries.id_countries','=','cities.country_id')->orwhere("countries.country_name",'LIKE','%'.$query)->orwhere("cities.name",'LIKE','%'.$query)->select('countries.country_name','cities.name')->get();
-        // // dd($join_country_city);
-        // // $users = User::join('posts', 'users.id', '=', 'posts.user_id')
-        // //        ->get(['users.*', 'posts.descrption']);
-        // // $data = countries::where("name", "LIKE", $query)->select('name')
-        // //     ->get();
-        // return response()->json($data);
     }
 
     // Customer Controller

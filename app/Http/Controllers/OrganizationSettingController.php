@@ -35,6 +35,11 @@ class OrganizationSettingController extends Controller
         $setting->phone = $request->input('phone');
         $setting->address = $request->input('address');
         $setting->city = $request->input('city');
+        $setting->logo_height = $request->filled('logo_height') ? (int)$request->input('logo_height') : 55;
+        $setting->logo_width = $request->filled('logo_width') ? (int)$request->input('logo_width') : 180;
+        $setting->logo_padding = $request->filled('logo_padding') ? (int)$request->input('logo_padding') : 4;
+        $setting->logo_margin_top = $request->filled('logo_margin_top') ? (int)$request->input('logo_margin_top') : 0;
+        $setting->logo_margin_bottom = $request->filled('logo_margin_bottom') ? (int)$request->input('logo_margin_bottom') : 0;
 
         if ($request->hasFile('logo')) {
             $logo = $request->file('logo');

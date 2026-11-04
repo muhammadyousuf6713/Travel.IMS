@@ -176,27 +176,12 @@ class PermissionController extends Controller
         // Sync permissions to the role (adds and removes accordingly)
         $role->syncPermissions($permissions);
 
-        // Sync permissions for the authenticated user
-        $user = auth()->user();
-
-        // Get all permissions assigned to the user
-        $userPermissions = $user->getPermissionNames()->toArray();
-
-        // Add new permissions to the user
-        foreach ($permissions as $permission) {
-            if (!in_array($permission, $userPermissions)) {
-                $user->givePermissionTo($permission);
-            }
-        }
-
-        // Remove permissions that are unchecked
-        foreach ($userPermissions as $permission) {
-            if (!in_array($permission, $permissions)) {
-                $user->revokePermissionTo($permission);
-            }
+        try {
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        } catch (\Throwable $e) {
         }
 
         // Set success response
-        return redirect()->back()->with('alert', 'Permissions updated successfully')->with('alert-class', 'success');
+        return redirect()->back()->with('alert', 'Permissions updated successfully for role: ' . $role->name)->with('alert-class', 'success');
     }
 }

@@ -4,12 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
-use File;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
@@ -18,17 +14,11 @@ class RoleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-
-
-
     public function index()
     {
-        $roles = DB::table('roles')->where('id', '!=', 45)->get()->toArray();
-        // dd($roles);
-        //        print_r($roles); exit;
+        $roles = DB::table('roles')->get()->toArray();
         return view('roles.index')->with(compact('roles'));
     }
-
 
     /**
      * Show the form for creating a new resource.
@@ -41,7 +31,6 @@ class RoleController extends Controller
         $menu = 'role';
         $submenu = 'role';
         $page = 'add';
-        // dd($page);
 
         return view('roles.create')->with(compact('title', 'menu', 'submenu', 'page'));
     }
@@ -55,12 +44,21 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'role' => 'required',
+            'role' => 'required|string|max:191|unique:roles,name',
+        ], [
+            'role.unique' => 'A role with this name already exists. Please choose a different name.',
         ]);
-        // dd($request);
-        DB::table('roles')->insert(['name' => $request->role, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
 
-        return redirect(url('roles'));
+        $roleName = trim($request->role);
+
+        Role::create([
+            'name' => $roleName,
+            'guard_name' => 'web',
+        ]);
+
+        return redirect(url('roles'))
+            ->with('alert', "Role '{$roleName}' created successfully!")
+            ->with('alert-class', 'success');
     }
 
     /**
@@ -88,6 +86,12 @@ class RoleController extends Controller
         $page = 'edit';
         $role = DB::table('roles')->where('id', $id)->first();
 
+        if (!$role) {
+            return redirect(url('roles'))
+                ->with('alert', 'Role not found')
+                ->with('alert-class', 'danger');
+        }
+
         return view('roles.edit')->with(compact('title', 'menu', 'submenu', 'page', 'role'));
     }
 
@@ -101,24 +105,44 @@ class RoleController extends Controller
     public function update(Request $request, $id)
     {
         $this->validate($request, [
-            'role' => 'required',
+            'role' => 'required|string|max:191|unique:roles,name,' . $id,
+        ], [
+            'role.unique' => 'A role with this name already exists. Please choose a different name.',
         ]);
 
-        DB::table('roles')->where('id_roles', $id)->update(['role' => $request->role, 'updated_at' => date('Y-m-d H:i:s')]);
+        $role = Role::findOrFail($id);
+        $roleName = trim($request->role);
 
-        return redirect(url('roles'));
+        $role->update([
+            'name' => $roleName,
+            'guard_name' => 'web',
+        ]);
+
+        return redirect(url('roles'))
+            ->with('alert', "Role updated successfully to '{$roleName}'!")
+            ->with('alert-class', 'success');
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function destroy(Request $request)
     {
-        $role = DB::table('roles')->where('id_roles', $request->id)->delete();
-        Session::flash('message', 'Role has been deleted');
-        return back();
+        $id = $request->id;
+        $role = Role::find($id);
+
+        if (!$role) {
+            return back()->with('alert', 'Role not found')->with('alert-class', 'danger');
+        }
+
+        if (in_array(strtolower($role->name), ['super admin', 'admin', 'administrator'])) {
+            return back()->with('alert', 'System core roles cannot be deleted.')->with('alert-class', 'danger');
+        }
+
+        $role->delete();
+        return back()->with('alert', 'Role has been deleted successfully')->with('alert-class', 'success');
     }
 }
