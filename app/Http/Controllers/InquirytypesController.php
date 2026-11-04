@@ -6,6 +6,7 @@ use App\inquirytypes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 
 class InquirytypesController extends Controller
 {
@@ -29,28 +30,24 @@ class InquirytypesController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'type_name' => 'required'
+            'type_name' => 'required|string|max:255',
         ]);
         $vendor = new inquirytypes();
-        $vendor->type_name = $request->type_name;
-        $vendor->type_desc = $request->type_desc;
+        $vendor->type_name = trim($request->type_name);
+        $vendor->type_desc = $request->type_desc ?? $request->type_name;
         $vendor->business_id = '1';
         $vendor->save();
-        session()->flash('success', 'Inquiry Type Added Successfully');
-        // dd($vendor);
-        return redirect()->back();
-    }
 
-    /** Display the specified resource. */
+        session()->flash('success', 'Inquiry Type Added Successfully');
+        return redirect('inquiry-type');
+    }
 
     /**
      * Show the form for editing the specified resource.
      */
     public function edit($id)
     {
-        // $dec_id = \Crypt::decrypt($id);
-        $edit_vendor = inquirytypes::where('type_id', $id)->first();
-        // dd($edit_vendor);
+        $edit_vendor = inquirytypes::where('type_id', $id)->firstOrFail();
         return view('inquiry_types.edit', compact('edit_vendor'));
     }
 
@@ -59,25 +56,41 @@ class InquirytypesController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // dd($request);
         $request->validate([
-            'type_name' => 'required',
+            'type_name' => 'required|string|max:255',
         ]);
-        // dd($request);
-        // $dec_id = \Crypt::decrypt($id);
-        // dd($dec_id);
-        $inquiry_type = inquirytypes::where('type_id', $id)->first();
-        $inquiry_type->type_name = $request->type_name;
+
+        $inquiry_type = inquirytypes::where('type_id', $id)->firstOrFail();
+        $inquiry_type->type_name = trim($request->type_name);
+        if ($request->filled('type_desc')) {
+            $inquiry_type->type_desc = $request->type_desc;
+        }
         $inquiry_type->save();
+
         session()->flash('success', 'Inquiry Type Updated Successfully');
-        return redirect()->back();
+        return redirect('inquiry-type');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(inquiry_types $inquiry_types)
+    public function destroy($id)
     {
-        //
+        $type = inquirytypes::where('type_id', $id)->first();
+        if (!$type) {
+            session()->flash('error', 'Inquiry Type not found.');
+            return redirect('inquiry-type');
+        }
+
+        // Protect live data: never delete a type that is still linked to inquiries
+        $inUse = DB::table('inquiry')->where('inquiry_type', $id)->count();
+        if ($inUse > 0) {
+            session()->flash('error', "Cannot delete '{$type->type_name}' because it is linked to {$inUse} inquiry record(s). You can edit its name instead.");
+            return redirect('inquiry-type');
+        }
+
+        $type->delete();
+        session()->flash('success', 'Inquiry Type deleted successfully');
+        return redirect('inquiry-type');
     }
 }

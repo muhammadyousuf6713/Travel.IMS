@@ -53,8 +53,11 @@ class CustomerController extends Controller
             return DataTables::of($customers)
                 ->addIndexColumn()
                 ->addColumn('image', function ($customer) {
-                    return $customer->customer_image
-                        ? '<img src="' . asset('uploads/customer_images/' . $customer->customer_image) . '" style="height:40px;width:40px;border-radius:50%"/>'
+                    $hasCustomImg = $customer->customer_image
+                        && $customer->customer_image !== 'default_user'
+                        && file_exists(public_path('uploads/customer_images/' . $customer->customer_image));
+                    return $hasCustomImg
+                        ? '<img src="' . asset('uploads/customer_images/' . $customer->customer_image) . '" style="height:40px;width:40px;border-radius:50%;object-fit:cover"/>'
                         : '<img src="' . asset('img/default_user.png') . '" style="height:40px;width:40px;border-radius:50%"/>';
                 })
                 ->addColumn('sale_person_name', function ($customer) {
@@ -230,7 +233,7 @@ class CustomerController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(service_vendor $service_vendor) {}
+    public function show($id) {}
 
     public function check_customer_number($cell)
     {

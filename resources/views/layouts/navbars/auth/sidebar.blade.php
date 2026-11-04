@@ -129,6 +129,7 @@
         }
     }
 
+    @media (min-width: 1200px) {
     body.g-sidenav-hidden #sidenav-main .nav-link-text,
     body.g-sidenav-hidden #sidenav-main h6,
     body.g-sidenav-hidden #sidenav-main .navbar-brand span {
@@ -161,6 +162,47 @@
     body.g-sidenav-hidden #sidenav-main #sidebarToggleBtn {
         margin-right: 0 !important;
     }
+    }
+
+    /* ===== Mobile / Tablet off-canvas drawer ===== */
+    #imsSidenavBackdrop { display: none; }
+    @media (max-width: 1199.98px) {
+        #sidenav-main {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            margin: 0 !important;
+            width: 272px !important;
+            max-width: 86vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            border-radius: 0 16px 16px 0 !important;
+            transform: translateX(-105%) !important;
+            transition: transform .28s ease, box-shadow .28s ease !important;
+            z-index: 1065 !important;
+            box-shadow: none !important;
+        }
+        body.ims-sidenav-open #sidenav-main {
+            transform: translateX(0) !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,.25) !important;
+        }
+        #imsSidenavBackdrop {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .45);
+            z-index: 1060;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .25s ease, visibility .25s ease;
+        }
+        body.ims-sidenav-open #imsSidenavBackdrop { opacity: 1; visibility: visible; }
+        body.ims-sidenav-open { overflow: hidden; }
+        .main-content { margin-left: 0 !important; }
+        #sidenav-main .nav-link:hover { transform: none; }
+    }
 </style>
 
 <aside class="card sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3"
@@ -181,123 +223,111 @@
     
     <script>
         (function() {
-            function initSidebar() {
-                const body = document.body;
-                const toggleIcon = document.getElementById("sidebarToggleIcon");
-                const toggleBtn = document.getElementById("sidebarToggleBtn");
-                
-                if (!toggleBtn || !toggleIcon || !body) return;
-
-                // Load state
-                if (localStorage.getItem("sidebar-collapsed") === "true") {
-                    body.classList.add("g-sidenav-hidden");
-                    body.classList.remove("g-sidenav-pinned");
-                    toggleIcon.classList.remove("fa-bars");
-                    toggleIcon.classList.add("fa-chevron-right");
+            var BP = 1200;
+            function isMobile() { return window.innerWidth < BP; }
+            function icon(cls) {
+                var i = document.getElementById("sidebarToggleIcon");
+                if (!i) return;
+                i.classList.remove("fa-bars", "fa-chevron-right", "fa-xmark");
+                i.classList.add(cls);
+            }
+            function applyState() {
+                var body = document.body;
+                if (isMobile()) {
+                    // Mobile / tablet: off-canvas drawer, always starts closed
+                    body.classList.remove("g-sidenav-hidden", "g-sidenav-pinned", "ims-sidenav-open");
+                    icon("fa-xmark");
                 } else {
-                    body.classList.add("g-sidenav-pinned");
-                    body.classList.remove("g-sidenav-hidden");
-                    toggleIcon.classList.remove("fa-chevron-right");
-                    toggleIcon.classList.add("fa-bars");
-                }
-
-                // Toggle click
-                toggleBtn.addEventListener("click", function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    if (body.classList.contains("g-sidenav-pinned")) {
-                        body.classList.remove("g-sidenav-pinned");
+                    body.classList.remove("ims-sidenav-open");
+                    if (localStorage.getItem("sidebar-collapsed") === "true") {
                         body.classList.add("g-sidenav-hidden");
-                        localStorage.setItem("sidebar-collapsed", "true");
-                        toggleIcon.classList.remove("fa-bars");
-                        toggleIcon.classList.add("fa-chevron-right");
+                        body.classList.remove("g-sidenav-pinned");
+                        icon("fa-chevron-right");
                     } else {
-                        body.classList.remove("g-sidenav-hidden");
                         body.classList.add("g-sidenav-pinned");
-                        localStorage.setItem("sidebar-collapsed", "false");
-                        toggleIcon.classList.remove("fa-chevron-right");
-                        toggleIcon.classList.add("fa-bars");
+                        body.classList.remove("g-sidenav-hidden");
+                        icon("fa-bars");
                     }
-                });
-            }
-
-            // Run only on DOMContentLoaded to prevent duplicate listeners
-            document.addEventListener("DOMContentLoaded", initSidebar);
-        })();
-
-        function lockSidenavScroll() {
-            const sideCollapse = document.getElementById("sidenav-collapse-main");
-            if (sideCollapse) {
-                sideCollapse.style.display = "block";
-            }
-            const sideMain = document.getElementById("sidenav-main");
-            if (sideMain) {
-                sideMain.scrollTop = 0;
-                sideMain.style.overflow = "hidden";
-                sideMain.classList.remove("ps", "ps--active-y", "ps--active-x");
-                sideMain.querySelectorAll(".ps__rail-y, .ps__rail-x").forEach(function(r) {
-                    r.remove();
-                });
-            }
-        }
-
-        lockSidenavScroll();
-
-        document.addEventListener("DOMContentLoaded", function() {
-            lockSidenavScroll();
-            const body = document.body;
-            const toggleIcon = document.getElementById("sidebarToggleIcon");
-            
-            // Check saved state on load
-            if (localStorage.getItem("sidebar-collapsed") === "true") {
-                body.classList.add("g-sidenav-hidden");
-                body.classList.remove("g-sidenav-pinned");
-                if (toggleIcon) {
-                    toggleIcon.classList.remove("fa-bars");
-                    toggleIcon.classList.add("fa-chevron-right");
                 }
-            } else {
-                body.classList.add("g-sidenav-pinned");
-                body.classList.remove("g-sidenav-hidden");
-                if (toggleIcon) {
-                    toggleIcon.classList.remove("fa-chevron-right");
-                    toggleIcon.classList.add("fa-bars");
+            }
+            function openMobile() { document.body.classList.add("ims-sidenav-open"); }
+            function closeMobile() { document.body.classList.remove("ims-sidenav-open"); }
+            window.imsToggleSidenav = function() {
+                if (document.body.classList.contains("ims-sidenav-open")) closeMobile(); else openMobile();
+            };
+
+            function lockSidenavScroll() {
+                var sideMain = document.getElementById("sidenav-main");
+                if (sideMain) {
+                    sideMain.scrollTop = 0;
+                    sideMain.classList.remove("ps", "ps--active-y", "ps--active-x");
+                    sideMain.querySelectorAll(".ps__rail-y, .ps__rail-x").forEach(function(r) { r.remove(); });
                 }
             }
 
-            const sideMain = document.getElementById("sidenav-main");
-            if (sideMain) {
-                sideMain.addEventListener("scroll", function() {
-                    if (this.scrollTop !== 0) this.scrollTop = 0;
-                });
-                sideMain.addEventListener("wheel", function(e) {
-                    const collapse = document.getElementById("sidenav-collapse-main");
-                    if (collapse && !collapse.contains(e.target)) {
-                        collapse.scrollTop += e.deltaY;
+            document.addEventListener("DOMContentLoaded", function() {
+                applyState();
+                lockSidenavScroll();
+
+                var toggleBtn = document.getElementById("sidebarToggleBtn");
+                if (toggleBtn) {
+                    toggleBtn.addEventListener("click", function(e) {
                         e.preventDefault();
-                    }
-                    this.scrollTop = 0;
-                }, { passive: false });
-            }
-        });
-
-        window.addEventListener("load", lockSidenavScroll);
-
-        // Handle clicking icons when sidebar is collapsed (Event Delegation)
-        document.addEventListener("click", function(e) {
-            const link = e.target.closest("#sidenav-main .nav-link");
-            if (link && document.body.classList.contains("g-sidenav-hidden") && link.id !== "sidebarToggleBtn") {
-                document.body.classList.remove("g-sidenav-hidden");
-                document.body.classList.add("g-sidenav-pinned");
-                localStorage.setItem("sidebar-collapsed", "false");
-                const toggleIcon = document.getElementById("sidebarToggleIcon");
-                if (toggleIcon) {
-                    toggleIcon.classList.remove("fa-chevron-right");
-                    toggleIcon.classList.add("fa-bars");
+                        e.stopPropagation();
+                        if (isMobile()) { closeMobile(); return; }
+                        var body = document.body;
+                        if (body.classList.contains("g-sidenav-pinned")) {
+                            body.classList.remove("g-sidenav-pinned");
+                            body.classList.add("g-sidenav-hidden");
+                            localStorage.setItem("sidebar-collapsed", "true");
+                            icon("fa-chevron-right");
+                        } else {
+                            body.classList.remove("g-sidenav-hidden");
+                            body.classList.add("g-sidenav-pinned");
+                            localStorage.setItem("sidebar-collapsed", "false");
+                            icon("fa-bars");
+                        }
+                    });
                 }
-            }
-        });
+
+                var sideMain = document.getElementById("sidenav-main");
+                if (sideMain) {
+                    sideMain.addEventListener("scroll", function() { if (this.scrollTop !== 0) this.scrollTop = 0; });
+                }
+            });
+
+            window.addEventListener("load", lockSidenavScroll);
+
+            var lastMobile = null;
+            window.addEventListener("resize", function() {
+                var m = isMobile();
+                if (m !== lastMobile) { lastMobile = m; applyState(); }
+            });
+
+            document.addEventListener("keydown", function(e) { if (e.key === "Escape") closeMobile(); });
+
+            document.addEventListener("click", function(e) {
+                // Hamburger in top navbar (mobile)
+                if (e.target.closest("#mobileSidenavToggle")) {
+                    e.preventDefault();
+                    window.imsToggleSidenav();
+                    return;
+                }
+                // Backdrop closes the drawer
+                if (e.target.closest("#imsSidenavBackdrop")) { closeMobile(); return; }
+
+                var link = e.target.closest("#sidenav-main .nav-link");
+                if (!link) return;
+                if (isMobile()) { closeMobile(); return; }
+                // Desktop: clicking an icon while collapsed expands the sidebar
+                if (document.body.classList.contains("g-sidenav-hidden")) {
+                    document.body.classList.remove("g-sidenav-hidden");
+                    document.body.classList.add("g-sidenav-pinned");
+                    localStorage.setItem("sidebar-collapsed", "false");
+                    icon("fa-bars");
+                }
+            });
+        })();
     </script>
     
     <hr class="horizontal dark mt-0">
@@ -445,4 +475,5 @@
         </ul>
     </div>
 </aside>
+<div id="imsSidenavBackdrop" aria-hidden="true"></div>
 @endif

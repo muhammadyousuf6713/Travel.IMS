@@ -641,26 +641,13 @@
                 ['link', 'image', 'video']
             ];
 
-            // Initialize Quill on the hidden div and sync with textarea
-            var quill = new Quill('#editor', {
-                modules: {
-                    toolbar: toolbarOptions
-                },
-                theme: 'snow'
-            });
-
-            var editorTextarea = document.querySelector('#editorTextarea');
-
-            quill.on('text-change', function(delta, oldDelta, source) {
-                if (source === 'user') {
-                    editorTextarea.value = quill.root.innerHTML;
-                }
-            });
-
-            // Initialize content from textarea if there's any
-            var storedContent = editorTextarea.value;
-            if (storedContent) {
-                quill.root.innerHTML = storedContent;
+            if (document.querySelector('#editor') && document.querySelector('#editorTextarea')) {
+                var quill2 = new Quill('#editor', { modules: { toolbar: toolbarOptions }, theme: 'snow' });
+                var editorTextarea = document.querySelector('#editorTextarea');
+                quill2.on('text-change', function(delta, oldDelta, source) {
+                    if (source === 'user') editorTextarea.value = quill2.root.innerHTML;
+                });
+                if (editorTextarea.value) quill2.root.innerHTML = editorTextarea.value;
             }
         });
     </script>
@@ -734,38 +721,9 @@
 
 
     <script>
-        mobiscroll.setOptions({
-            theme: 'ios',
-            themeVariant: 'light'
-        });
-
-        $(function() {
-            var inst = $('#demo-country-picker').mobiscroll().select({
-                display: 'anchored',
-                filter: true,
-                itemHeight: 40,
-                renderItem: function(item) {
-                    return '<div class="md-country-picker-item">' +
-                        '<img class="md-country-picker-flag" src="https://img.mobiscroll.com/demos/flags/' +
-                        item.data.value + '.png" />' +
-                        item.display + '</div>';
-                }
-            }).mobiscroll('getInst');
-
-            $.getJSON('https://trial.mobiscroll.com/content/countries.json', function(resp) {
-                var countries = [];
-                for (var i = 0; i < resp.length; ++i) {
-                    var country = resp[i];
-                    countries.push({
-                        text: country.text,
-                        value: country.value
-                    });
-                }
-                inst.setOptions({
-                    data: countries
-                });
-            });
-        });
+        if (typeof mobiscroll !== 'undefined' && $('#demo-country-picker').length) {
+            mobiscroll.setOptions({ theme: 'ios', themeVariant: 'light' });
+        }
     </script>
     <script>
         $(document).ready(function() {

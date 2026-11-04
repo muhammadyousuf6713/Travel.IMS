@@ -326,7 +326,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('assets/js/vendor/datatables.min.js') }}"></script>
     <script>
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 's') {
@@ -369,15 +368,14 @@
                     .prop('checked', isChecked);
             });
         });
-        document.getElementById('checkAllAccounts').addEventListener('click', function() {
-            // Get all checkboxes with class 'account-slider'
-            const checkboxes = document.querySelectorAll('.account-slider');
-            // Check if all are checked
-            const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
-            // Toggle check/uncheck all
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = !allChecked; // Check or uncheck all
+        var checkAllAccountsBtn = document.getElementById('checkAllAccounts');
+        if (checkAllAccountsBtn) {
+            checkAllAccountsBtn.addEventListener('click', function() {
+                const checkboxes = document.querySelectorAll('.account-slider');
+                const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+                checkboxes.forEach(checkbox => { checkbox.checked = !allChecked; });
             });
+        }
         });
     </script>
 @endpush

@@ -58,7 +58,7 @@
     <link href="{{ asset('assets/css/nucleo-icons.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
     <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-pXX..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
     <!-- CSS Files -->
     <link id="pagestyle" href="{{ asset('assets/css/soft-ui-dashboard.css?v=1.0.3') }}" rel="stylesheet" />
@@ -127,7 +127,21 @@
     @if (session()->has('error'))
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                toastr.error("{{ session('error') }}");
+                toastr.error(@json(session('error')));
+            });
+        </script>
+    @endif
+    @if (session()->has('warning'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                toastr.warning(@json(session('warning')));
+            });
+        </script>
+    @endif
+    @if (session()->has('info'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                toastr.info(@json(session('info')));
             });
         </script>
     @endif
@@ -251,7 +265,7 @@
     </script>
 
     <!-- Github buttons -->
-    <script async defer src="https://buttons.github.io/buttons.js')}}"></script>
+    
     <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
     <script src="{{ asset('assets/js/soft-ui-dashboard.min.js?v=1.0.3') }}"></script>
     

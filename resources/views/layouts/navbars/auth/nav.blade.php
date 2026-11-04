@@ -1,28 +1,33 @@
 <!-- Navbar -->
-<nav class="card navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur"
+<nav class="card navbar navbar-main navbar-expand-lg px-0 mx-2 mx-md-4 shadow-none border-radius-xl ims-topbar" id="navbarBlur"
     navbar-scroll="true">
-    <div class="container-fluid py-1 px-3">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-                <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+    <div class="container-fluid py-1 px-2 px-md-3 flex-nowrap">
+        <a href="javascript:;" id="mobileSidenavToggle" class="ims-mobile-toggle d-xl-none me-2" aria-label="Open menu" title="Menu">
+            <i class="fa fa-bars"></i>
+        </a>
+        <nav aria-label="breadcrumb" class="ims-topbar-title">
+            <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5 d-none d-md-flex">
+                <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{{ url('dashboard') }}">Pages</a></li>
                 <li class="breadcrumb-item text-sm text-dark active text-capitalize" aria-current="page">
-                    {{ str_replace('-', ' ', Request::path()) }}</li>
+                    {{ str_replace(['-', '_'], ' ', Request::segment(1)) }}</li>
             </ol>
-            <h6 class="font-weight-bolder mb-0 text-capitalize">{{ str_replace('-', ' ', Request::path()) }}</h6>
+            <h6 class="font-weight-bolder mb-0 text-capitalize text-truncate">{{ str_replace(['-', '_'], ' ', Request::segment(1) ?: 'dashboard') }}</h6>
         </nav>
-        <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4 d-flex justify-content-end" id="navbar">
+        <div class="collapse navbar-collapse mt-0 me-md-0 d-flex justify-content-end ims-topbar-actions" id="navbar">
 
-            <ul class="navbar-nav me-4 justify-content-end">
+            <ul class="navbar-nav flex-row align-items-center justify-content-end me-0 me-md-4">
+                @can('Inquiry add')
                 <li class="nav-item d-flex align-items-center">
-                    <a href="{{ url('inquiry/create') }}" class="nav-link text-body font-weight-bold px-0 me-3">
+                    <a href="{{ url('inquiry/create') }}" class="nav-link text-body font-weight-bold px-0 me-3" title="New Inquiry">
                         <i class="fa fa-plus me-sm-1"></i>
                         <span class="d-sm-inline d-none">Inquiry</span>
                     </a>
                 </li>
+                @endcan
                 <li class="nav-item d-flex align-items-center">
-                    <a href="javascript:;" class="nav-link text-body font-weight-bold px-0 me-3" onclick="darkMode(this)">
+                    <a href="javascript:;" class="nav-link text-body font-weight-bold px-0 me-3" onclick="darkMode(this)" title="Dark Mode">
                         <i class="fa fa-moon me-sm-1"></i>
-                        <span class="d-sm-inline d-none">Dark Mode</span>
+                        <span class="d-lg-inline d-none">Dark Mode</span>
                     </a>
                 </li>
                 <li class="nav-item dropdown d-flex align-items-center">
@@ -30,7 +35,7 @@
                         <div class="avatar avatar-xs rounded-circle bg-gradient-dark text-white font-weight-bold d-inline-flex align-items-center justify-content-center me-1" style="width: 28px; height: 28px; font-size: 12px;">
                             {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
                         </div>
-                        <span class="d-sm-inline d-none text-xs font-weight-bold me-1">{{ auth()->user()->name ?? 'User' }}</span>
+                        <span class="d-md-inline d-none text-xs font-weight-bold me-1">{{ auth()->user()->name ?? 'User' }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end px-2 py-3 shadow-lg border-0 border-radius-md" aria-labelledby="navbarProfileDropdown" style="min-width: 230px; margin-top: 10px; z-index: 1050;">
                         <li class="px-2 py-2 mb-2 bg-gray-100 border-radius-md">

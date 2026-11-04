@@ -187,10 +187,10 @@
 
                     <div class="form-group">
                         <label class="form-control-label">Customer Image</label>
-                        @if($customer->customer_image)
+                        @if($customer->customer_image && $customer->customer_image !== 'default_user' && file_exists(public_path('uploads/customer_images/' . $customer->customer_image)))
                             <div class="mb-2">
-                                <img src="{{ asset('storage/'.$customer->customer_image) }}"
-                                     alt="Customer Image" style="max-width: 200px;">
+                                <img src="{{ asset('uploads/customer_images/'.$customer->customer_image) }}"
+                                     alt="Customer Image" style="max-width: 140px; border-radius: 8px;">
                                 <br>
                                 <a href="#" class="text-danger small" onclick="document.getElementById('image-delete').value = '1'; this.style.display='none'; return false;">
                                     <i class="fa fa-trash me-1"></i> Remove current image

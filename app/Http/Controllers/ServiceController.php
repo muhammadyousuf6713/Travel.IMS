@@ -4,8 +4,7 @@ namespace App\Http\Controllers;
 
 use App\other_service;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 class ServiceController extends Controller
@@ -15,7 +14,7 @@ class ServiceController extends Controller
      */
     public function index()
     {
-        $service = other_service::all();
+        $service = other_service::whereNull('parent_id')->get();
         return view('service.index', compact('service'));
     }
 
@@ -29,103 +28,46 @@ class ServiceController extends Controller
 
     /**
      * Store a newly created resource in storage.
-//      */
-    //     public function store(Request $request)
-    //     {
-    //         $request->validate([
-    //             'type_name' => 'required|string|max:255',
-    //         ]);
-
-    //         try {
-    //             $store = new sales_reference();
-    //             $store->type_name = $request->type_name;
-    //             $store->save();
-    // dd($store);
-    //             session()->flash('success', "New Inquiry Type Added Successfully");
-    //         } catch (\Throwable $e) {
-    //             session()->flash('error', $e->getMessage());
-    //         }
-
-    //         return redirect('sales-reference');
-    //     }
-
+     */
     public function store(Request $request)
     {
         $request->validate([
-            'service_name' => 'string|max:255',
-
+            'service_name' => 'required|string|max:255',
         ]);
+
         $store = new other_service();
         $store->service_name = $request->service_name;
-        // dd($store);
-
-        // dd($store);
         $store->save();
-        session()->flash('success', "New Services Added Successfully");
 
+        session()->flash('success', 'New Service Added Successfully.');
         return redirect('services');
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    // public function edit($id)
-    // {
-    //     try {
-    //         $dec_id = Crypt::decrypt($id);
-    //         $edit_vendor = inquirytypes::findOrFail($dec_id);
-
-    //         return view('inquiry_types.edit', compact('edit_vendor'));
-    //     } catch (\Throwable $e) {
-    //         session()->flash('error', 'Invalid Inquiry Type ID');
-    //         return redirect()->back();
-    //     }
-    // }
     public function edit($id)
     {
-        $edit_vendor = other_service::where('id_other_services', $id)->first();
-        // dd($edit_vendor);
-        // $edit = currency_exchange_rate::all();
-
+        $edit_vendor = other_service::where('id_other_services', $id)->firstOrFail();
         return view('service.edit', compact('edit_vendor'));
     }
+
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, $id)
     {
-        // dd($request);
         $request->validate([
             'service_name' => 'required|string|max:255',
         ]);
+
         $update = other_service::findOrFail($id);
         $update->service_name = $request->service_name;
         $update->save();
 
-        session()->flash('info', "Service Updated Successfully");
-
+        session()->flash('success', 'Service Updated Successfully.');
         return redirect('services');
     }
-
-    //     public function update(Request $request, $id)
-    //     {
-    //         $request->validate([
-    //             'type_name' => 'string|max:255',
-
-    //         ]);
-
-    // // dd($dec_id);
-    //        $update = inquirytypes::findOrFail($id);
-    //         $update->type_name = $request->type_name;
-    //     //    dd($update);
-    //         // dd($store);
-    //         // $update->discount_status = "1";
-
-    //         $update->save();
-    //         session()->flash('success', "New Inquiry Type Updated Successfully");
-
-    //         return redirect()->back();
-    //     }
 
     /**
      * Remove the specified resource from storage.
@@ -134,10 +76,15 @@ class ServiceController extends Controller
     {
         try {
             $service = other_service::findOrFail($id);
+            $childrenCount = other_service::where('parent_id', $service->id_other_services)->count();
+            if ($childrenCount > 0) {
+                Session::flash('error', 'Cannot delete "' . $service->service_name . '" because it has ' . $childrenCount . ' sub-service(s) linked to it.');
+                return redirect('services');
+            }
             $service->delete();
-            Session::flash('warning', 'Service  Removed Successfully');
-        } catch (\Exception $e) {
-            Session::flash('error', 'Error deleting Servie: ' . $e->getMessage());
+            Session::flash('success', 'Service deleted successfully.');
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Error deleting Service: ' . $e->getMessage());
         }
         return redirect('services');
     }

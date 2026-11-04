@@ -173,6 +173,17 @@
                     });
                 }
             });
+
+            var deleteModal = document.getElementById('deleteModal');
+            if (deleteModal) {
+                deleteModal.addEventListener('show.bs.modal', function(event) {
+                    var button = event.relatedTarget;
+                    var id = button ? button.getAttribute('data-id') : null;
+                    if (id) {
+                        document.getElementById('deleteForm').setAttribute('action', '{{ url("other_services/delete") }}/' + id);
+                    }
+                });
+            }
         });
     </script>
 @endpush

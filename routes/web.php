@@ -196,7 +196,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/other_services/create', [OtherServiceController::class, 'create'])->middleware(['permission:Services add']);
     Route::post('/other_services/store', [OtherServiceController::class, 'store'])->middleware(['permission:Services add']);
     Route::post('/other_services/update/{id}', [OtherServiceController::class, 'update'])->middleware(['permission:Services edit']);
-    Route::post('/other_services/delete/{id}', [OtherServiceController::class, 'destroy'])->middleware(['permission:Services delete']);
+    Route::match(['post', 'delete'], '/other_services/delete/{id}', [OtherServiceController::class, 'destroy'])->middleware(['permission:Services delete']);
 
     // Follow-ups
     Route::get('/followups', [App\Http\Controllers\FollowupController::class, 'index'])->name('followups.index')->middleware(['permission:Inquiry list']);
