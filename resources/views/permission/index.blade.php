@@ -376,6 +376,5 @@
                 checkboxes.forEach(checkbox => { checkbox.checked = !allChecked; });
             });
         }
-        });
     </script>
 @endpush
