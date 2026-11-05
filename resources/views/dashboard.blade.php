@@ -116,9 +116,15 @@
             <p>{{ now()->format('l, d F Y') }} · Here is how the business is doing.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
+            @can('Inquiry add')
             <a href="{{ url('inquiry/create') }}" class="btn btn-sm btn-primary mb-0"><i class="fa-solid fa-plus me-1"></i> New inquiry</a>
+            @endcan
+            @can('Inquiry list')
             <a href="{{ route('inquiry.index', ['fud_filter' => 'today']) }}" class="btn btn-sm btn-outline-secondary mb-0"><i class="fa-regular fa-calendar-check me-1"></i> Today's follow-ups</a>
+            @endcan
+            @can('view reports')
             <a href="{{ route('reports.index') }}" class="btn btn-sm btn-outline-secondary mb-0"><i class="fa-regular fa-file-lines me-1"></i> Reports</a>
+            @endcan
         </div>
     </div>
 
@@ -151,7 +157,7 @@
             </a>
         </div>
         <div class="col-xl-3 col-md-6">
-            <a href="{{ url('customers') }}" class="db-card kpi">
+            <a href="{{ auth()->user()->can('Customers list') ? url('customers') : 'javascript:void(0);' }}" class="db-card kpi">
                 <span class="label"><i class="fa-regular fa-user"></i> Customers</span>
                 <span class="value">{{ number_format($totalCustomers) }}</span>
                 <span class="meta">+{{ number_format($newCustomersThisMonth) }} new in the last 30 days</span>
@@ -195,7 +201,9 @@
                 <div class="db-card">
                     <div class="db-card-h">
                         <div><h6>Customer reviews</h6><div class="sub">From completed inquiries</div></div>
+                        @can('Reviews list')
                         <a class="db-link" href="{{ route('reviews.index') }}">Open reviews</a>
+                        @endcan
                     </div>
                     <div class="db-card-b">
                         <div class="rv-grid">
@@ -244,7 +252,7 @@
                 <div class="db-card-b">
                     @forelse($agenda as $a)
                         @php $d = \Carbon\Carbon::parse($a->followup_date); $isToday = $d->isToday(); @endphp
-                        <a class="agenda-item" href="{{ url('edit_inquiry/' . $a->id_inquiry) }}">
+                        <a class="agenda-item" href="{{ auth()->user()->can('Inquiry edit') ? url('edit_inquiry/' . $a->id_inquiry) : route('inquiry.index', ['id_inquiry' => $a->id_inquiry]) }}">
                             <span class="when {{ $isToday ? 'today' : 'overdue' }}">{{ $isToday ? 'Today' : $d->format('d M') }}</span>
                             <span class="flex-grow-1" style="min-width:0">
                                 <span class="nm d-block">{{ $a->customer_name ?? 'Unknown' }} <span class="sub">· #{{ $a->id_inquiry }}</span></span>

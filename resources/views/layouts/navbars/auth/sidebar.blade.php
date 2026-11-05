@@ -359,12 +359,14 @@
             <!-- Operations -->
             <li class="nav-item mt-3">
                 <h6 class="ps-4 text-uppercase">Operations</h6>
-                <a class="nav-link {{ Request::is('customers') ? 'active' : '' }}" href="{{ url('customers') }}">
+                @can('Customers list')
+                <a class="nav-link {{ Request::is('customers*') ? 'active' : '' }}" href="{{ url('customers') }}">
                     <div class="icon">
                         <i class="fa-solid fa-users"></i>
                     </div>
                     <span class="nav-link-text">Customers</span>
                 </a>
+                @endcan
                 @can('Inquiry list')
                 <a class="nav-link {{ Request::is('inquiry') ? 'active' : '' }}" href="{{ url('inquiry') }}">
                     <div class="icon">
@@ -408,11 +410,12 @@
                 </a>
             </li>
             @endcan
+            @if(auth()->user()->can('Inquiry Type list') || auth()->user()->can('Sales References list') || auth()->user()->can('Currencies list') || auth()->user()->can('Services list'))
             <!-- Preferences -->
             <li class="nav-item mt-3">
                 <h6 class="ps-4 text-uppercase">Preferences</h6>
                 @can('Inquiry Type list')
-                <a class="nav-link {{ Request::is('inquiry-type') ? 'active' : '' }}" href="{{ url('inquiry-type') }}">
+                <a class="nav-link {{ Request::is('inquiry-type*') ? 'active' : '' }}" href="{{ url('inquiry-type') }}">
                     <div class="icon">
                         <i class="fa-solid fa-list"></i>
                     </div>
@@ -420,11 +423,19 @@
                 </a>
                 @endcan
                 @can('Sales References list')
-                <a class="nav-link {{ Request::is('sales-reference') ? 'active' : '' }}" href="{{ url('sales-reference') }}">
+                <a class="nav-link {{ Request::is('sales-reference*') ? 'active' : '' }}" href="{{ url('sales-reference') }}">
                     <div class="icon">
                         <i class="fa-solid fa-concierge-bell"></i>
                     </div>
                     <span class="nav-link-text">Sales Reference</span>
+                </a>
+                @endcan
+                @can('Services list')
+                <a class="nav-link {{ Request::is('other_services*') ? 'active' : '' }}" href="{{ url('other_services') }}">
+                    <div class="icon">
+                        <i class="fa-solid fa-briefcase"></i>
+                    </div>
+                    <span class="nav-link-text">Services</span>
                 </a>
                 @endcan
                 @can('Currencies list')
@@ -436,12 +447,14 @@
                 </a>
                 @endcan
             </li>
+            @endif
 
+            @if(auth()->user()->can('Users Management list') || auth()->user()->can('Organization Settings edit') || auth()->user()->can('Super-Admin') || auth()->user()->can('Roles Management list'))
             <!-- Admin -->
             <li class="nav-item mt-3">
                 <h6 class="ps-4 text-uppercase">Administration</h6>
                 @can('Users Management list')
-                    <a class="nav-link {{ Request::is('user-management') ? 'active' : '' }}" href="{{ url('user-management') }}">
+                    <a class="nav-link {{ Request::is('user-management*') || Request::is('users*') ? 'active' : '' }}" href="{{ url('user-management') }}">
                         <div class="icon">
                             <i class="fa-solid fa-user-shield"></i>
                         </div>
@@ -449,7 +462,7 @@
                     </a>
                 @endcan
                 @can('Organization Settings edit')
-                <a class="nav-link {{ Request::is('organization-settings') ? 'active' : '' }}" href="{{ route('organization_settings.edit') }}">
+                <a class="nav-link {{ Request::is('organization-settings*') ? 'active' : '' }}" href="{{ route('organization_settings.edit') }}">
                     <div class="icon">
                         <i class="fa-solid fa-building"></i>
                     </div>
@@ -465,7 +478,7 @@
                 </a>
                 @endcan
                 @can('Roles Management list')
-                <a class="nav-link {{ Request::is('roles') ? 'active' : '' }}" href="{{ url('roles') }}">
+                <a class="nav-link {{ Request::is('roles*') ? 'active' : '' }}" href="{{ url('roles') }}">
                     <div class="icon">
                         <i class="fa-solid fa-user-tag"></i>
                     </div>
@@ -473,7 +486,7 @@
                 </a>
                 @endcan
                 @can('Super-Admin')
-                    <a class="nav-link {{ Request::is('permission') ? 'active' : '' }}" href="{{ url('permission') }}">
+                    <a class="nav-link {{ Request::is('permission*') ? 'active' : '' }}" href="{{ url('permission') }}">
                         <div class="icon">
                             <i class="fa-solid fa-key"></i>
                         </div>
@@ -481,6 +494,7 @@
                     </a>
                 @endcan
             </li>
+            @endif
 
         </ul>
     </div>

@@ -124,17 +124,21 @@
                                 </small>
                             </div>
                             <div class="d-flex align-items-center gap-3">
+                                @can('Inquiry edit')
                                 <button type="button" class="btn btn-sm btn-info d-none" id="bulkAssignBtn">
                                     <i class="fa fa-users-cog"></i> Bulk Assign
                                 </button>
+                                @endcan
                                 @can('Reviews sync')
                                 <button type="button" class="btn btn-sm btn-success d-none" id="syncReviewsBtn">
                                     <i class="fa fa-star"></i> Sync to Reviews
                                 </button>
                                 @endcan
+                                @can('Inquiry add')
                                 <a href="{{ url('inquiry/create') }}" class="btn btn-sm btn-primary">
                                     <i class="fa fa-plus"></i> New Inquiry
                                 </a>
+                                @endcan
                             </div>
                         </div>
                     </div>
