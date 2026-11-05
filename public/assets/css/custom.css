@@ -26,13 +26,12 @@ body {
 
 /* Custom Scrollbar Styling (Webkit) */
 ::-webkit-scrollbar {
-    width: 14px !important; /* Visible width */
-    height: 14px !important;
+    width: 8px !important; /* Visible width */
+    height: 8px !important;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f8f9fa;
-    border-left: 1px solid #e9ecef;
+    background: transparent !important;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -357,3 +356,4 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
 }
 .table-sm td, .table-sm th { font-size: 0.85rem !important; padding: 0.5rem !important; } .table { font-size: 0.875rem; }
 .navbar-vertical .navbar-nav .nav-link.active { background-color: var(--bs-primary) !important; color: white !important; font-weight: bold; } .navbar-vertical .navbar-nav .nav-link.active .icon { color: white !important; }
+

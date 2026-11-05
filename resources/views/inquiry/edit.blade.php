@@ -52,13 +52,18 @@
                     <form action="{{ url('update_inquiry', $inquiry->id_inquiry) }}" method="post" id="submit_inquiry" novalidate>
                         @csrf
                         <div class="card shadow-sm mb-4 border-0">
-                            <div class="card-header bg-white border-bottom pb-3 pt-4 px-4 d-flex justify-content-between align-items-center">
+                            <div class="card-header bg-white border-bottom pb-3 pt-4 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <h5 class="fw-bold mb-0">
                                     <i class="fa fa-edit text-primary me-2"></i> Edit Inquiry #{{ $inquiry->id_inquiry }}
                                 </h5>
-                                <span class="badge bg-light text-dark border px-3 py-2">
-                                    Status: <strong class="text-primary">{{ $inquiry->status ?? 'Open' }}</strong>
-                                </span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-light text-dark border px-3 py-2">
+                                        Status: <strong class="text-primary">{{ $inquiry->status ?? 'Open' }}</strong>
+                                    </span>
+                                    <a href="{{ url('inquiry') }}" class="btn btn-sm btn-outline-primary mb-0">
+                                        <i class="fa fa-arrow-left me-1"></i> Back to Inquiry List
+                                    </a>
+                                </div>
                             </div>
                             
                             <div class="card-body p-4">

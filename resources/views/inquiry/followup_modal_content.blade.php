@@ -4,7 +4,7 @@
 
     <div class="mb-3">
         <label class="form-label fw-semibold">Follow-up Status</label>
-        <select name="followup_status" class="form-select" id="followupStatus">
+        <select name="followup_status" class="form-select no-select2" id="followupStatus">
             <option value="Open" {{ isset($inquiry) && $inquiry->status == 'Open' ? 'selected' : '' }}>
                 Open</option>
              <option value="In-Progress" {{ isset($inquiry) && $inquiry->status == 'In-Progress' ? 'selected' : '' }}>
@@ -45,7 +45,10 @@
         const dateInput = document.getElementById('followupDate');
         const dateContainer = document.getElementById('followupDateContainer');
         
-        if (statusSelect.value === 'Cancelled' || statusSelect.value === 'Completed') {
+        if (!statusSelect || !dateInput || !dateContainer) return;
+
+        const val = String(statusSelect.value || '').trim().toLowerCase();
+        if (val === 'cancelled' || val === 'completed') {
             dateInput.removeAttribute('required');
             dateInput.value = '';
             dateInput.disabled = true;
@@ -57,11 +60,14 @@
         }
     }
 
-    // Run on load
+    // Run immediately and whenever status changes (both native change and jQuery/select2 change)
     toggleFollowupDate();
-
-    // Run on change
-    document.getElementById('followupStatus').addEventListener('change', toggleFollowupDate);
+    if (document.getElementById('followupStatus')) {
+        document.getElementById('followupStatus').addEventListener('change', toggleFollowupDate);
+    }
+    if (window.jQuery) {
+        $(document).off('change.followupStatus', '#followupStatus').on('change.followupStatus', '#followupStatus', toggleFollowupDate);
+    }
 </script>
 
 <div class="row">

@@ -473,3 +473,76 @@ body.dark-mode .ims-mobile-toggle {
         margin-left: 105px !important;
     }
 }
+
+/* ==========================================================================
+   Select2 & Custom Dropdown / Modal Scrollbar Fixes
+   Prevents oversized desktop scrollbars (14px) and fixes Select2 dropdown scrolling
+   ========================================================================== */
+.select2-results > .select2-results__options,
+.select2-results__options {
+    max-height: 220px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin !important;
+    scrollbar-color: #cbd5e1 transparent !important;
+}
+
+.select2-results > .select2-results__options::-webkit-scrollbar,
+.select2-results__options::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+}
+
+.select2-results > .select2-results__options::-webkit-scrollbar-track,
+.select2-results__options::-webkit-scrollbar-track {
+    background: transparent !important;
+    border: none !important;
+}
+
+.select2-results > .select2-results__options::-webkit-scrollbar-thumb,
+.select2-results__options::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1 !important;
+    border-radius: 6px !important;
+    border: none !important;
+}
+
+.select2-results > .select2-results__options::-webkit-scrollbar-thumb:hover,
+.select2-results__options::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8 !important;
+}
+
+/* Follow-up modal list / inner scroll boxes */
+.followup-history-scrollbox,
+.followup-modal-list,
+.modal-body {
+    scrollbar-width: thin !important;
+    scrollbar-color: #cbd5e1 transparent !important;
+}
+
+.followup-history-scrollbox::-webkit-scrollbar,
+.followup-modal-list::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+}
+
+.followup-history-scrollbox::-webkit-scrollbar-track,
+.followup-modal-list::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track {
+    background: transparent !important;
+    border: none !important;
+}
+
+.followup-history-scrollbox::-webkit-scrollbar-thumb,
+.followup-modal-list::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1 !important;
+    border-radius: 6px !important;
+    border: none !important;
+}
+
+.followup-history-scrollbox::-webkit-scrollbar-thumb:hover,
+.followup-modal-list::-webkit-scrollbar-thumb:hover,
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8 !important;
+}

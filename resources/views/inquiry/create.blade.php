@@ -106,9 +106,9 @@
 
 
     <div class="col-md-12 col-lg-12 col-xl-12">
-         <!-- <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-3">
+         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 mt-2">
             <div>
-                <h4 class="font-weight-bolder mb-0 text-capitalize"><i class="fa fa-plus-circle text-primary me-2"></i> Create a New Inquiry</h4>
+                <h4 class="font-weight-bolder mb-1 text-capitalize"><i class="fa fa-plus-circle text-primary me-2"></i> Create a New Inquiry</h4>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                         <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{{ url('dashboard') }}">Dashboard</a></li>
@@ -117,12 +117,12 @@
                     </ol>
                 </nav>
             </div>
-            <div class="mt-3 mt-md-0">
+            <div>
                 <a href="{{ url('inquiry') }}" class="btn btn-primary text-white shadow-sm mb-0">
-                    <i class="fa fa-list me-2"></i> Inquiry List
+                    <i class="fa fa-arrow-left me-1"></i> Back to Inquiry List
                 </a>
             </div>
-        </div> -->
+        </div>
         @include('inquiry.bulk_upload')
         <br>
         <!-- Modern Page Header -->
