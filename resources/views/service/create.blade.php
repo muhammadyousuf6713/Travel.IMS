@@ -1,189 +1,66 @@
 @extends('layouts.user_type.auth')
 
 @section('content')
-    <!-- Quill Editor -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-header pb-0 bg-white">
+                    <div class="d-flex flex-row justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">Create Service</h5>
+                        <a href="{{ url('services') }}" class="btn bg-gradient-secondary btn-sm mb-0 text-uppercase">
+                            <i class="fa fa-arrow-left me-1"></i> Services List
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body px-4 pt-4 pb-2">
+                    <form id="myForm" method="post" action="{{ url('services/store') }}">
+                        @csrf
+                        @if (count($errors) > 0)
+                            <div class="alert alert-danger text-white alert-dismissible fade show" role="alert">
+                                <span class="alert-icon"><i class="ni ni-like-2"></i></span>
+                                <span class="alert-text"><strong>Error!</strong>
+                                    <ul class="mb-0">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </span>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        @endif
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
+                        <h6 class="text-uppercase text-body text-xs font-weight-bolder mb-3">Service Details</h6>
 
-
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-
-
-        .container {
-            margin: 50px;
-        }
-
-        input {
-            padding: 10px;
-            font-size: 16px;
-            width: 250px;
-            margin-right: 10px;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-        }
-
-        div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
-            border: 0;
-            border-radius: 0.25em;
-            background: initial;
-            background-color: #06b0c9;
-            color: #fff;
-            font-size: 1em;
-
-        }
-
-        .select2-container--default .select2-selection--multiple .select2-selection__rendered li {
-            color: #000 !important;
-        }
-
-        .tabs {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 20px;
-            border: 1px solid lightgrey
-        }
-
-        .tab-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #495057;
-            font-size: 16px;
-            cursor: pointer;
-            margin-right: 15px;
-            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-
-        .tab-btn .disabled .btn-az-primary {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .tab-btn .btn-az-primary strong {
-            background-color: #414343;
-            color: white;
-            border-radius: 50%;
-            padding: 5px 10px;
-            margin-right: 10px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            width: 30px;
-            height: 30px;
-            font-size: 14px;
-        }
-
-        .tab-btn .active strong,
-        .tab-btn .btn-az-primary.visited strong {
-            background-color: #00beda !important;
-            color: white !important;
-        }
-
-        .tab-btn .active span,
-        .tab-btn .btn-az-primary.visited span {
-            white-space: nowrap;
-            color: #00beda;
-        }
-
-        .btn-secondary[disabled] {
-            cursor: not-allowed;
-        }
-    </style>
-    <div class="col-md-12 col-lg-12 col-xl-12">
-        <div class="card card-body pd-40">
-            <div class="az-content-breadcrumb ">
-                <span>Service</span>
-                <span>Add Service  </span>
-            </div>
-            <h2 class="az-content-title" style="display: inline">Create  Service <span><a href="{{ url('services') }}"
-                        class="btn btn-az-primary" style="float: right">Service List</a></span></h2>
-
-            <div class="az-content">
-                <div class="container-fluid">
-
-                    <div class="az-content-body d-flex flex-column">
-                        <form id="myForm" method="post" action="{{ url('services/store') }}">
-                            @csrf
-                            @if (count($errors) > 0)
-                                <div class="p-1">
-                                    @foreach ($errors->all() as $error)
-                                        <div class="alert alert-warning alert-danger fade show" role="alert">{{ $error }}
-                                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
-                                            </button>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-                            
-                            <div id="wizard2" class="col-md-12">
-                                <div class="row row-sm mg-b-20">
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label class="az-content-label tx-11 tx-medium tx-gray-600">Service Name <span style="color:red;">*</span></label>
-                                            <input type="text" name="service_name[]" class="form-control" value="{{ old('service_name') }}" required />
-                                        </div>
-                                        @error('service_name')
-                                            <span ss="form-text text-danger">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                        @enderror
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label class="az-content-label tx-11 tx-medium tx-gray-600">Sub Service Name <span style="color:red;">*</span></label>
-                                            <input type="text" name="service_name" class="form-control" value="{{ old('service_name') }}" required />
-                                        </div>
-                                        @error('service_name')
-                                            <span ss="form-text text-danger">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                        @enderror
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="az-content-label tx-11 tx-medium tx-gray-600">Status</label>
-                                        <select class="form-control" name="status" id="status">
-                                            <option value="1">Active</option>
-                                            <option value="0">In Active</option>
-                                        </select>
-                                    </div>
-            
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label class="form-control-label">Service Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="service_name" class="form-control" value="{{ old('service_name') }}" placeholder="e.g. Flights, Visa, Hotel" required />
+                                    @error('service_name')
+                                        <span class="text-danger text-xs">{{ $message }}</span>
+                                    @enderror
                                 </div>
                             </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-control-label">Status</label>
+                                    <select class="form-control" name="status" id="status">
+                                        <option value="1">Active</option>
+                                        <option value="0">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
-                            {{-- <div class="wizard-buttons" style="padding: 20px; border: 1px solid lightgrey">
-                                <span id="prev" class="btn btn-secondary" style="cursor: not-allowed;"
-                                    disabled>Previous</span>
-                                <span id="next" class="btn btn-az-primary" style="float: right">Next</span>
-                                <button id="submit" class="btn btn-az-primary"
-                                    style="float: right; margin-right: 20px; display: none;">Submit</button>
-                            </div> --}}
-
-                            <a type="button" href="{{ url('services') }}" class="btn btn-danger btn-block mt-2">
-                                Cancel
-                            </a>
-                            <button type="submit" class="btn btn-az-primary btn-block mt-2" style="float: right">
-                                Submit
-                            </button>
-
-                        </form>
-                        <!--</div> az-content-body -->
-                    </div><!-- container -->
-                </div><!-- az-content -->
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="{{ url('services') }}" class="btn btn-light m-0 me-2">Cancel</a>
+                            <button type="submit" class="btn bg-gradient-primary m-0">Submit</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 @endsection
-
-

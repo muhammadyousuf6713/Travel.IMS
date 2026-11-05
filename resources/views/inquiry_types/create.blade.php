@@ -34,20 +34,11 @@
                         <h6 class="text-uppercase text-body text-xs font-weight-bolder mb-3">Inquiry Type Details</h6>
 
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="form-group">
                                     <label class="form-control-label">Inquiry Type Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="type_name" class="form-control" value="{{ old('type_name') }}" required />
+                                    <input type="text" name="type_name" class="form-control" value="{{ old('type_name') }}" placeholder="e.g. Umrah Package, Air Ticket, Visa" required />
                                     @error('type_name')
-                                        <span class="text-danger text-xs">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-control-label">Inquiry Type Description <span class="text-danger">*</span></label>
-                                    <input type="text" name="type_desc" class="form-control" value="{{ old('type_desc') }}" required />
-                                    @error('type_desc')
                                         <span class="text-danger text-xs">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -64,5 +55,3 @@
         </div>
     </div>
 @endsection
-
-
