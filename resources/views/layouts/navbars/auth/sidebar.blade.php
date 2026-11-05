@@ -118,13 +118,21 @@
     }
 
     @media (min-width: 1200px) {
+        .main-content,
+        body.g-sidenav-pinned .main-content,
+        .sidenav.fixed-start + .main-content,
+        .sidenav.fixed-start ~ .main-content {
+            margin-left: 17.125rem !important;
+        }
         body.g-sidenav-hidden #sidenav-main {
             max-width: 85px !important;
             width: 85px !important;
             overflow: hidden;
             transform: translateX(0) !important;
         }
-        body.g-sidenav-hidden .main-content {
+        body.g-sidenav-hidden .main-content,
+        body.g-sidenav-hidden .sidenav.fixed-start + .main-content,
+        body.g-sidenav-hidden .sidenav.fixed-start ~ .main-content {
             margin-left: 105px !important;
         }
     }
@@ -205,6 +213,7 @@
     }
 </style>
 
+<div id="imsSidenavBackdrop" aria-hidden="true"></div>
 <aside class="card sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3"
     id="sidenav-main">
     <div class="sidenav-header d-flex align-items-center position-relative" style="min-height: {{ max(70, ($orgSetting->logo_height ?? 55) + 15) }}px; height: auto; padding: 8px 12px;">
@@ -475,5 +484,4 @@
         </ul>
     </div>
 </aside>
-<div id="imsSidenavBackdrop" aria-hidden="true"></div>
 @endif

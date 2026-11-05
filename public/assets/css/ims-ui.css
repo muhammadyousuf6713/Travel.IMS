@@ -460,3 +460,16 @@ body.dark-mode .ims-mobile-toggle {
         margin: .5rem !important;
     }
 }
+
+@media (min-width: 1200px) {
+    .sidenav.fixed-start + .main-content,
+    .sidenav.fixed-start ~ .main-content,
+    body.g-sidenav-pinned .main-content {
+        margin-left: 17.125rem !important;
+    }
+    body.g-sidenav-hidden .main-content,
+    body.g-sidenav-hidden .sidenav.fixed-start + .main-content,
+    body.g-sidenav-hidden .sidenav.fixed-start ~ .main-content {
+        margin-left: 105px !important;
+    }
+}

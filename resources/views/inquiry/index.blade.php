@@ -1074,16 +1074,6 @@
             });
         });
     </script>
-    @if(session('success'))
-        <script>
-            toastr.success("{{ session('success') }}", "Success");
-        </script>
-    @endif
-    @if(session('error'))
-        <script>
-            toastr.error("{{ session('error') }}", "Error");
-        </script>
-    @endif
     <script>
         function loadFollowups(inquiryId, offset, initial = false) {
             var container = $('#followup-container-' + inquiryId);
