@@ -124,7 +124,7 @@
                     { data: 'customer_email', name: 'customer_email' },
                     { data: 'customer_address', name: 'customer_address' },
                     { data: 'country', name: 'country' },
-                    { data: 'city.name', name: 'city.name', defaultContent: '-' },
+                    { data: 'city_name', name: 'city', defaultContent: '-' },
                     { data: 'created_at', name: 'created_at', render: function(data) {
                         return data ? new Date(data).toLocaleDateString('en-GB') : '-';
                     }},

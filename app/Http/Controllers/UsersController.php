@@ -266,10 +266,12 @@ class UsersController extends Controller
         if ($user->save()) {
             // Assign role using Spatie
             $role = roles::find($request->role_id);
-            $user->assignRole($role->name);
+            if ($role) {
+                $user->assignRole($role->name);
+            }
             session()->flash('success', 'User has been added with the assigned role.');
         } else {
-            session()->flash('danger', 'User has not been added.');
+            session()->flash('error', 'User has not been added.');
         }
 
         return redirect(url('user-management'));
@@ -320,7 +322,7 @@ class UsersController extends Controller
             // $role = DB::table('role_user')->where('user_id', $dec_id)->update(['user_id' => $user->id, 'role_id' => $request->role_id]); //role id will come from Form input
             session()->flash('success', 'User has been updated');
         } else {
-            session()->flash('danger', 'User has not been updated');
+            session()->flash('error', 'User has not been updated');
         }
         return redirect(url('user-management'));
     }
@@ -332,9 +334,17 @@ class UsersController extends Controller
 
     public function destroy($id)
     {
+        if ((int) $id === (int) auth()->id()) {
+            session()->flash('error', 'You cannot delete your own account.');
+            return redirect(url('user-management'));
+        }
         $user = User::find($id);
-        $user->delete();
-        session()->flash('success', 'User deleted successfully'); 
+        if ($user) {
+            $user->delete();
+            session()->flash('success', 'User deleted successfully');
+        } else {
+            session()->flash('error', 'User not found');
+        }
         return redirect(url('user-management'));
     }
 }

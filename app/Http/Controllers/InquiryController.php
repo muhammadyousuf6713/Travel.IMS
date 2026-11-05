@@ -503,13 +503,19 @@ class InquiryController extends Controller
                 $query->where('inquiry.sales_reference', $v);
             }
             if ($v = request('customer_name')) {
-                $query->where('customers.customer_name', 'like', "%{$v}%");
+                $query->whereHas('customer', function ($q) use ($v) {
+                    $q->where('customer_name', 'like', "%{$v}%");
+                });
             }
             if ($v = request('customer_cell')) {
-                $query->where('customers.customer_cell', 'like', "%{$v}%");
+                $query->whereHas('customer', function ($q) use ($v) {
+                    $q->where('customer_cell', 'like', "%{$v}%");
+                });
             }
             if ($v = request('customer_email')) {
-                $query->where('customers.customer_email', 'like', "%{$v}%");
+                $query->whereHas('customer', function ($q) use ($v) {
+                    $q->where('customer_email', 'like', "%{$v}%");
+                });
             }
 
             $today = now()->toDateString();
@@ -1051,54 +1057,41 @@ class InquiryController extends Controller
      */
     public function store(Request $request)
     {
-        //    dd($request);
         $searched_customer_id = $request->searched_customer_id;
-        //
-        $service_name = other_service::where('id_other_services', $request['services'][0])->first();
-        //        dd($service_name);exit;
+        $firstServiceId = is_array($request->services) ? ($request->services[0] ?? null) : null;
+        $service_name = $firstServiceId ? other_service::where('id_other_services', $firstServiceId)->first() : null;
+        $serviceDeptName = $service_name->service_name ?? 'General';
+
         if (empty($searched_customer_id)) {
-            if ($request->sp_assign_check == 'on') {
-                $this->validate($request, [
-                    'customer_name' => 'required',
-                    'customer_cell' => 'required',
-                    'inquiry_type' => 'required',
-                    'services' => 'required',
-                    'travel_date' => 'required',
-                    'sale_person' => 'required',
-                    'remarks' => ['required', function ($attribute, $value, $fail) {
-                        if (trim(strip_tags($value)) === '') {
-                            $fail('The ' . $attribute . ' field is required.');
-                        }
-                    }],
-                ]);
-            } else {
-                $this->validate($request, [
-                    'customer_name' => 'required',
-                    'customer_cell' => 'required',
-                    'inquiry_type' => 'required',
-                    'services' => 'required',
-                    'travel_date' => 'required',
-                    'remarks' => ['required', function ($attribute, $value, $fail) {
-                        if (trim(strip_tags($value)) === '') {
-                            $fail('The ' . $attribute . ' field is required.');
-                        }
-                    }],
-                ]);
+            $rules = [
+                'customer_name' => 'required',
+                'customer_cell' => 'required',
+                'inquiry_type' => 'required',
+                'services' => 'required|array|min:1',
+                'travel_date' => 'required',
+                'remarks' => ['required', function ($attribute, $value, $fail) {
+                    if (trim(strip_tags((string) $value)) === '') {
+                        $fail('The ' . $attribute . ' field is required.');
+                    }
+                }],
+            ];
+            if ($request->sp_assign_check != 'on') {
+                $rules['sale_person'] = 'required';
             }
+            $this->validate($request, $rules);
 
             $customer = new customer();
             $customer->customer_name = $request->customer_name;
-            $customer->customer_type = $request->customer_type;
+            $customer->customer_type = $request->customer_type ?: 'Individual';
             $customer->customer_cell = $request->customer_cell;
             $customer->whatsapp_number = $request->customer_whatsapp;
+            $customer->customer_phone1 = $request->customer_whatsapp;
             $customer->customer_address = $request->customer_address;
             $customer->city = $request->customer_city;
-            // $customer->customer_phone2    = $request->customer_phone_2;
             $customer->customer_email = $request->customer_email;
             $customer->customer_reference = $request->customer_reference;
             $customer->customer_remarks = $request->customer_details;
-            // $customer->sale_person        = $request->sp_assign_check == "on" ? "un_assign" : $request->sale_person;
-            $customer->sale_person = Auth::user()->name;
+            $customer->sale_person = ($request->sp_assign_check != 'on' && $request->sale_person) ? $request->sale_person : Auth::id();
             $customer->save();
 
             if ($customer) {
@@ -1234,69 +1227,57 @@ class InquiryController extends Controller
                         $my_team_jobs->taken_by_status = 1;
                     }
                     $get_team_job_id = $my_team_jobs->id_my_team_jobs;
-                    $my_team_jobs->department_ids = $service_name->service_name;
+                    $my_team_jobs->department_ids = $serviceDeptName;
                     $my_team_jobs->save();
-                    session()->flash('success', 'Inquiry Added Successfully!, Assigned to ' . $service_name->service_name . ' Department');
-                    // sendNoti('New ' . $service_name->service_name . ' Team Un-Assigned Inquiry', auth()->user()->name, 'team_inquiry', auth()->user()->id, $service_name->id_other_services);
+                    session()->flash('success', 'Inquiry Added Successfully!, Assigned to ' . $serviceDeptName . ' Department');
                     // Code of Inserting Team Jobs End---------
                 }
 
                 session()->flash('success', 'New Customer Added Successfully!');
                 $inquiry_types = inquirytypes::where('type_id', $request->inquiry_type)->first();
-                $sale_person = User::where('id', $request->sale_person)->first();
+                $sale_person = $request->sale_person ? User::where('id', $request->sale_person)->first() : null;
                 if ($inquiry) {
-                    //                    session()->flash('success', 'Inquiry Added Successfully!');
+                    if ($sale_person) {
+                        $my_job_create = new my_job();
+                        $my_job_create->inquiry_id = $inquiry->id_inquiry;
+                        $my_job_create->user_id = $request->sale_person;
+                        $my_job_create->team_job_id = $get_team_job_id ?? null;
+                        $my_job_create->assign_by = auth()->user()->id;
+                        $my_job_create->save();
 
-                    //                    sendNoti('New Inquiry Added By ' . auth()->user()->name, auth()->user()->name, 'create_inquiry');
-                    // if (isset($request->sale_person) && $request->sale_person && $request->sale_person == auth()->user()->id) {
-                    //     // dd($request->sale_person);
-                    //     $my_job_create = new_my_job();
-                    //     $my_job_create->inquiry_id = $inquiry->id_inquiry;
-                    //     $my_job_create->user_id = auth()->user()->id;
-                    //     $my_job_create->team_job_id = $get_team_job_id;
-                    //     $my_job_create->assign_by = auth()->user()->id;
-                    //     $my_job_create->save();
-
-                    //     if ($request->sale_person == auth()->user()->id) {
-                    //         session()->flash('success', 'Inquiry Added Successfully!, Assigned to: ' . auth()->user()->name . '');
-                    //         sendNoti('New ' . $inquiry_types->type_name . ' Inquiry', auth()->user()->name, 'self_inquiry', auth()->user()->id);
-                    //     }
-
-                    //     return redirect('/create_quotation/' . Crypt::encrypt($inquiry_id));
-                    // return redirect('/create_quotation/' . $inquiry_id);
-                    // } else if (isset($request->sale_person) && $request->sale_person && $request->sale_person !== auth()->user()->id) {
-
-                    $my_job_create = new my_job();
-                    $my_job_create->inquiry_id = $inquiry->id_inquiry;
-                    $my_job_create->user_id = $request->sale_person;
-                    $my_job_create->team_job_id = $get_team_job_id;
-                    $my_job_create->assign_by = auth()->user()->id;
-                    $my_job_create->save();
-
-                    session()->flash('success', 'Inquiry Added Successfully!, Assigned to: ' . $sale_person->name . '');
-                    if ($request->sale_person !== auth()->user()->id) {
-                        // sendNoti('New ' . $inquiry_types->type_name . ' Inquiry', $sale_person->name, 'self_inquiry', $request->sale_person);
-                        return redirect('/inquiry');
+                        session()->flash('success', 'Inquiry Added Successfully!, Assigned to: ' . $sale_person->name);
+                    } else {
+                        session()->flash('success', 'Inquiry Added Successfully!');
                     }
-                    // } else {
-                    //     return redirect('/my_jobs');
-                    // }
+                    return redirect('/inquiry');
                 } else {
                     Session::flash('error', 'An error has occurred please try again later.');
-                    //            session()->flash('error', $th->getMessage());
                     return redirect()->back();
                 }
             } else {
                 Session::flash('error', 'An error has occurred please try again later.');
-                //            session()->flash('error', $th->getMessage());
                 return redirect()->back();
             }
         } else {
-            // $this->validate($request, [
-            //     'inquiry_type' => 'required',
-            //     'sales_reference' => 'required',
-            //     'travel_date' => 'required'
-            // ]);
+            $rules = [
+                'inquiry_type' => 'required',
+                'services' => 'required|array|min:1',
+                'travel_date' => 'required',
+                'remarks' => ['required', function ($attribute, $value, $fail) {
+                    if (trim(strip_tags((string) $value)) === '') {
+                        $fail('The ' . $attribute . ' field is required.');
+                    }
+                }],
+            ];
+            if ($request->sp_assign_check != 'on') {
+                $rules['sale_person'] = 'required';
+            }
+            $this->validate($request, $rules);
+
+            $firstServiceId = is_array($request->services) ? ($request->services[0] ?? null) : null;
+            $service_name = $firstServiceId ? other_service::where('id_other_services', $firstServiceId)->first() : null;
+            $serviceDeptName = $service_name->service_name ?? 'General';
+
             $services_count = count($request->services);
             // dd($services_count);
             $data = $request->all();
@@ -1422,47 +1403,28 @@ class InquiryController extends Controller
                     $my_team_jobs->taken_by = auth()->user()->id;
                     $my_team_jobs->taken_by_status = 1;
                 }
-                $my_team_jobs->department_ids = $service_name->service_name;
+                $my_team_jobs->department_ids = $serviceDeptName;
                 $my_team_jobs->save();
-                session()->flash('success', 'Inquiry Added Successfully!, Assigned to ' . $service_name->service_name . ' Department');
-                // sendNoti('New ' . $service_name->service_name . ' Team Un-Assigned Inquiry', auth()->user()->name, 'team_inquiry', auth()->user()->id, $service_name->id_other_services);
+                session()->flash('success', 'Inquiry Added Successfully!, Assigned to ' . $serviceDeptName . ' Department');
 
                 // Code of Inserting Team Jobs End---------
             }
             $inquiry_types = inquirytypes::where('type_id', $request->inquiry_type)->first();
-            $sale_person = User::where('id', $request->sale_person)->first();
+            $sale_person = $request->sale_person ? User::where('id', $request->sale_person)->first() : null;
             if ($inquiry) {
-                if (isset($request->sale_person) && $request->sale_person && $request->sale_person == auth()->user()->id) {
-                    // dd($request->sale_person);
+                if ($sale_person) {
                     $my_job_create = new my_job();
                     $my_job_create->inquiry_id = $inquiry->id_inquiry;
-                    $my_job_create->user_id = auth()->user()->id;
-                    $my_job_create->team_job_id = $get_team_job_id;
+                    $my_job_create->user_id = $sale_person->id;
+                    $my_job_create->team_job_id = $get_team_job_id ?? null;
                     $my_job_create->assign_by = auth()->user()->id;
                     $my_job_create->save();
 
-                    if ($request->sale_person == auth()->user()->id) {
-                        session()->flash('success', 'Inquiry Added Successfully!, Assigned to: ' . auth()->user()->name . '');
-                        // sendNoti('New ' . $inquiry_types->type_name . ' Inquiry', auth()->user()->name, 'self_inquiry', auth()->user()->id);
-                    }
-
-                    return redirect('inquiry');
-                } else if (isset($request->sale_person) && $request->sale_person && $request->sale_person !== auth()->user()->id) {
-                    $my_job_create = new my_job();
-                    $my_job_create->inquiry_id = $inquiry->id_inquiry;
-                    $my_job_create->user_id = $request->sale_person;
-                    $my_job_create->team_job_id = $get_team_job_id;
-                    $my_job_create->assign_by = auth()->user()->id;
-                    $my_job_create->save();
-
-                    session()->flash('success', 'Inquiry Added Successfully!, Assigned to: ' . $sale_person->name . '');
-                    if ($request->sale_person !== auth()->user()->id) {
-                        // sendNoti('New ' . $inquiry_types->type_name . ' Inquiry', $sale_person->name, 'self_inquiry', $request->sale_person);
-                        return redirect('/inquiry');
-                    }
+                    session()->flash('success', 'Inquiry Added Successfully!, Assigned to: ' . $sale_person->name);
                 } else {
-                    return redirect('/my_teams_jobs');
+                    session()->flash('success', 'Inquiry Added Successfully!');
                 }
+                return redirect('/inquiry');
             } else {
                 Session::flash('error', 'An error has occurred please try again later.');
                 //            session()->flash('error', $th->getMessage());
@@ -1621,7 +1583,7 @@ class InquiryController extends Controller
         }
         $inquiry->save();
 
-        Session::flash('message', 'Inquiry has been updated successfully!');
+        Session::flash('success', 'Inquiry has been updated successfully!');
         return redirect()->route('inquiry.index');
     }
 
@@ -1635,8 +1597,7 @@ class InquiryController extends Controller
     {
         $user = auth()->user();
 
-        // Allow only if role_id is 1 or 8
-        if (in_array($user->role_id, [1, 8])) {
+        if ($user && ($user->can('Inquiry delete') || in_array($user->role_id, [1, 8]))) {
             $inquiry = \App\inquiry::find($id);
 
             if ($inquiry) {
@@ -1647,7 +1608,7 @@ class InquiryController extends Controller
                 followup_remark::where('inquiry_id', $id)->delete();
                 remarks::where('inquiry_id', $id)->delete();
 
-                Session::flash('message', 'Inquiry soft deleted and related records removed successfully.');
+                Session::flash('success', 'Inquiry deleted successfully.');
             } else {
                 Session::flash('error', 'Inquiry not found.');
             }
@@ -1887,8 +1848,7 @@ class InquiryController extends Controller
 
     public function get_sub_services($inquiry_id)
     {
-        // dd($id);
-        $sub_services = other_service::where('parent_id', $id)->get();
+        $sub_services = other_service::where('parent_id', $inquiry_id)->get();
         $data = "<option value=''>Select Sub Service</option>";
         foreach ($sub_services as $service) {
             $data .= '<option value="' . $service->id_other_services . '">' . $service->service_name . '</option>';
@@ -2385,7 +2345,7 @@ class InquiryController extends Controller
                 <span class="badge bg-info text-white">' . e($typeName) . '</span>
                 <small class="text-muted">• ' . ($remark->followup_date ?? '-') . '</small>
             </div>
-            <small class="text-muted">Added ' . $remark->created_at->diffForHumans() . ' by ' . e($user->name ?? 'N/A') . '</small>
+            <small class="text-muted">Added ' . ($remark->created_at ? \Carbon\Carbon::parse($remark->created_at)->diffForHumans() : 'recently') . ' by ' . e($user->name ?? 'N/A') . '</small>
         </div>';
         }
         return response()->json(['html' => $html]);

@@ -29,7 +29,7 @@ class ReportController extends Controller
 
     public function getData(Request $request)
     {
-        $query = inquiry::with(['customer', 'inquiryType', 'salesPerson', 'salesReference', 'createdBy'])
+        $query = inquiry::with(['customer', 'inquiryType', 'salesPerson', 'salesReference', 'createdBy', 'latestFollowup'])
             ->select(['inquiry.*']);
 
         if ($request->filled('services')) {
@@ -112,14 +112,15 @@ class ReportController extends Controller
                 return $row->travel_date ? date('Y-m-d', strtotime($row->travel_date)) : '-';
             })
             ->editColumn('followup_date', function ($row) {
-                return $row->followup_date ? date('Y-m-d', strtotime($row->followup_date)) : '-';
+                $fud = $row->latestFollowup->followup_date ?? $row->followup_date;
+                return $fud ? date('Y-m-d', strtotime($fud)) : '-';
             })
             ->make(true);
     }
 
     public function export(Request $request)
     {
-        $query = \App\inquiry::with(['customer', 'inquiryType', 'salesPerson', 'salesReference', 'createdBy'])->select(['inquiry.*']);
+        $query = \App\inquiry::with(['customer', 'inquiryType', 'salesPerson', 'salesReference', 'createdBy', 'latestFollowup'])->select(['inquiry.*']);
 
         if ($request->filled('services')) {
             $services = $request->services;

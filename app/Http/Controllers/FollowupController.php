@@ -139,9 +139,9 @@ class FollowupController extends Controller
                 }
                 return '-';
             })
-            ->addColumn('created_at', fn($fr) => $fr->created_at->format('d M Y'))
+            ->addColumn('created_at', fn($fr) => $fr->created_at ? \Carbon\Carbon::parse($fr->created_at)->format('d M Y') : '-')
             ->addColumn('created_by', fn($fr) => $fr->created_by_name ?? '-')
-            ->addColumn('updated_at', fn($fr) => $fr->updated_at->format('d M Y'))
+            ->addColumn('updated_at', fn($fr) => $fr->updated_at ? \Carbon\Carbon::parse($fr->updated_at)->format('d M Y') : ($fr->created_at ? \Carbon\Carbon::parse($fr->created_at)->format('d M Y') : '-'))
             ->filterColumn('customer_name', function ($query, $keyword) {
                 $query->where('customers.customer_name', 'like', "%{$keyword}%");
             })
@@ -174,12 +174,12 @@ class FollowupController extends Controller
             ->escapeColumns([])
             ->make(true);
     }
-     private function rowClass($inquiry, $past, $today)
+    private function rowClass($inquiry, $past, $today)
     {
-        if (!$inquiry->latestFollowup)
+        $date = $inquiry->followup_date ?? ($inquiry->latestFollowup->followup_date ?? null);
+        if (!$date)
             return 'row-no-followup';
 
-        $date = $inquiry->latestFollowup->followup_date;
         $followDate = date('Y-m-d', strtotime($date));
         $currentDate = date('Y-m-d');
 

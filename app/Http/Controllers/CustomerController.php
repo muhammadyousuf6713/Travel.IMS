@@ -19,20 +19,18 @@ class CustomerController extends Controller
     public function customer_search(Request $request, $query = null)
     {
         if ($request->ajax()) {
-            $bilal = $request->page;
             $artilces = ' ';
 
             if ($query != null && $query != '') {
-                // $artilces = '';
-                $customers = customer::orderBy('id_customers')->where('customer_name', 'LIKE', '%' . $query . '%')->orWhere('customer_cell', '=', $query)->paginate(20);
-                // dd($customers);
-            } else {
-                $artilces = ' ';
+                $customers = customer::orderBy('id_customers')
+                    ->where('customer_name', 'LIKE', '%' . $query . '%')
+                    ->orWhere('customer_cell', '=', $query)
+                    ->paginate(20);
             }
 
             if (isset($customers)) {
                 foreach ($customers as $result) {
-                    $artilces .= '<div id="get_cus_details" data-id="' . $result->id_customers . '" onClick="CusDetails()" class="az-contact-item mt-3 clickable-data"><div class="az-img-user"><img src="' . asset('img/default_user.png') . '" alt=""></div><div class="az-contact-body"><h6>' . $result->customer_name . '</h6><span class="phone">' . $result->customer_cell . '</span></div></div>';
+                    $artilces .= '<div id="get_cus_details" data-id="' . $result->id_customers . '" onClick="CusDetails()" class="az-contact-item mt-3 clickable-data"><div class="az-img-user"><img src="' . asset('img/default_user.png') . '" alt=""></div><div class="az-contact-body"><h6>' . e($result->customer_name) . '</h6><span class="phone">' . e($result->customer_cell) . '</span></div></div>';
                 }
             }
             return $artilces;
@@ -41,14 +39,29 @@ class CustomerController extends Controller
 
     public function index(Request $request)
     {
-        // $user = Auth::user();
-        // $user->assignRole('Admin');
-        // dd($user->getRoleNames());
-        // exit;
         if ($request->ajax()) {
             $customers = customer::with(['salePerson', 'city'])
                 ->select('customers.*')
                 ->orderBy('customers.id_customers', 'desc');
+
+            if ($request->filled('customer_name')) {
+                $customers->where('customers.customer_name', 'like', '%' . $request->customer_name . '%');
+            }
+            if ($request->filled('customer_cell')) {
+                $customers->where('customers.customer_cell', 'like', '%' . $request->customer_cell . '%');
+            }
+            if ($request->filled('customer_email')) {
+                $customers->where('customers.customer_email', 'like', '%' . $request->customer_email . '%');
+            }
+            if ($request->filled('city')) {
+                $cityVal = $request->city;
+                $customers->where(function ($q) use ($cityVal) {
+                    $q->where('customers.city', 'like', '%' . $cityVal . '%')
+                        ->orWhereHas('city', function ($cq) use ($cityVal) {
+                            $cq->where('name', 'like', '%' . $cityVal . '%');
+                        });
+                });
+            }
 
             return DataTables::of($customers)
                 ->addIndexColumn()
@@ -61,7 +74,15 @@ class CustomerController extends Controller
                         : '<img src="' . asset('img/default_user.png') . '" style="height:40px;width:40px;border-radius:50%"/>';
                 })
                 ->addColumn('sale_person_name', function ($customer) {
-                    return $customer->salePerson->name ?? '';
+                    if ($customer->salePerson && $customer->salePerson->name) {
+                        return $customer->salePerson->name;
+                    }
+                    $raw = $customer->getAttributes()['sale_person'] ?? '';
+                    return (!is_numeric($raw) && !empty($raw)) ? $raw : '-';
+                })
+                ->addColumn('city_name', function ($customer) {
+                    $relCity = $customer->relationLoaded('city') ? $customer->getRelation('city') : null;
+                    return $relCity->name ?? ($customer->getAttributes()['city'] ?? '-');
                 })
                 ->addColumn('whatsapp_enabled', function ($customer) {
                     return $customer->whatsapp_check == 1
@@ -69,13 +90,13 @@ class CustomerController extends Controller
                         : '';
                 })
                 ->addColumn('customer_mobile', function ($customer) {
-                    return $customer->customer_cell;  // Not customer_cell
+                    return $customer->customer_cell;
                 })
                 ->addColumn('customer_phone1', function ($customer) {
-                    return $customer->customer_phone1;  // Not customer_cell
+                    return $customer->customer_phone1 ?: $customer->whatsapp_number;
                 })
                 ->addColumn('customer_phone2', function ($customer) {
-                    return $customer->customer_phone2;  // Not customer_cell
+                    return $customer->customer_phone2;
                 })
                 ->addColumn('action', function ($customer) {
                     $editBtn = '';
@@ -84,7 +105,6 @@ class CustomerController extends Controller
                         $editBtn = '<a href="' . route('customers.edit', $customer->id_customers) . '" class="btn btn-sm btn-primary me-2"><i class="fa fa-pen"></i></a>';
                     }
                     if (auth()->user()?->can('Customers delete')) {
-                        // Delete is sent as a POST form with CSRF token (not a plain GET link)
                         $deleteBtn = '<form method="POST" action="' . url('customers/destroy/' . $customer->id_customers) . '" class="d-inline m-0" onsubmit="return confirm(\'Are you sure?\')">'
                             . '<input type="hidden" name="_token" value="' . csrf_token() . '">'
                             . '<button type="submit" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button></form>';
@@ -98,27 +118,19 @@ class CustomerController extends Controller
         return view('customers.index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function getData(Request $request)
     {
-        // Define the number of records to load
         $perPage = 1;
-
-        // Retrieve data based on the scroll position
         $data = customer::skip($perPage)
             ->take($perPage)
             ->get();
-        // Return the data as JSON response
         return response()->json($data);
     }
 
     public function create(Request $request)
     {
         $countries = countries::all();
-        $sale_persons = \App\Models\User::select('users.name', 'users.id')->where('role_id', '=', 6)->get()->toArray();
-        //        dd($sale_persons);
+        $sale_persons = User::orderBy('name')->select('users.name', 'users.id')->get()->toArray();
         return view('customers.create', compact('countries', 'sale_persons'));
     }
 
@@ -126,23 +138,23 @@ class CustomerController extends Controller
     {
         if (is_numeric($request->country_id)) {
             $countries = countries::where('id_countries', $request->country_id)->first();
-            $data['cities'] = \App\cities::where('country_id', $countries->id_countries)->get();
         } else {
             $countries = countries::where('name', $request->country_id)->first();
-            $data['cities'] = \App\cities::where('country_id', $countries->id_countries)->get();
         }
 
+        $data['cities'] = $countries
+            ? \App\cities::where('country_id', $countries->id_countries)->get()
+            : [];
+
         return response()->json($data);
-        // $cities = "";
-        // foreach ($data['cities'] as $key => $value) {
-        //     $cities .= "<option " . $value->id . " >" . $value->name . "</option>";
-        // }
-        // return $cities;
     }
 
     public function get_customer_details(Request $request)
     {
         $data = customer::where('id_customers', $request->id)->first();
+        if (!$data) {
+            return response()->json(['html' => '', 'customer' => null], 404);
+        }
         $html = '<h5>ID: <span style="text-decoration: underline;">' . $data->id_customers . '<input type="hidden" value="' . $data->id_customers . '" name="searched_customer_id"/></span></h5>
             <h5>Customer: <span style="text-decoration: underline;">' . htmlspecialchars($data->customer_name) . '</span></h5>
             <p>Contact# <span style="text-decoration: underline;">' . htmlspecialchars($data->customer_cell) . '</span></p>
@@ -160,29 +172,21 @@ class CustomerController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request);
         $request->validate([
             'customer_cell' => 'required',
             'customer_name' => 'required',
             'sale_person' => 'required'
         ]);
-        //        // try {
-        //        $size = sizeof($request->care_of_name);
-        //        $care_of_name = $request->care_of_name;
-        //        $care_of_relation = $request->care_of_relation;
-        //        $care_of_cell = $request->care_of_cell;
-        //        $care_of_email = $request->care_of_email;
-        //        $care_of_age = $request->care_of_age;
 
         $Customer = new customer();
         $Customer->customer_name = $request->customer_name;
-        $Customer->customer_type = $request->customer_type;
+        $Customer->customer_type = $request->customer_type ?: 'Individual';
         $Customer->customer_cell = $request->customer_cell;
         if ($request->whatsapp_check == 'on') {
-            //            dd($request->whatsapp_check);
             $Customer->whatsapp_check = 1;
         }
         $Customer->customer_phone1 = $request->customer_whatsapp;
+        $Customer->whatsapp_number = $request->customer_whatsapp;
         $Customer->customer_phone2 = $request->customer_phone_2;
         $Customer->customer_address = $request->customer_address;
         $Customer->customer_email = $request->customer_email;
@@ -190,44 +194,42 @@ class CustomerController extends Controller
         $Customer->customer_reference = $request->customer_reference;
         $Customer->customer_remarks = $request->customer_remarks;
         $Customer->sale_person = $request->sale_person;
-        $Customer->status = $request->status;
+        $Customer->status = $request->status ?: 'Verified';
         $Customer->accounts_customer_rating = $request->accounts_customer_rating;
         $Customer->country = $request->country;
-        $Customer->city_id = $request->city;
+
+        if (is_numeric($request->city)) {
+            $Customer->city_id = (int) $request->city;
+            $cityRow = \App\cities::find((int) $request->city);
+            if ($cityRow) {
+                $Customer->city = $cityRow->name;
+            }
+        } else {
+            $Customer->city = $request->city;
+        }
+
         $Customer->created_by = auth()->user()->id;
 
-        if (!empty($request->customer_image)) {
+        if ($request->hasFile('customer_image')) {
             $file = $request->file('customer_image');
             $extension = $file->getClientOriginalExtension();
             $filename = time() . '.' . $extension;
             $file->move(public_path('uploads/customer_images/'), $filename);
-            $data['image'] = $filename;
-            $Customer->customer_image = $data['image'];
+            $Customer->customer_image = $filename;
         }
-        $cus_id = customer::max('id_customers');
-        // dd($cus_id);
 
         $Customer->save();
 
-        //        for ($i = 1; $i < $size; $i++) {
-        //
-        //            $detail = new care_of_detail();
-        //            $detail->customer_id = $cus_id;
-        //            $detail->care_of_name = $care_of_name[$i];
-        //            $detail->care_of_relation = $care_of_relation[$i];
-        //            $detail->care_of_cell = $care_of_cell[$i];
-        //            $detail->care_of_email = $care_of_email[$i];
-        //            $detail->care_of_age = $care_of_age[$i];
-        //            $detail->save();
-        //        }
         session()->flash('success', 'Customer Added Successfully');
 
-        sendNoti('New Customer Added By ' . 'bilal', 'sds', 'Installation');
-        return redirect()->back();
-        // } catch (\Throwable $th) {
-        //     session()->flash('error', $th->getMessage());
-        //     return redirect()->back();
-        // }
+        try {
+            if (function_exists('sendNoti')) {
+                sendNoti('New Customer Added By ' . (auth()->user()->name ?? 'Admin'), 'Customer Created', 'Installation');
+            }
+        } catch (\Throwable $e) {
+        }
+
+        return redirect(url('customers'));
     }
 
     /**
@@ -239,17 +241,9 @@ class CustomerController extends Controller
     {
         $get_customer = customer::where('customer_cell', $cell)->first();
 
-        // dd($cell);
-
-        if ($get_customer) {
-            return response()->json([
-                'getCell' => true
-            ]);
-        } else {
-            return response()->json([
-                'getCell' => false
-            ]);
-        }
+        return response()->json([
+            'getCell' => (bool) $get_customer
+        ]);
     }
 
     /**
@@ -260,7 +254,7 @@ class CustomerController extends Controller
         $customer = customer::findOrFail($id);
 
         $countries = countries::all();
-        $sale_persons = User::where('role_id', 6)
+        $sale_persons = User::orderBy('name')
             ->select('id', 'name')
             ->get();
 
@@ -278,22 +272,37 @@ class CustomerController extends Controller
         $Customer = customer::findOrFail($id);
 
         $Customer->customer_name = $request->customer_name;
-        $Customer->customer_type = $request->customer_type;
+        $Customer->customer_type = $request->customer_type ?: 'Individual';
         $Customer->customer_cell = $request->customer_cell;
         $Customer->whatsapp_check = $request->whatsapp_check == 'on' ? 1 : 0;
         $Customer->customer_phone1 = $request->customer_whatsapp;
+        $Customer->whatsapp_number = $request->customer_whatsapp;
         $Customer->customer_phone2 = $request->customer_phone_2;
         $Customer->customer_address = $request->customer_address;
         $Customer->customer_email = $request->customer_email;
         $Customer->customer_reference = $request->customer_reference;
         $Customer->customer_remarks = $request->customer_remarks;
         $Customer->sale_person = $request->sale_person;
-        $Customer->status = $request->status;
+        $Customer->status = $request->status ?: 'Verified';
         $Customer->accounts_customer_rating = $request->accounts_customer_rating;
         $Customer->country = $request->country;
-        $Customer->city_id = $request->city;
 
-        if (!empty($request->customer_image)) {
+        if (is_numeric($request->city)) {
+            $Customer->city_id = (int) $request->city;
+            $cityRow = \App\cities::find((int) $request->city);
+            if ($cityRow) {
+                $Customer->city = $cityRow->name;
+            }
+        } else {
+            $Customer->city = $request->city;
+            $Customer->city_id = null;
+        }
+
+        if ($request->input('remove_image') == '1') {
+            $Customer->customer_image = null;
+        }
+
+        if ($request->hasFile('customer_image')) {
             $file = $request->file('customer_image');
             $extension = $file->getClientOriginalExtension();
             $filename = time() . '.' . $extension;
@@ -304,36 +313,28 @@ class CustomerController extends Controller
         $Customer->save();
 
         session()->flash('success', 'Customer Updated Successfully');
-        return redirect()->back();
+        return redirect(url('customers'));
     }
 
     public function view($id)
     {
-        $view = customer::where('id_customers', $id)->first();
-        // $inquiry1 = inquiry::where('customer_id', $view->id_customers)->get();
+        $view = customer::where('id_customers', $id)->firstOrFail();
 
         $inquiry = inquiry::select('inquiry.*', 'inquirytypes.type_id', 'inquirytypes.type_name')
-            ->join('inquirytypes', 'inquirytypes.type_id', 'inquiry.id_inquiry')
-            // ->join('users' ,'users.id' , 'inquiry.saleperson' )
+            ->leftJoin('inquirytypes', 'inquirytypes.type_id', '=', 'inquiry.inquiry_type')
             ->where('customer_id', $view->id_customers)
             ->get();
 
         $customers = customer::all();
-        $view = customer::where('id_customers', $id)->first();
-        // dd($view);
         return view('customers.view', compact('customers', 'view', 'inquiry'));
     }
-
-    /** Update the specified resource in storage. */
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy($id)
     {
-        // $dec_id = Crypt::decrypt($id);
-        $edit_vendor = customer::where('id_customers', $id)->delete();
-        // dd($edit_vendor);
+        customer::where('id_customers', $id)->delete();
         session()->flash('success', 'Deleted Successfully');
         return redirect()->back();
     }

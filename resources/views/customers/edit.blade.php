@@ -75,7 +75,7 @@
                             <div class="form-group">
                                 <label class="form-control-label">Contact - WhatsApp</label>
                                 <input type="text" id="whatsapp_number" class="form-control"
-                                       name="customer_whatsapp" value="{{ old('customer_whatsapp', $customer->whatsapp_number) }}">
+                                       name="customer_whatsapp" value="{{ old('customer_whatsapp', $customer->whatsapp_number ?: $customer->customer_phone1) }}">
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -175,9 +175,12 @@
                             <div class="form-group">
                                 <label class="form-control-label">City</label>
                                 <select name="city" class="form-control ajax-city-select2" id="city-dropdown" data-placeholder="Select City">
-                                    @if(isset($customer) && $customer->city_id)
-                                        <option value="{{ $customer->city_id }}" selected>
-                                            {{ $customer->city_id }}
+                                    @php
+                                        $selectedCity = $customer->getAttributes()['city'] ?? ($customer->city_id ?: '');
+                                    @endphp
+                                    @if(!empty($selectedCity))
+                                        <option value="{{ $selectedCity }}" selected>
+                                            {{ $selectedCity }}
                                         </option>
                                     @endif
                                 </select>

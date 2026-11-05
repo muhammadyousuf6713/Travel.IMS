@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class InfoUserController extends Controller
@@ -18,7 +19,7 @@ class InfoUserController extends Controller
         $user = Auth::user();
         $inquiriesCount = 0;
         try {
-            $inquiriesCount = \App\inquiry::where('sale_person_id', $user->id)->count();
+            $inquiriesCount = \App\inquiry::where('saleperson', $user->id)->count();
         } catch (\Throwable $e) {
             $inquiriesCount = 0;
         }
@@ -50,13 +51,18 @@ class InfoUserController extends Controller
             'about_me' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $user->update([
+        $updateData = [
             'name' => $attributes['name'],
             'email' => $attributes['email'],
-            'phone' => $attributes['phone'] ?? null,
-            'location' => $attributes['location'] ?? null,
-            'about_me' => $attributes['about_me'] ?? null,
-        ]);
+        ];
+
+        foreach (['phone', 'location', 'about_me'] as $col) {
+            if (Schema::hasColumn('users', $col)) {
+                $updateData[$col] = $attributes[$col] ?? null;
+            }
+        }
+
+        $user->update($updateData);
 
         return redirect()->route('profile.view')->with('success', 'Profile updated successfully.');
     }

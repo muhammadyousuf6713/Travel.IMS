@@ -22,9 +22,8 @@ class RegisterController extends Controller
             'password' => ['required', 'min:5', 'max:20'],
             'agreement' => ['accepted']
         ]);
-        $attributes['password'] = bcrypt($attributes['password'] );
-
-        
+        $attributes['password'] = bcrypt($attributes['password']);
+        $attributes['role_id'] = 2;
 
         session()->flash('success', 'Your account has been created.');
         $user = User::create($attributes);

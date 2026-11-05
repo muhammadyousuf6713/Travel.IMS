@@ -94,20 +94,7 @@ class PermissionController extends Controller
 
         // Update the permission's details
         $permission->name = $request->name;
-
-        // If a parent module is selected, update the parent_id
-        if ($request->has('parent_id')) {
-            $permission->parent_id = $request->parent_id;
-        } else {
-            $permission->parent_id = 0; // Set to 0 if no parent is selected
-        }
-
-        // If a sub-module is selected, update the sub_module_id
-        if ($request->has('sub_module_id')) {
-            $permission->sub_module_id = $request->sub_module_id;
-        } else {
-            $permission->sub_module_id = null; // Set to null if no sub-module is selected
-        }
+        $permission->parent_id = $request->sub_module_id ?: ($request->parent_id ?: 0);
 
         // Save the updated permission
         $permission->save();
@@ -147,7 +134,8 @@ class PermissionController extends Controller
         $permissions = Permission::all();
 
 
-        $assigned_permissions = $role_id ? Role::find($role_id)->permissions->pluck('id')->toArray() : [];
+        $selectedRole = $role_id ? Role::find($role_id) : null;
+        $assigned_permissions = $selectedRole ? $selectedRole->permissions->pluck('id')->toArray() : [];
 
         return view('permission.index', compact('roles', 'role_id', 'permissions', 'assigned_permissions'));
     }
