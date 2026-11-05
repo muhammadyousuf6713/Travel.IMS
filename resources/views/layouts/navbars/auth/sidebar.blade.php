@@ -161,14 +161,15 @@
     }
 
     body.g-sidenav-hidden #sidenav-main .navbar-brand {
-        padding: 1rem 0 !important;
-        margin: 0 !important;
-        display: flex;
-        justify-content: center;
+        display: none !important;
     }
 
     body.g-sidenav-hidden #sidenav-main #sidebarToggleBtn {
-        margin-right: 0 !important;
+        position: static !important;
+        transform: none !important;
+        margin: 0 auto !important;
+        width: 36px !important;
+        height: 36px !important;
     }
     }
 
