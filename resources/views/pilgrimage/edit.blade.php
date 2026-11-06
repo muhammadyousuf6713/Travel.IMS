@@ -2,55 +2,6 @@
 
 @section('content')
 <style>
-.custom-toggle-switch {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-    margin-bottom: 0;
-}
-.custom-toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-}
-.custom-toggle-switch .toggle-slider {
-    position: relative;
-    display: inline-block;
-    width: 42px;
-    height: 22px;
-    background-color: #cbd5e1;
-    border-radius: 22px;
-    transition: background-color 0.25s ease, box-shadow 0.25s ease;
-    flex-shrink: 0;
-}
-.custom-toggle-switch .toggle-slider::after {
-    content: "";
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 18px;
-    height: 18px;
-    background-color: #ffffff;
-    border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.custom-toggle-switch input:checked + .toggle-slider {
-    background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
-}
-.custom-toggle-switch input:checked + .toggle-slider::after {
-    transform: translateX(20px);
-}
-.custom-toggle-switch .toggle-label {
-    margin-left: 8px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: #2d3748;
-    cursor: pointer;
-}
 .hotel-row, .flight-row, .pilgrim-row, .custom-leg-row {
     transition: all 0.2s ease-in-out;
 }
@@ -184,7 +135,7 @@
                         <div class="pilgrim-row card border border-radius-md p-3 mb-3 bg-light shadow-none position-relative">
                             <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
                                 <span class="badge bg-white text-dark text-xxs font-weight-bolder text-uppercase border pilgrim-badge">
-                                    <i class="fa-solid fa-user-plus text-primary me-1"></i> Co-Traveler #{{ $loop->iteration }}
+                                    <i class="fa-solid fa-user-plus text-primary me-1"></i> Co-Traveler #{{ $loop->iteration + 1 }}
                                 </span>
                                 <button type="button" class="btn btn-outline-danger btn-xs mb-0 py-1 px-2 btn-remove-row shadow-none" title="Delete Traveler">
                                     <i class="fa-solid fa-trash-can me-1"></i> Delete
@@ -252,20 +203,24 @@
                                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Airline</label>
                                     <input type="text" name="flights[{{ $fIdx }}][airline]" class="form-control form-control-sm" value="{{ $flight->airline }}">
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">From City <span class="text-danger">*</span></label>
-                                    <input type="text" name="flights[{{ $fIdx }}][from_city]" class="form-control form-control-sm" list="citiesDatalist" value="{{ $flight->from_city }}" required>
+                                <div class="col-md-3">
+                                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Departure City <span class="text-danger">*</span></label>
+                                    <select name="flights[{{ $fIdx }}][from_city]" class="form-control form-control-sm ajax-city-select2" data-placeholder="Select Origin City..." required>
+                                        <option value="{{ $flight->from_city }}" selected>{{ $flight->from_city }}</option>
+                                    </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">To City <span class="text-danger">*</span></label>
-                                    <input type="text" name="flights[{{ $fIdx }}][to_city]" class="form-control form-control-sm" list="citiesDatalist" value="{{ $flight->to_city }}" required>
+                                <div class="col-md-3">
+                                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Arrival City <span class="text-danger">*</span></label>
+                                    <select name="flights[{{ $fIdx }}][to_city]" class="form-control form-control-sm ajax-city-select2" data-placeholder="Select Destination City..." required>
+                                        <option value="{{ $flight->to_city }}" selected>{{ $flight->to_city }}</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">ETD <span class="text-danger">*</span></label>
                                     <input type="datetime-local" name="flights[{{ $fIdx }}][etd]" class="form-control form-control-sm" value="{{ $flight->etd ? $flight->etd->format('Y-m-d\TH:i') : '' }}" required>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">PNR</label>
+                                <div class="col-md-2 mt-2">
+                                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">PNR Ref</label>
                                     <input type="text" name="flights[{{ $fIdx }}][pnr]" class="form-control form-control-sm" value="{{ $flight->pnr }}">
                                 </div>
                             </div>
@@ -304,20 +259,27 @@
                             </div>
                             <div class="row g-2">
                                 <div class="col-md-3">
-                                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">City <span class="text-danger">*</span></label>
-                                    <input type="text" name="hotels[{{ $hIdx }}][city]" class="form-control form-control-sm hotel-city-input" list="citiesDatalist" value="{{ $hotel->city }}" placeholder="Search City..." required>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label text-xxs font-weight-bold text-secondary mb-0">City <span class="text-danger">*</span></label>
+                                        <a href="javascript:void(0);" class="text-primary text-xxs fw-bold btn-quick-add-city">
+                                            <i class="fa-solid fa-plus-circle me-1"></i>New City
+                                        </a>
+                                    </div>
+                                    <select name="hotels[{{ $hIdx }}][city]" class="form-control form-control-sm ajax-city-select2 hotel-city-select" data-placeholder="Select City from Database..." required>
+                                        <option value="{{ $hotel->city }}" selected>{{ $hotel->city }}</option>
+                                    </select>
                                 </div>
 
                                 <div class="col-md-4">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <label class="form-label text-xxs font-weight-bold text-secondary mb-0">Hotel Name <span class="text-danger">*</span></label>
-                                        <button type="button" class="btn btn-link text-primary p-0 m-0 text-xxs btn-quick-add-hotel" title="Quick add hotel">
+                                        <a href="javascript:void(0);" class="text-primary text-xxs fw-bold btn-quick-add-hotel" title="Quick add hotel">
                                             <i class="fa-solid fa-plus-circle me-1"></i> New Hotel
-                                        </button>
+                                        </a>
                                     </div>
                                     <select name="hotels[{{ $hIdx }}][hotel_name]" class="form-select form-select-sm hotel-name-select" data-selected="{{ $hotel->hotel_name }}" required>
                                         <option value="{{ $hotel->hotel_name }}" selected>{{ $hotel->hotel_name }}</option>
-                                        <option value="__CUSTOM__">+ Add New Hotel...</option>
+                                        <option value="__CUSTOM__" class="fw-bold text-primary">+ Add New Hotel to Database...</option>
                                     </select>
                                 </div>
 
@@ -346,27 +308,29 @@
                                     <input type="number" name="hotels[{{ $hIdx }}][room_qty]" class="form-control form-control-sm text-center" value="{{ $hotel->room_qty }}" min="1" required>
                                 </div>
 
-                                <div class="col-md-4">
-                                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Check-In <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" name="hotels[{{ $hIdx }}][check_in]" class="form-control form-control-sm hotel-checkin-input" value="{{ $hotel->check_in ? $hotel->check_in->format('Y-m-d\TH:i') : '' }}" required>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Check-Out <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" name="hotels[{{ $hIdx }}][check_out]" class="form-control form-control-sm hotel-checkout-input" value="{{ $hotel->check_out ? $hotel->check_out->format('Y-m-d\TH:i') : '' }}" required>
-                                </div>
-
                                 <div class="col-md-2">
                                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Duration</label>
                                     <input type="text" class="form-control form-control-sm text-center bg-light hotel-nights-display" value="{{ $hotel->nights }} Nights" readonly>
                                 </div>
 
-                                <div class="col-md-2 d-flex align-items-center mt-3">
-                                    <label class="custom-toggle-switch">
-                                        <input type="checkbox" name="hotels[{{ $hIdx }}][schedule_ziyaraat]" value="1" {{ $hotel->schedule_ziyaraat ? 'checked' : '' }}>
-                                        <span class="toggle-slider"></span>
-                                        <span class="toggle-label text-xxs">Ziyaraat (+48h)</span>
-                                    </label>
+                                <div class="col-md-3">
+                                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Check-In <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" name="hotels[{{ $hIdx }}][check_in]" class="form-control form-control-sm hotel-checkin-input" value="{{ $hotel->check_in ? $hotel->check_in->format('Y-m-d\TH:i') : '' }}" required>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Check-Out <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" name="hotels[{{ $hIdx }}][check_out]" class="form-control form-control-sm hotel-checkout-input" value="{{ $hotel->check_out ? $hotel->check_out->format('Y-m-d\TH:i') : '' }}" required>
+                                </div>
+
+                                <div class="col-md-4 d-flex align-items-center mt-3">
+                                    <div class="slide-switch-container">
+                                        <label class="slide-switch mb-0">
+                                            <input type="checkbox" name="hotels[{{ $hIdx }}][schedule_ziyaraat]" value="1" {{ $hotel->schedule_ziyaraat ? 'checked' : '' }}>
+                                            <span class="slider"></span>
+                                        </label>
+                                        <span class="text-xs font-weight-bold text-dark">Auto-Schedule Ziyaraat (+48h)</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -386,29 +350,8 @@
     </form>
 </div>
 
-<!-- Global Cities Datalist -->
-<datalist id="citiesDatalist">
-    <option value="Makkah, Saudi Arabia">
-    <option value="Madinah, Saudi Arabia">
-    <option value="Jeddah, Saudi Arabia">
-    <option value="Riyadh, Saudi Arabia">
-    <option value="Taif, Saudi Arabia">
-    <option value="Dubai, United Arab Emirates">
-    <option value="Istanbul, Turkey">
-    <option value="Cairo, Egypt">
-    <option value="Karachi, Pakistan">
-    <option value="Lahore, Pakistan">
-    <option value="Islamabad, Pakistan">
-    <option value="London, United Kingdom">
-    <option value="Doha, Qatar">
-    <option value="Muscat, Oman">
-    <option value="Amman, Jordan">
-    <option value="Baghdad, Iraq">
-    <option value="Najaf, Iraq">
-</datalist>
-
 <!-- Quick Add Hotel Modal -->
-<div class="modal fade" id="quickAddHotelModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="quickAddHotelModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-3 shadow">
             <div class="modal-header bg-light border-bottom py-2 px-3">
@@ -426,7 +369,7 @@
                     <div class="row g-2 mb-2">
                         <div class="col-6">
                             <label class="form-label text-xs font-weight-bold mb-1">City <span class="text-danger">*</span></label>
-                            <input type="text" id="quick_hotel_city" class="form-control form-control-sm" list="citiesDatalist" required>
+                            <input type="text" id="quick_hotel_city" class="form-control form-control-sm" required>
                         </div>
                         <div class="col-6">
                             <label class="form-label text-xs font-weight-bold mb-1">Rating</label>
@@ -459,6 +402,41 @@
     </div>
 </div>
 
+<!-- Quick Add City Modal -->
+<div class="modal fade" id="quickAddCityModal" tabindex="-1" aria-hidden="true" style="z-index: 1065;">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-light border-bottom py-2 px-3">
+                <h6 class="modal-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem;">
+                    <i class="fa-solid fa-city text-primary me-1"></i> Quick Add New City
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="quickAddCityForm">
+                <div class="modal-body p-3">
+                    <div class="mb-2">
+                        <label class="form-label text-xs font-weight-bold mb-1">City Name <span class="text-danger">*</span></label>
+                        <input type="text" id="quick_city_name_input" class="form-control form-control-sm" placeholder="e.g. Taif / Yanbu" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label text-xs font-weight-bold mb-1">Country</label>
+                        <input type="text" id="quick_country_name_input" class="form-control form-control-sm" value="Saudi Arabia" placeholder="e.g. Saudi Arabia">
+                    </div>
+                    <div class="text-xxs text-muted">
+                        <i class="fa-solid fa-circle-info me-1"></i> This city will be permanently saved to the database table for future selections.
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2 px-3 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary btn-xs mb-0" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-xs mb-0 shadow-sm" id="btnSaveQuickCity">
+                        <i class="fa-solid fa-save me-1"></i> Save City
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const pilgrimsContainer = document.getElementById('pilgrimsContainer');
@@ -466,6 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const hotelsContainer = document.getElementById('hotelsContainer');
     const totalPaxDisplay = document.getElementById('totalPaxDisplay');
     let activeHotelSelectForQuickAdd = null;
+    let activeCitySelectForQuickAdd = null;
 
     // --- SEQUENTIAL RENUMBERING ON ADD & DELETE ---
     function renumberTravelers() {
@@ -593,25 +572,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Airline</label>
                     <input type="text" name="flights[${newIdx}][airline]" class="form-control form-control-sm" placeholder="Saudia">
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">From City <span class="text-danger">*</span></label>
-                    <input type="text" name="flights[${newIdx}][from_city]" class="form-control form-control-sm" list="citiesDatalist" placeholder="Madinah (MED)" required>
+                <div class="col-md-3">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Departure City <span class="text-danger">*</span></label>
+                    <select name="flights[${newIdx}][from_city]" class="form-control form-control-sm ajax-city-select2" data-placeholder="Select Origin City..." required>
+                        <option value="">-- Select Origin City --</option>
+                    </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">To City <span class="text-danger">*</span></label>
-                    <input type="text" name="flights[${newIdx}][to_city]" class="form-control form-control-sm" list="citiesDatalist" placeholder="Karachi (KHI)" required>
+                <div class="col-md-3">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Arrival City <span class="text-danger">*</span></label>
+                    <select name="flights[${newIdx}][to_city]" class="form-control form-control-sm ajax-city-select2" data-placeholder="Select Destination City..." required>
+                        <option value="">-- Select Destination City --</option>
+                    </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">ETD <span class="text-danger">*</span></label>
                     <input type="datetime-local" name="flights[${newIdx}][etd]" class="form-control form-control-sm" required>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">PNR</label>
+                <div class="col-md-2 mt-2">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">PNR Ref</label>
                     <input type="text" name="flights[${newIdx}][pnr]" class="form-control form-control-sm" placeholder="PNR Ref">
                 </div>
             </div>
         `;
         flightsContainer.appendChild(row);
+        initializeAjaxCityDropdowns($(row));
         renumberFlights();
     });
 
@@ -632,20 +616,27 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
             <div class="row g-2">
                 <div class="col-md-3">
-                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">City <span class="text-danger">*</span></label>
-                    <input type="text" name="hotels[${newIdx}][city]" class="form-control form-control-sm hotel-city-input" list="citiesDatalist" value="Madinah" placeholder="Search City..." required>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label text-xxs font-weight-bold text-secondary mb-0">City <span class="text-danger">*</span></label>
+                        <a href="javascript:void(0);" class="text-primary text-xxs fw-bold btn-quick-add-city">
+                            <i class="fa-solid fa-plus-circle me-1"></i>New City
+                        </a>
+                    </div>
+                    <select name="hotels[${newIdx}][city]" class="form-control form-control-sm ajax-city-select2 hotel-city-select" data-placeholder="Select City from Database..." required>
+                        <option value="">-- Select City --</option>
+                    </select>
                 </div>
 
                 <div class="col-md-4">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <label class="form-label text-xxs font-weight-bold text-secondary mb-0">Hotel Name <span class="text-danger">*</span></label>
-                        <button type="button" class="btn btn-link text-primary p-0 m-0 text-xxs btn-quick-add-hotel" title="Quick add hotel">
+                        <a href="javascript:void(0);" class="text-primary text-xxs fw-bold btn-quick-add-hotel" title="Quick add hotel">
                             <i class="fa-solid fa-plus-circle me-1"></i> New Hotel
-                        </button>
+                        </a>
                     </div>
                     <select name="hotels[${newIdx}][hotel_name]" class="form-select form-select-sm hotel-name-select" required>
-                        <option value="">Select or Type City First...</option>
-                        <option value="__CUSTOM__">+ Add New Hotel...</option>
+                        <option value="">-- Select City First --</option>
+                        <option value="__CUSTOM__" class="fw-bold text-primary">+ Add New Hotel to Database...</option>
                     </select>
                 </div>
 
@@ -674,44 +665,52 @@ document.addEventListener('DOMContentLoaded', function () {
                     <input type="number" name="hotels[${newIdx}][room_qty]" class="form-control form-control-sm text-center" value="1" min="1" required>
                 </div>
 
-                <div class="col-md-4">
-                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Check-In <span class="text-danger">*</span></label>
-                    <input type="datetime-local" name="hotels[${newIdx}][check_in]" class="form-control form-control-sm hotel-checkin-input" required>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Check-Out <span class="text-danger">*</span></label>
-                    <input type="datetime-local" name="hotels[${newIdx}][check_out]" class="form-control form-control-sm hotel-checkout-input" required>
-                </div>
-
                 <div class="col-md-2">
                     <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Duration</label>
                     <input type="text" class="form-control form-control-sm text-center bg-light hotel-nights-display" value="—" readonly>
                 </div>
 
-                <div class="col-md-2 d-flex align-items-center mt-3">
-                    <label class="custom-toggle-switch">
-                        <input type="checkbox" name="hotels[${newIdx}][schedule_ziyaraat]" value="1" checked>
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-label text-xxs">Ziyaraat (+48h)</span>
-                    </label>
+                <div class="col-md-3">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Check-In <span class="text-danger">*</span></label>
+                    <input type="datetime-local" name="hotels[${newIdx}][check_in]" class="form-control form-control-sm hotel-checkin-input" required>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label text-xxs font-weight-bold text-secondary mb-1">Check-Out <span class="text-danger">*</span></label>
+                    <input type="datetime-local" name="hotels[${newIdx}][check_out]" class="form-control form-control-sm hotel-checkout-input" required>
+                </div>
+
+                <div class="col-md-4 d-flex align-items-center mt-3">
+                    <div class="slide-switch-container">
+                        <label class="slide-switch mb-0">
+                            <input type="checkbox" name="hotels[${newIdx}][schedule_ziyaraat]" value="1" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="text-xs font-weight-bold text-dark">Auto-Schedule Ziyaraat (+48h)</span>
+                    </div>
                 </div>
             </div>
         `;
         hotelsContainer.appendChild(row);
+        initializeAjaxCityDropdowns($(row));
         attachDateChangeListeners(row);
-        loadHotelsForCity(row);
         renumberHotels();
     });
 
     // --- DYNAMIC HOTELS FETCH BY CITY ---
     function loadHotelsForCity(row, preferredSelection = null) {
-        const cityInput = row.querySelector('.hotel-city-input');
+        const citySelect = row.querySelector('.hotel-city-select');
         const hotelSelect = row.querySelector('.hotel-name-select');
-        if (!cityInput || !hotelSelect) return;
+        if (!citySelect || !hotelSelect) return;
 
-        const city = cityInput.value.trim();
+        const city = citySelect.value.trim();
+        if (!city) {
+            hotelSelect.innerHTML = '<option value="">-- Select City First --</option><option value="__CUSTOM__" class="fw-bold text-primary">+ Add New Hotel to Database...</option>';
+            return;
+        }
+
         const currentVal = preferredSelection || hotelSelect.dataset.selected || hotelSelect.value;
+        hotelSelect.innerHTML = '<option value="">Loading hotels...</option>';
 
         fetch(`{{ url('api/hotels-by-city') }}?city=${encodeURIComponent(city)}`)
             .then(res => res.json())
@@ -719,7 +718,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 hotelSelect.innerHTML = '';
                 const defaultOpt = document.createElement('option');
                 defaultOpt.value = '';
-                defaultOpt.textContent = hotels.length ? '-- Select Hotel from Database --' : '-- No hotels listed for this city --';
+                defaultOpt.textContent = hotels.length ? `-- Select ${city} Hotel --` : `-- No hotels listed for ${city} --`;
                 hotelSelect.appendChild(defaultOpt);
 
                 let matched = false;
@@ -737,79 +736,65 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (currentVal && !matched && currentVal !== '__CUSTOM__') {
                     const customOpt = document.createElement('option');
                     customOpt.value = currentVal;
-                    customOpt.textContent = `${currentVal} (Saved)`;
+                    customOpt.textContent = `${currentVal} (Custom)`;
                     customOpt.selected = true;
                     hotelSelect.appendChild(customOpt);
                 }
 
                 const addOpt = document.createElement('option');
                 addOpt.value = '__CUSTOM__';
-                addOpt.textContent = '+ Add New Hotel to Database...';
+                addOpt.className = 'fw-bold text-primary';
+                addOpt.textContent = `+ Add New Hotel for ${city}...`;
                 hotelSelect.appendChild(addOpt);
             })
-            .catch(() => {});
+            .catch(() => {
+                hotelSelect.innerHTML = '<option value="">Error loading hotels</option><option value="__CUSTOM__">+ Add New Hotel...</option>';
+            });
     }
 
-    // City change event
-    document.addEventListener('input', function (e) {
-        if (e.target.classList.contains('hotel-city-input')) {
-            const row = e.target.closest('.hotel-row');
-            if (row) loadHotelsForCity(row);
+    $(document).on('change', '.hotel-city-select', function() {
+        const row = this.closest('.hotel-row');
+        if (row) loadHotelsForCity(row);
+    });
+
+    $(document).on('change', '.hotel-name-select', function() {
+        if (this.value === '__CUSTOM__') {
+            const row = this.closest('.hotel-row');
+            activeHotelSelectForQuickAdd = this;
+            openQuickAddHotelModal(row);
         }
     });
 
-    document.addEventListener('change', function (e) {
-        if (e.target.classList.contains('hotel-city-input')) {
-            const row = e.target.closest('.hotel-row');
-            if (row) loadHotelsForCity(row);
-        }
-        if (e.target.classList.contains('hotel-name-select')) {
-            if (e.target.value === '__CUSTOM__') {
-                const row = e.target.closest('.hotel-row');
-                activeHotelSelectForQuickAdd = e.target;
-                openQuickAddHotelModal(row);
-            }
-        }
-    });
-
-    // Quick Add Hotel Modal Open
-    document.addEventListener('click', function (e) {
-        const trigger = e.target.closest('.btn-quick-add-hotel');
-        if (trigger) {
-            const row = trigger.closest('.hotel-row');
-            if (row) {
-                activeHotelSelectForQuickAdd = row.querySelector('.hotel-name-select');
-                openQuickAddHotelModal(row);
-            }
+    $(document).on('click', '.btn-quick-add-hotel', function(e) {
+        e.preventDefault();
+        const row = this.closest('.hotel-row');
+        if (row) {
+            activeHotelSelectForQuickAdd = row.querySelector('.hotel-name-select');
+            openQuickAddHotelModal(row);
         }
     });
 
     function openQuickAddHotelModal(row) {
-        const cityInput = row ? row.querySelector('.hotel-city-input') : null;
-        const currentCity = cityInput ? cityInput.value.trim() : 'Makkah';
+        const citySelect = row ? row.querySelector('.hotel-city-select') : null;
+        const currentCity = citySelect && citySelect.value ? citySelect.value.trim() : 'Makkah';
 
-        document.getElementById('quick_hotel_city').value = currentCity;
-        document.getElementById('quick_hotel_name').value = '';
-        document.getElementById('quick_hotel_distance').value = '';
-        document.getElementById('quick_hotel_address').value = '';
-
-        const modalEl = document.getElementById('quickAddHotelModal');
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
+        $('#quick_hotel_city').val(currentCity);
+        $('#quick_hotel_name').val('');
+        $('#quick_hotel_distance').val('');
+        $('#quick_hotel_address').val('');
+        $('#quickAddHotelModal').modal('show');
     }
 
-    // Quick Add Hotel Form Submission
-    document.getElementById('quickAddHotelForm').addEventListener('submit', function (e) {
+    $('#quickAddHotelForm').on('submit', function (e) {
         e.preventDefault();
-        const btn = document.getElementById('btnSaveQuickHotel');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Saving...';
+        const btn = $('#btnSaveQuickHotel');
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Saving...');
 
-        const name = document.getElementById('quick_hotel_name').value.trim();
-        const city = document.getElementById('quick_hotel_city').value.trim();
-        const rating = document.getElementById('quick_hotel_rating').value;
-        const distance = document.getElementById('quick_hotel_distance').value.trim();
-        const address = document.getElementById('quick_hotel_address').value.trim();
+        const name = $('#quick_hotel_name').val().trim();
+        const city = $('#quick_hotel_city').val().trim();
+        const rating = $('#quick_hotel_rating').val();
+        const distance = $('#quick_hotel_distance').val().trim();
+        const address = $('#quick_hotel_address').val().trim();
 
         fetch("{{ route('hotels.quick_store') }}", {
             method: 'POST',
@@ -827,13 +812,10 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(res => res.json())
         .then(data => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-save me-1"></i> Save & Use Hotel';
+            btn.prop('disabled', false).html('<i class="fa-solid fa-save me-1"></i> Save & Use Hotel');
 
             if (data.success && data.hotel) {
-                const modalEl = document.getElementById('quickAddHotelModal');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                if (modal) modal.hide();
+                $('#quickAddHotelModal').modal('hide');
 
                 if (activeHotelSelectForQuickAdd) {
                     const label = `${data.hotel.name} (${data.hotel.star_rating || 'Standard'}${data.hotel.distance ? ' - ' + data.hotel.distance : ''})`;
@@ -846,34 +828,66 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     activeHotelSelectForQuickAdd.value = data.hotel.name;
                 }
+                if (window.toastr) {
+                    toastr.success(`Hotel '${name}' registered successfully!`);
+                }
             } else {
                 alert('Could not save hotel: ' + (data.message || 'Unknown error'));
             }
         })
         .catch(err => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-save me-1"></i> Save & Use Hotel';
+            btn.prop('disabled', false).html('<i class="fa-solid fa-save me-1"></i> Save & Use Hotel');
             alert('Error adding hotel: ' + err.message);
         });
     });
 
-    // --- REMOVE ROW WITH SEQUENTIAL RENUMBERING ---
-    document.addEventListener('click', function (e) {
-        const btn = e.target.closest('.btn-remove-row');
-        if (btn) {
-            const card = btn.closest('.pilgrim-row, .flight-row, .hotel-row');
-            if (card) {
-                const isPilgrim = card.classList.contains('pilgrim-row');
-                const isFlight = card.classList.contains('flight-row');
-                const isHotel = card.classList.contains('hotel-row');
-
-                card.remove();
-
-                if (isPilgrim) renumberTravelers();
-                if (isFlight) renumberFlights();
-                if (isHotel) renumberHotels();
-            }
+    // --- QUICK ADD CITY MODAL ---
+    $(document).on('click', '.btn-quick-add-city', function(e) {
+        e.preventDefault();
+        const row = this.closest('.hotel-row, .flight-row');
+        if (row) {
+            activeCitySelectForQuickAdd = row.querySelector('.ajax-city-select2');
         }
+        $('#quick_city_name_input').val('');
+        $('#quickAddCityModal').modal('show');
+    });
+
+    $('#quickAddCityForm').on('submit', function(e) {
+        e.preventDefault();
+        const btn = $('#btnSaveQuickCity');
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Saving...');
+
+        const cityName = $('#quick_city_name_input').val().trim();
+        const countryName = $('#quick_country_name_input').val().trim() || 'Saudi Arabia';
+
+        $.ajax({
+            url: "{{ route('geo.store_city') }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                city_name: cityName,
+                country_name: countryName
+            },
+            success: function(res) {
+                btn.prop('disabled', false).html('<i class="fa-solid fa-save me-1"></i> Save City');
+                $('#quickAddCityModal').modal('hide');
+
+                if (res.success && res.city) {
+                    const cName = res.city.name;
+                    if (activeCitySelectForQuickAdd) {
+                        const newOption = new Option(cName, cName, true, true);
+                        $(activeCitySelectForQuickAdd).append(newOption).trigger('change');
+                    }
+                    if (window.toastr) {
+                        toastr.success(res.message || `City '${cName}' saved to database!`);
+                    }
+                }
+            },
+            error: function(err) {
+                btn.prop('disabled', false).html('<i class="fa-solid fa-save me-1"></i> Save City');
+                alert('Could not save city: ' + (err.responseJSON?.message || 'Error occurred'));
+            }
+        });
     });
 
     // --- NIGHTS CALCULATION ---
@@ -901,7 +915,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initial setup
     document.querySelectorAll('.hotel-row').forEach(row => {
         attachDateChangeListeners(row);
-        loadHotelsForCity(row);
+        const citySelect = row.querySelector('.hotel-city-select');
+        if (citySelect && citySelect.value) {
+            loadHotelsForCity(row);
+        }
     });
 
     renumberTravelers();

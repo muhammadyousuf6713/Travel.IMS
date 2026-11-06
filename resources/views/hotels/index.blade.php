@@ -221,22 +221,22 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label text-xs font-weight-bold text-secondary mb-1">City <span class="text-danger">*</span></label>
-                        <input type="text" name="city" list="popularCitiesList" class="form-control form-control-sm" placeholder="e.g. Makkah" required>
-                        <datalist id="popularCitiesList">
-                            <option value="Makkah">
-                            <option value="Madinah">
-                            <option value="Jeddah">
-                            <option value="Riyadh">
-                            <option value="Taif">
-                            <option value="Dammam">
-                            <option value="Dubai">
-                        </datalist>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label text-xs font-weight-bold text-secondary mb-0">City <span class="text-danger">*</span></label>
+                            <a href="javascript:void(0);" class="text-primary text-xxs fw-bold btn-quick-add-city" data-target="#add_hotel_city">
+                                <i class="fa-solid fa-plus-circle me-1"></i>New City
+                            </a>
+                        </div>
+                        <select name="city" id="add_hotel_city" class="form-control form-control-sm ajax-city-select2" data-placeholder="Search City in Database..." required>
+                            <option value="Makkah" selected>Makkah</option>
+                        </select>
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label text-xs font-weight-bold text-secondary mb-1">Country</label>
-                        <input type="text" name="country" class="form-control form-control-sm" value="Saudi Arabia">
+                        <select name="country" id="add_hotel_country" class="form-control form-control-sm ajax-country-select2" data-placeholder="Select Country...">
+                            <option value="Saudi Arabia" selected>Saudi Arabia</option>
+                        </select>
                     </div>
 
                     <div class="col-md-4">
@@ -276,9 +276,14 @@
                     </div>
 
                     <div class="col-12">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="status" value="1" id="addHotelStatus" checked>
-                            <label class="form-check-label text-xs font-weight-bold text-secondary" for="addHotelStatus">Active & Available in Itinerary Bookings</label>
+                        <div class="slide-switch-container">
+                            <label class="slide-switch mb-0">
+                                <input type="checkbox" name="status" value="1" id="addHotelStatus" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <label for="addHotelStatus" class="text-xs font-weight-bold text-dark mb-0 cursor-pointer">
+                                Active & Available in Itinerary Bookings
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -313,13 +318,18 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label text-xs font-weight-bold text-secondary mb-1">City <span class="text-danger">*</span></label>
-                        <input type="text" name="city" id="edit_city" list="popularCitiesList" class="form-control form-control-sm" required>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label text-xs font-weight-bold text-secondary mb-0">City <span class="text-danger">*</span></label>
+                            <a href="javascript:void(0);" class="text-primary text-xxs fw-bold btn-quick-add-city" data-target="#edit_city">
+                                <i class="fa-solid fa-plus-circle me-1"></i>New City
+                            </a>
+                        </div>
+                        <select name="city" id="edit_city" class="form-control form-control-sm ajax-city-select2" data-placeholder="Search City..." required></select>
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label text-xs font-weight-bold text-secondary mb-1">Country</label>
-                        <input type="text" name="country" id="edit_country" class="form-control form-control-sm">
+                        <select name="country" id="edit_country" class="form-control form-control-sm ajax-country-select2" data-placeholder="Select Country..."></select>
                     </div>
 
                     <div class="col-md-4">
@@ -359,9 +369,14 @@
                     </div>
 
                     <div class="col-12">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="status" value="1" id="edit_status">
-                            <label class="form-check-label text-xs font-weight-bold text-secondary" for="edit_status">Active & Available in Itinerary Bookings</label>
+                        <div class="slide-switch-container">
+                            <label class="slide-switch mb-0">
+                                <input type="checkbox" name="status" value="1" id="edit_status">
+                                <span class="slider"></span>
+                            </label>
+                            <label for="edit_status" class="text-xs font-weight-bold text-dark mb-0 cursor-pointer">
+                                Active & Available in Itinerary Bookings
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -403,4 +418,39 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<!-- Quick Add City Modal -->
+<div class="modal fade" id="quickAddCityModal" tabindex="-1" aria-hidden="true" style="z-index: 1065;">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-light border-bottom py-2 px-3">
+                <h6 class="modal-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem;">
+                    <i class="fa-solid fa-city text-primary me-1"></i> Quick Add New City
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="quickAddCityForm">
+                <div class="modal-body p-3">
+                    <div class="mb-2">
+                        <label class="form-label text-xs font-weight-bold mb-1">City Name <span class="text-danger">*</span></label>
+                        <input type="text" id="quick_city_name_input" class="form-control form-control-sm" placeholder="e.g. Taif / Yanbu" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label text-xs font-weight-bold mb-1">Country</label>
+                        <input type="text" id="quick_country_name_input" class="form-control form-control-sm" value="Saudi Arabia" placeholder="e.g. Saudi Arabia">
+                    </div>
+                    <div class="text-xxs text-muted">
+                        <i class="fa-solid fa-circle-info me-1"></i> This city will be permanently saved to the database table for future selections.
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2 px-3 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary btn-xs mb-0" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-xs mb-0 shadow-sm" id="btnSaveQuickCity">
+                        <i class="fa-solid fa-save me-1"></i> Save City
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection

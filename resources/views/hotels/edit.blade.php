@@ -23,18 +23,22 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label text-xs font-weight-bold text-secondary mb-1">City <span class="text-danger">*</span></label>
-                    <input type="text" name="city" list="popularCitiesList" class="form-control form-control-sm" value="{{ old('city', $hotel->city) }}" required>
-                    <datalist id="popularCitiesList">
-                        @foreach($popularCities as $pc)
-                            <option value="{{ $pc }}">
-                        @endforeach
-                    </datalist>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label text-xs font-weight-bold text-secondary mb-0">City <span class="text-danger">*</span></label>
+                        <a href="javascript:void(0);" class="text-primary text-xxs fw-bold btn-quick-add-city" data-target="#edit_hotel_city_page">
+                            <i class="fa-solid fa-plus-circle me-1"></i>New City
+                        </a>
+                    </div>
+                    <select name="city" id="edit_hotel_city_page" class="form-control form-control-sm ajax-city-select2" data-placeholder="Search City..." required>
+                        <option value="{{ old('city', $hotel->city) }}" selected>{{ old('city', $hotel->city) }}</option>
+                    </select>
                 </div>
 
                 <div class="col-md-3">
                     <label class="form-label text-xs font-weight-bold text-secondary mb-1">Country</label>
-                    <input type="text" name="country" class="form-control form-control-sm" value="{{ old('country', $hotel->country) }}">
+                    <select name="country" id="edit_hotel_country_page" class="form-control form-control-sm ajax-country-select2" data-placeholder="Select Country...">
+                        <option value="{{ old('country', $hotel->country) }}" selected>{{ old('country', $hotel->country) }}</option>
+                    </select>
                 </div>
 
                 <div class="col-md-4">

@@ -125,6 +125,8 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/create_quotation/{id}', [QuotationController::class, 'create_quotation'])->middleware(['permission:Inquiry edit']);
     Route::get('autocomplete_country', [AjaxController::class, 'autocomplete'])->name('autocomplete_country');
     Route::get('autocomplete_city', [AjaxController::class, 'autocomplete_city'])->name('autocomplete_city');
+    Route::get('autocomplete_country_list', [AjaxController::class, 'autocomplete_country'])->name('autocomplete_country_list');
+    Route::post('api/geo/store-city', [AjaxController::class, 'store_city'])->name('geo.store_city');
 
 
     // User Management

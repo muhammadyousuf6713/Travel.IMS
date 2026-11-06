@@ -331,8 +331,9 @@
     <!-- Shared UI layer (loaded last so it wins over theme + inline styles) -->
     <link href="{{ asset('assets/css/ims-ui.css') }}?v={{ @filemtime(public_path('assets/css/ims-ui.css')) }}" rel="stylesheet">
     <script>
-        function initializeAjaxCityDropdowns() {
-            $('.ajax-city-select2').each(function() {
+        function initializeAjaxCityDropdowns($context) {
+            var $targets = $context ? $context.find('.ajax-city-select2') : $('.ajax-city-select2');
+            $targets.each(function() {
                 var $this = $(this);
 
                 if ($this.hasClass('select2-hidden-accessible')) {
@@ -340,26 +341,25 @@
                 }
                 
                 var placeholderText = $this.data('placeholder') || 'Search City...';
+                var modalParent = $this.closest('.modal');
                 
                 $this.select2({
                     placeholder: $this.prop('multiple') ? placeholderText : { id: '', text: placeholderText },
-                    allowClear: !$this.prop('multiple'),
-                    minimumInputLength: 2,
+                    allowClear: true,
+                    minimumInputLength: 0,
                     width: '100%',
+                    dropdownParent: modalParent.length ? modalParent : $(document.body),
                     ajax: {
                         url: '{{ route("autocomplete_city") }}',
                         dataType: 'json',
-                        delay: 350,
+                        delay: 250,
                         data: function(params) {
                             return {
-                                q: params.term,
+                                q: params.term || '',
                                 page: params.page || 1
                             };
                         },
                         processResults: function(data, params) {
-                            params.page = params.page || 1;
-                            
-                            // Map the raw array of objects from the backend to Select2's expected format
                             var mappedData = $.map(data, function(obj) {
                                 return {
                                     id: obj.name,
@@ -369,9 +369,44 @@
                             
                             return {
                                 results: mappedData,
-                                pagination: {
-                                    more: false // Disable infinite scroll if backend doesn't support pagination
-                                }
+                                pagination: { more: false }
+                            };
+                        },
+                        cache: true
+                    }
+                });
+            });
+
+            // Also initialize country ajax dropdowns if present
+            var $countryTargets = $context ? $context.find('.ajax-country-select2') : $('.ajax-country-select2');
+            $countryTargets.each(function() {
+                var $this = $(this);
+                if ($this.hasClass('select2-hidden-accessible')) {
+                    $this.select2('destroy');
+                }
+                var placeholderText = $this.data('placeholder') || 'Search Country...';
+                var modalParent = $this.closest('.modal');
+                
+                $this.select2({
+                    placeholder: { id: '', text: placeholderText },
+                    allowClear: true,
+                    minimumInputLength: 0,
+                    width: '100%',
+                    dropdownParent: modalParent.length ? modalParent : $(document.body),
+                    ajax: {
+                        url: '{{ route("autocomplete_country_list") }}',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term || ''
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: $.map(data, function(obj) {
+                                    return { id: obj.name, text: obj.name };
+                                })
                             };
                         },
                         cache: true
@@ -383,32 +418,83 @@
         $(document).ready(function() {
             initializeAjaxCityDropdowns();
         });
-    
-        // Universal scroll boundary isolation: Prevents wheel scrolling over dropdowns/modals from moving background screen
+
+        // =====================================================================
+        // Universal Background Scroll Lock & Wheel Trap
+        // Prevents backscreen scrolling completely whenever any modal is open
+        // or whenever hovering over Select2 dropdowns
+        // =====================================================================
+        $(document).on('show.bs.modal', '.modal', function() {
+            var mc = document.querySelector('.main-content');
+            if (mc) {
+                mc.style.setProperty('overflow-y', 'hidden', 'important');
+            }
+        });
+
+        $(document).on('hidden.bs.modal', '.modal', function() {
+            if ($('.modal.show').length === 0) {
+                var mc = document.querySelector('.main-content');
+                if (mc) {
+                    mc.style.setProperty('overflow-y', 'auto', 'important');
+                }
+            }
+        });
+
         document.addEventListener('wheel', function(e) {
-            const scrollable = e.target.closest('.select2-results__options, .select2-dropdown, .modal-body, .followup-history-scrollbox, .followup-modal-list, .dropdown-menu');
+            var hasModalOpen = document.body.classList.contains('modal-open') || document.querySelector('.modal.show');
             
-            if (document.body.classList.contains('modal-open')) {
-                const insideModal = e.target.closest('.modal-content, .select2-dropdown, .select2-container');
-                if (!insideModal) {
+            if (hasModalOpen) {
+                // Find closest scrollable element under cursor inside modal or active select2
+                var scrollable = e.target.closest('.select2-results__options, .modal-body, .followup-history-scrollbox, .followup-modal-list, .dropdown-menu');
+                
+                if (!scrollable) {
+                    // Over modal-content header, footer, backdrop: LOCK scroll completely
                     e.preventDefault();
                     return;
                 }
+
+                // Check if target container actually has scrollable overflow
+                var maxScroll = scrollable.scrollHeight - scrollable.clientHeight;
+                if (maxScroll <= 1) {
+                    // Content fits without scrollbar (e.g. only 4-5 items): LOCK wheel so it NEVER scrolls background
+                    e.preventDefault();
+                    return;
+                }
+
+                // Check boundary
+                var delta = e.deltaY;
+                var isAtTop = scrollable.scrollTop <= 0 && delta < 0;
+                var isAtBottom = (scrollable.scrollTop >= maxScroll - 1) && delta > 0;
+
+                if (isAtTop || isAtBottom) {
+                    e.preventDefault();
+                } else {
+                    e.stopPropagation();
+                }
+                return;
             }
 
-            if (!scrollable) return;
-
-            const hasScroll = scrollable.scrollHeight > scrollable.clientHeight;
-            if (!hasScroll) return;
-
-            const scrollTop = scrollable.scrollTop;
-            const maxScroll = scrollable.scrollHeight - scrollable.clientHeight;
-            const delta = e.deltaY;
-
-            if ((delta < 0 && scrollTop <= 0) || (delta > 0 && scrollTop >= maxScroll - 1)) {
-                e.preventDefault();
-            } else {
-                e.stopPropagation();
+            // When no modal is open, prevent Select2 dropdowns from scrolling the main content
+            var openDropdown = e.target.closest('.select2-results__options, .select2-dropdown, .dropdown-menu');
+            if (openDropdown) {
+                var scrollableList = e.target.closest('.select2-results__options, .dropdown-menu');
+                if (!scrollableList) {
+                    e.preventDefault();
+                    return;
+                }
+                var maxScrollList = scrollableList.scrollHeight - scrollableList.clientHeight;
+                if (maxScrollList <= 1) {
+                    e.preventDefault();
+                    return;
+                }
+                var deltaY = e.deltaY;
+                var atTop = scrollableList.scrollTop <= 0 && deltaY < 0;
+                var atBottom = (scrollableList.scrollTop >= maxScrollList - 1) && deltaY > 0;
+                if (atTop || atBottom) {
+                    e.preventDefault();
+                } else {
+                    e.stopPropagation();
+                }
             }
         }, { passive: false });
     </script>

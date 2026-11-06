@@ -22,18 +22,26 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label text-xs font-weight-bold text-secondary mb-1">City <span class="text-danger">*</span></label>
-                    <input type="text" name="city" list="popularCitiesList" class="form-control form-control-sm" placeholder="e.g. Makkah" value="{{ old('city') }}" required>
-                    <datalist id="popularCitiesList">
-                        @foreach($popularCities as $pc)
-                            <option value="{{ $pc }}">
-                        @endforeach
-                    </datalist>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label text-xs font-weight-bold text-secondary mb-0">City <span class="text-danger">*</span></label>
+                        <a href="javascript:void(0);" class="text-primary text-xxs fw-bold btn-quick-add-city" data-target="#create_hotel_city">
+                            <i class="fa-solid fa-plus-circle me-1"></i>New City
+                        </a>
+                    </div>
+                    <select name="city" id="create_hotel_city" class="form-control form-control-sm ajax-city-select2" data-placeholder="Search City in Database..." required>
+                        @if(old('city'))
+                            <option value="{{ old('city') }}" selected>{{ old('city') }}</option>
+                        @else
+                            <option value="Makkah" selected>Makkah</option>
+                        @endif
+                    </select>
                 </div>
 
                 <div class="col-md-3">
                     <label class="form-label text-xs font-weight-bold text-secondary mb-1">Country</label>
-                    <input type="text" name="country" class="form-control form-control-sm" value="{{ old('country', 'Saudi Arabia') }}">
+                    <select name="country" id="create_hotel_country" class="form-control form-control-sm ajax-country-select2" data-placeholder="Select Country...">
+                        <option value="{{ old('country', 'Saudi Arabia') }}" selected>{{ old('country', 'Saudi Arabia') }}</option>
+                    </select>
                 </div>
 
                 <div class="col-md-4">
@@ -71,9 +79,14 @@
                 </div>
 
                 <div class="col-12">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="status" value="1" id="hotelStatus" checked>
-                        <label class="form-check-label text-xs font-weight-bold text-secondary" for="hotelStatus">Active & Available in Itinerary Bookings</label>
+                    <div class="slide-switch-container">
+                        <label class="slide-switch mb-0">
+                            <input type="checkbox" name="status" value="1" id="hotelStatus" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <label for="hotelStatus" class="text-xs font-weight-bold text-dark mb-0 cursor-pointer">
+                            Active & Available in Itinerary Bookings
+                        </label>
                     </div>
                 </div>
 

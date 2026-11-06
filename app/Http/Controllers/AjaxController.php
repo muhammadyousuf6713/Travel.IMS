@@ -355,6 +355,101 @@ class AjaxController extends Controller
         return response()->json($data);
     }
 
+    public function store_city(Request $request)
+    {
+        $request->validate([
+            'city_name' => 'required|string|max:191',
+            'country_name' => 'nullable|string|max:191',
+        ]);
+
+        $cityName = trim($request->city_name);
+        $countryName = trim($request->country_name ?? 'Saudi Arabia');
+
+        // Check or create country
+        $country = DB::table('countries')
+            ->where('name', 'LIKE', $countryName)
+            ->orWhere('country_name', 'LIKE', $countryName)
+            ->first();
+
+        if ($country) {
+            $countryId = $country->id_countries;
+            $countryCode = $country->iso2 ?: 'SA';
+        } else {
+            $iso2 = strtoupper(substr($countryName, 0, 2));
+            $countryId = DB::table('countries')->insertGetId([
+                'name' => $countryName,
+                'country_name' => $countryName,
+                'iso2' => $iso2,
+                'iso3' => strtoupper(substr($countryName, 0, 3)),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $countryCode = $iso2;
+        }
+
+        // Check if city exists
+        $existingCity = DB::table('cities')
+            ->where('name', 'LIKE', $cityName)
+            ->first();
+
+        if ($existingCity) {
+            return response()->json([
+                'success' => true,
+                'city' => $existingCity,
+                'message' => 'City already exists in database.'
+            ]);
+        }
+
+        // Sample a state from existing cities for this country
+        $sampleCity = DB::table('cities')->where('country_id', $countryId)->first();
+        $stateId = $sampleCity ? $sampleCity->state_id : 1;
+        $stateCode = $sampleCity ? $sampleCity->state_code : '01';
+
+        $cityId = DB::table('cities')->insertGetId([
+            'name' => $cityName,
+            'state_id' => $stateId,
+            'state_code' => $stateCode,
+            'country_id' => $countryId,
+            'country_code' => $countryCode,
+            'latitude' => 0.00000000,
+            'longitude' => 0.00000000,
+            'flag' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $newCity = DB::table('cities')->where('id', $cityId)->first();
+
+        return response()->json([
+            'success' => true,
+            'city' => $newCity,
+            'message' => "City '{$cityName}' added successfully to database."
+        ]);
+    }
+
+    public function autocomplete_country(Request $request)
+    {
+        $search = trim($request->input('q', $request->input('term', '')));
+        $query = DB::table('countries')->select('id_countries', 'name', 'country_name');
+
+        if (!empty($search)) {
+            $query->where('name', 'LIKE', '%' . $search . '%')
+                  ->orWhere('country_name', 'LIKE', '%' . $search . '%');
+        }
+
+        $countries = $query->limit(50)->get();
+        $data = [];
+        foreach ($countries as $c) {
+            $cName = $c->country_name ?: $c->name;
+            $data[] = [
+                'id' => $cName,
+                'text' => $cName,
+                'name' => $cName,
+            ];
+        }
+        return response()->json($data);
+    }
+
     // Customer Controller
     public function customer_search(Request $request, $query = null)
     {
