@@ -15,6 +15,7 @@ use App\Http\Controllers\PilgrimageBookingController;
 use App\Http\Controllers\PilgrimageVoucherController;
 use App\Http\Controllers\SystemIntegrationSettingController;
 use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\HotelController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ResetController;
@@ -177,6 +178,11 @@ Route::group(['middleware' => 'auth'], function () {
     Route::put('/currencies/{id}', [CurrencyController::class, 'update'])->name('currencies.update')->middleware(['permission:Currencies edit']);
     Route::delete('/currencies/{id}', [CurrencyController::class, 'destroy'])->name('currencies.destroy')->middleware(['permission:Currencies edit']);
     Route::get('/currencies/rates-json', [CurrencyController::class, 'ratesJson'])->name('currencies.rates');
+
+    // Hotels & Accommodations (Preferences)
+    Route::resource('hotels', HotelController::class);
+    Route::get('/api/hotels-by-city', [HotelController::class, 'getByCity'])->name('hotels.by_city');
+    Route::post('/api/hotels/quick-store', [HotelController::class, 'quickStore'])->name('hotels.quick_store');
 
     // Services
     Route::get('/services', [ServiceController::class, 'index'])->middleware(['permission:Services list']);

@@ -164,7 +164,7 @@
                                         <th>SR</th>
                                         <th>FUD</th>
                                         <th>TD</th>
-                                        <th>Status</th>
+                                        <th class="all" style="width: 100px; min-width: 95px; text-align: center;">Status</th>
                                         <th class="none">Services</th>
                                         <th class="none">City</th>
                                         <th class="none">Created At</th>
@@ -899,7 +899,9 @@
                     },
                     {
                         data: 'status',
-                        name: 'inquiry.status'
+                        name: 'inquiry.status',
+                        responsivePriority: 1,
+                        className: 'text-center'
                     },
                     {
                         data: 'services',
@@ -933,7 +935,8 @@
                         data: 'action',
                         name: 'action',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        responsivePriority: 1
                     }
                 ],
                 lengthMenu: [

@@ -410,7 +410,7 @@
                 </a>
             </li>
             @endcan
-            @if(auth()->user()->can('Inquiry Type list') || auth()->user()->can('Sales References list') || auth()->user()->can('Currencies list') || auth()->user()->can('Services list'))
+            @if(auth()->user()->can('Inquiry Type list') || auth()->user()->can('Sales References list') || auth()->user()->can('Currencies list') || auth()->user()->can('Services list') || auth()->user()->can('Hotels list'))
             <!-- Preferences -->
             <li class="nav-item mt-3">
                 <h6 class="ps-4 text-uppercase">Preferences</h6>
@@ -446,6 +446,14 @@
                     <span class="nav-link-text">Currencies & Rates</span>
                 </a>
                 @endcan
+                @if(auth()->user()->can('Hotels list') || auth()->user()->hasRole(['Admin', 'Super-Admin', 'admin', 'super-admin']) || auth()->user()->role_id == 1)
+                <a class="nav-link {{ Request::is('hotels*') ? 'active' : '' }}" href="{{ route('hotels.index') }}">
+                    <div class="icon">
+                        <i class="fa-solid fa-hotel"></i>
+                    </div>
+                    <span class="nav-link-text">Hotels</span>
+                </a>
+                @endif
             </li>
             @endif
 

@@ -163,7 +163,8 @@ class PilgrimageBookingController extends Controller
         $latestId = PilgrimageBooking::max('id') ?? 0;
         $suggestedCrmId = 'CRM-' . str_pad($latestId + 1001, 5, '0', STR_PAD_LEFT);
 
-        return view('pilgrimage.create', compact('agents', 'popularCities', 'isBossOrAdmin', 'suggestedCrmId'));
+        $initialHotels = \App\Models\Hotel::active()->orderBy('name', 'asc')->get();
+        return view('pilgrimage.create', compact('agents', 'popularCities', 'isBossOrAdmin', 'suggestedCrmId', 'initialHotels'));
     }
 
     /**
@@ -222,7 +223,8 @@ class PilgrimageBookingController extends Controller
         $agents = User::orderBy('name', 'asc')->get();
         $popularCities = ['Makkah', 'Madinah', 'Jeddah', 'Riyadh', 'Taif', 'Dammam', 'Dubai', 'Karachi', 'Lahore', 'Islamabad'];
 
-        return view('pilgrimage.edit', compact('booking', 'agents', 'popularCities', 'isBossOrAdmin'));
+        $initialHotels = \App\Models\Hotel::active()->orderBy('name', 'asc')->get();
+        return view('pilgrimage.edit', compact('booking', 'agents', 'popularCities', 'isBossOrAdmin', 'initialHotels'));
     }
 
     /**

@@ -288,23 +288,70 @@ class AjaxController extends Controller
     public function autocomplete_city(Request $request)
     {
         $data = [];
-        $search = $request->input('q', $request->input('term', ''));
+        $search = trim($request->input('q', $request->input('term', '')));
 
-        if (!empty($search)) {
-            $rows = DB::table('cities')
-                ->where('name', 'LIKE', '%' . $search . '%')
-                ->select('cities.name')
-                ->limit(50)
-                ->get();
+        // Popular pilgrimage & major international travel hubs shown when search is empty or short
+        $popular = [
+            'Makkah', 'Madinah', 'Jeddah', 'Riyadh', 'Taif', 'Dammam',
+            'Karachi', 'Lahore', 'Islamabad', 'Peshawar', 'Multan', 'Faisalabad',
+            'Dubai', 'Abu Dhabi', 'Sharjah', 'Doha', 'Muscat', 'Kuwait City',
+            'London', 'Manchester', 'Istanbul', 'Kuala Lumpur', 'New York', 'Toronto'
+        ];
 
-            foreach ($rows as $row) {
+        if (empty($search)) {
+            foreach ($popular as $p) {
                 $data[] = [
-                    'id' => $row->name,
-                    'text' => $row->name,
-                    'name' => $row->name,
+                    'id' => $p,
+                    'text' => $p,
+                    'name' => $p,
+                ];
+            }
+            return response()->json($data);
+        }
+
+        // Add matching popular cities first
+        foreach ($popular as $p) {
+            if (stripos($p, $search) !== false) {
+                $data[] = ['id' => $p, 'text' => $p, 'name' => $p];
+            }
+        }
+
+        // Check for common Makkah / Mecca or Madinah / Madina aliases
+        if (stripos($search, 'makk') !== false || stripos($search, 'mecc') !== false) {
+            if (!in_array('Makkah', array_column($data, 'id'))) {
+                $data[] = ['id' => 'Makkah', 'text' => 'Makkah', 'name' => 'Makkah'];
+            }
+        }
+        if (stripos($search, 'madi') !== false) {
+            if (!in_array('Madinah', array_column($data, 'id'))) {
+                $data[] = ['id' => 'Madinah', 'text' => 'Madinah', 'name' => 'Madinah'];
+            }
+        }
+
+        $rows = DB::table('cities')
+            ->where('name', 'LIKE', '%' . $search . '%')
+            ->orWhere(function ($q) use ($search) {
+                if (stripos($search, 'makk') !== false) {
+                    $q->where('name', 'LIKE', '%Mecca%');
+                } elseif (stripos($search, 'madi') !== false) {
+                    $q->where('name', 'LIKE', '%Madina%');
+                }
+            })
+            ->select('cities.name')
+            ->limit(50)
+            ->get();
+
+        foreach ($rows as $row) {
+            $cityName = ($row->name === 'Mecca') ? 'Makkah' : (($row->name === 'Madina') ? 'Madinah' : $row->name);
+            if (!in_array($cityName, array_column($data, 'id'))) {
+                $data[] = [
+                    'id' => $cityName,
+                    'text' => $cityName,
+                    'name' => $cityName,
                 ];
             }
         }
+
         return response()->json($data);
     }
 

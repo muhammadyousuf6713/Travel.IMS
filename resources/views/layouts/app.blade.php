@@ -383,6 +383,34 @@
         $(document).ready(function() {
             initializeAjaxCityDropdowns();
         });
+    
+        // Universal scroll boundary isolation: Prevents wheel scrolling over dropdowns/modals from moving background screen
+        document.addEventListener('wheel', function(e) {
+            const scrollable = e.target.closest('.select2-results__options, .select2-dropdown, .modal-body, .followup-history-scrollbox, .followup-modal-list, .dropdown-menu');
+            
+            if (document.body.classList.contains('modal-open')) {
+                const insideModal = e.target.closest('.modal-content, .select2-dropdown, .select2-container');
+                if (!insideModal) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            if (!scrollable) return;
+
+            const hasScroll = scrollable.scrollHeight > scrollable.clientHeight;
+            if (!hasScroll) return;
+
+            const scrollTop = scrollable.scrollTop;
+            const maxScroll = scrollable.scrollHeight - scrollable.clientHeight;
+            const delta = e.deltaY;
+
+            if ((delta < 0 && scrollTop <= 0) || (delta > 0 && scrollTop >= maxScroll - 1)) {
+                e.preventDefault();
+            } else {
+                e.stopPropagation();
+            }
+        }, { passive: false });
     </script>
 </body>
 

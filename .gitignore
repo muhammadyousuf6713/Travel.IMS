@@ -16,3 +16,7 @@ yarn-error.log
 _backup*/
 _*.txt
 _*.bat
+
+/scratch
+/demo_recorder
+/demo_videos
