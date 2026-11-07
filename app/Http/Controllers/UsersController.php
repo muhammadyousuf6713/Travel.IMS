@@ -192,7 +192,21 @@ class UsersController extends Controller
      */
     public function index()
     {
-        $users = User::with('roles')->where('id', '!=', auth()->user()->id)->get();
+        $users = User::with(['roles.permissions', 'permissions'])
+            ->where('id', '!=', auth()->user()->id)
+            ->get();
+
+        // Eager count inquiries by salesperson to avoid N+1 queries
+        $inquiryCounts = \App\inquiry::selectRaw("saleperson, count(*) as total, sum(case when status in ('Confirmed', 'Completed') then 1 else 0 end) as won")
+            ->groupBy('saleperson')
+            ->get()
+            ->keyBy('saleperson');
+
+        foreach ($users as $u) {
+            $u->total_inquiries = (int) ($inquiryCounts[$u->id]->total ?? 0);
+            $u->won_inquiries = (int) ($inquiryCounts[$u->id]->won ?? 0);
+        }
+
         return view('users.index')->with(compact('users'));
     }
 
@@ -312,6 +326,28 @@ class UsersController extends Controller
         $user->email = $request->email;
         $user->status = $request->status;
         $user->role_id = $request->role_id;
+        if ($request->has('phone')) $user->phone = $request->phone;
+        if ($request->has('location')) $user->location = $request->location;
+        if ($request->has('about_me')) $user->about_me = $request->about_me;
+
+        if ($request->hasFile('profile_picture')) {
+            $dir = public_path('uploads/avatars');
+            if (!\Illuminate\Support\Facades\File::exists($dir)) {
+                \Illuminate\Support\Facades\File::makeDirectory($dir, 0755, true);
+            }
+            if (!empty($user->profile_picture) && \Illuminate\Support\Facades\File::exists(public_path($user->profile_picture))) {
+                \Illuminate\Support\Facades\File::delete(public_path($user->profile_picture));
+            }
+            $file = $request->file('profile_picture');
+            $fileName = 'avatar_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move($dir, $fileName);
+            $user->profile_picture = 'uploads/avatars/' . $fileName;
+        } elseif ($request->boolean('remove_picture')) {
+            if (!empty($user->profile_picture) && \Illuminate\Support\Facades\File::exists(public_path($user->profile_picture))) {
+                \Illuminate\Support\Facades\File::delete(public_path($user->profile_picture));
+            }
+            $user->profile_picture = null;
+        }
 
         if ($user->save()) {
             // Assign role using Spatie
@@ -346,5 +382,59 @@ class UsersController extends Controller
             session()->flash('error', 'User not found');
         }
         return redirect(url('user-management'));
+    }
+
+    /**
+     * Impersonate a user to experience the CRM with their exact allotted permissions.
+     */
+    public function impersonate($id)
+    {
+        $currentUser = Auth::user();
+
+        $isAuthorized = $currentUser->hasRole(['Admin', 'Super-Admin', 'admin', 'super-admin'])
+            || $currentUser->role_id == 1
+            || $currentUser->can('Users Management list')
+            || $currentUser->can('Super-Admin');
+
+        if (!$isAuthorized) {
+            abort(403, 'Unauthorized to login as another user.');
+        }
+
+        $targetUser = User::findOrFail($id);
+
+        if ((int) $targetUser->id === (int) $currentUser->id) {
+            return redirect()->back()->with('error', 'You are already logged into this account.');
+        }
+
+        // Store parent account ID in session
+        if (!Session::has('impersonated_by')) {
+            Session::put('impersonated_by', $currentUser->id);
+            Session::put('impersonated_by_name', $currentUser->name);
+        }
+
+        Auth::loginUsingId($targetUser->id);
+
+        return redirect('/dashboard')->with('success', 'Logged in as ' . $targetUser->name . ' with allotted permissions. Use "Back to Parent Account" in profile menu to return.');
+    }
+
+    /**
+     * Switch back to the original parent admin account.
+     */
+    public function leaveImpersonate()
+    {
+        if (!Session::has('impersonated_by')) {
+            return redirect('/dashboard');
+        }
+
+        $originalUserId = Session::pull('impersonated_by');
+        Session::forget('impersonated_by_name');
+
+        $originalUser = User::find($originalUserId);
+        if ($originalUser) {
+            Auth::loginUsingId($originalUser->id);
+            return redirect('/user-management')->with('success', 'Switched back to your parent account (' . $originalUser->name . ').');
+        }
+
+        return redirect('/dashboard');
     }
 }

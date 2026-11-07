@@ -136,6 +136,12 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('users/edit/{id}', [UsersController::class, 'edit'])->middleware(['permission:Users Management edit']);
     Route::post('users/update/{id}', [UsersController::class, 'update'])->middleware(['permission:Users Management edit']);
     Route::delete('users/delete/{id}', [UsersController::class, 'destroy'])->middleware(['permission:Users Management delete']);
+    Route::get('users/impersonate/{id}', [UsersController::class, 'impersonate'])->name('users.impersonate')->middleware(['auth']);
+    Route::get('impersonate/leave', [UsersController::class, 'leaveImpersonate'])->name('users.leave_impersonate')->middleware(['auth']);
+
+    // Global Settings Module
+    Route::get('settings', [\App\Http\Controllers\SystemSettingController::class, 'index'])->name('settings.index')->middleware(['auth']);
+    Route::post('settings', [\App\Http\Controllers\SystemSettingController::class, 'update'])->name('settings.update')->middleware(['auth']);
 
     // Roles Management
     Route::group(['prefix' => 'roles', 'middleware' => ['auth']], function () {

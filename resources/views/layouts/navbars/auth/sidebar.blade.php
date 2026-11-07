@@ -489,10 +489,18 @@
                     <span class="nav-link-text">Organization Settings</span>
                 </a>
                 @endcan
+                @if(auth()->user()->can('Organization Settings edit') || auth()->user()->can('Super-Admin') || auth()->user()->hasRole(['Admin', 'Super-Admin', 'admin', 'super-admin']) || auth()->user()->role_id == 1)
+                <a class="nav-link {{ Request::is('settings*') ? 'active' : '' }}" href="{{ route('settings.index') }}">
+                    <div class="icon">
+                        <i class="fa-solid fa-gear"></i>
+                    </div>
+                    <span class="nav-link-text">Settings</span>
+                </a>
+                @endif
                 @can('Super-Admin')
                 <a class="nav-link {{ Request::is('system-integration-settings*') ? 'active' : '' }}" href="{{ route('integration_settings.edit') }}">
                     <div class="icon">
-                        <i class="fa-solid fa-sliders"></i>
+                        <i class="fa-solid fa-plug"></i>
                     </div>
                     <span class="nav-link-text">Integration Settings</span>
                 </a>

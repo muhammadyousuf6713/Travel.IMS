@@ -48,6 +48,17 @@ class FollowupController extends Controller
             $query->orderBy('followup_remarks.followup_date', 'DESC');
         }
 
+        $authUser = auth()->user();
+        $isAdmin = $authUser && ($authUser->hasRole(['Admin', 'Super-Admin', 'admin', 'super-admin']) || $authUser->role_id == 1 || $authUser->can('Super-Admin'));
+        $onlyAssigned = \App\Models\SystemSetting::get('only_assigned_inquiries', '0') === '1';
+
+        if (!$isAdmin && $onlyAssigned) {
+            $query->where(function ($q) use ($authUser) {
+                $q->where('inquiry.saleperson', $authUser->id)
+                  ->orWhere('inquiry.created_by', $authUser->id);
+            });
+        }
+
         // Apply filters
         if ($v = request('sales_person')) {
             $query->whereHas('inquiry', function ($q) use ($v) {

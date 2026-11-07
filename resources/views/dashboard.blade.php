@@ -113,7 +113,7 @@
     <div class="db-head d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
         <div>
             <h4>{{ $greeting }}, {{ \Illuminate\Support\Str::of($userName)->explode(' ')->first() }}</h4>
-            <p>{{ now()->format('l, d F Y') }} · Here is how the business is doing.</p>
+            <p>{{ now()->format('l, d F Y') }} · {{ !empty($isSalesDashboard) ? 'Here is your personal sales pipeline, follow-ups and performance.' : 'Here is how the business is doing.' }}</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             @can('Inquiry add')
@@ -132,7 +132,7 @@
     <div class="row g-3 mb-3">
         <div class="col-xl-3 col-md-6">
             <a href="{{ route('inquiry.index') }}" class="db-card kpi">
-                <span class="label"><i class="fa-regular fa-envelope-open"></i> Inquiries · last 30 days</span>
+                <span class="label"><i class="fa-regular fa-envelope-open"></i> {{ !empty($isSalesDashboard) ? 'My Inquiries · last 30 days' : 'Inquiries · last 30 days' }}</span>
                 <span class="value">{{ number_format($inquiriesThisMonth) }}</span>
                 <span class="meta">
                     @if(!is_null($monthChange))
@@ -158,7 +158,7 @@
         </div>
         <div class="col-xl-3 col-md-6">
             <a href="{{ auth()->user()->can('Customers list') ? url('customers') : 'javascript:void(0);' }}" class="db-card kpi">
-                <span class="label"><i class="fa-regular fa-user"></i> Customers</span>
+                <span class="label"><i class="fa-regular fa-user"></i> {{ !empty($isSalesDashboard) ? 'My Customers' : 'Customers' }}</span>
                 <span class="value">{{ number_format($totalCustomers) }}</span>
                 <span class="meta">+{{ number_format($newCustomersThisMonth) }} new in the last 30 days</span>
             </a>
@@ -288,7 +288,10 @@
     {{-- Team --}}
     <div class="db-card mb-3">
         <div class="db-card-h">
-            <div><h6>Team performance</h6><div class="sub">Top 8 salespeople by assigned inquiries · click a name to see their list</div></div>
+            <div>
+                <h6>{{ !empty($isSalesDashboard) ? 'My Performance Summary' : 'Team performance' }}</h6>
+                <div class="sub">{{ !empty($isSalesDashboard) ? 'Your personal active pipeline, won deals and conversion rate' : 'Top 8 salespeople by assigned inquiries · click a name to see their list' }}</div>
+            </div>
         </div>
         <div class="db-card-b">
             <div class="team-row head"><span>Salesperson</span><span class="c">Active</span><span class="c">Won</span><span class="c">Total</span><span>Conversion</span></div>
@@ -318,7 +321,10 @@
     {{-- Status by salesperson --}}
     <div class="db-card mb-2">
         <div class="db-card-h">
-            <div><h6>Inquiry status by salesperson</h6><div class="sub">Click a number to open those inquiries</div></div>
+            <div>
+                <h6>{{ !empty($isSalesDashboard) ? 'My Inquiries by Status' : 'Inquiry status by salesperson' }}</h6>
+                <div class="sub">Click a number to open those inquiries</div>
+            </div>
         </div>
         <div class="db-card-b pt-0">
             <div class="table-responsive">

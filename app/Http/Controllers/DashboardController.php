@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\customer;
 use App\followup_remark;
@@ -12,7 +13,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Dashboard: read-only summary queries. Nothing here writes to the database.
+ * Dashboard: read-only summary queries. Scoped to personal metrics for sales staff
+ * when Sales Dashboard permission is allotted or inquiry restriction is active.
  */
 class DashboardController extends Controller
 {
@@ -28,38 +30,74 @@ class DashboardController extends Controller
         $monthStart = $today->copy()->startOfMonth();
         $lastMonthStart = $monthStart->copy()->subMonth();
 
+        $user = Auth::user();
+        $isAdmin = $user && ($user->hasRole(['Admin', 'Super-Admin', 'admin', 'super-admin'])
+                   || $user->role_id == 1
+                   || $user->can('Super-Admin')
+                   || $user->can('Admin Dashboard')
+                   || $user->can('Admin Dashboard view')
+                   || $user->can('Admin Dashboard list'));
+
+        $isSalesDashboard = !$isAdmin && ($user->can('Sales Dashboard')
+                            || $user->can('Sales Dashboard view')
+                            || $user->can('Sales Dashboard list')
+                            || SystemSetting::get('only_assigned_inquiries', '0') === '1');
+
+        // Base query closure for scoping inquiries
+        $baseInquiry = function() use ($isSalesDashboard, $user) {
+            $q = inquiry::query()->whereNull('inquiry.deleted_at');
+            if ($isSalesDashboard && $user) {
+                $q->where(function($sub) use ($user) {
+                    $sub->where('inquiry.saleperson', $user->id)
+                        ->orWhere('inquiry.created_by', $user->id);
+                });
+            }
+            return $q;
+        };
+
         // ---------------------------------------------------------------
         // 1. Headline numbers
         // ---------------------------------------------------------------
-        $totalInquiries = inquiry::count();
-        $totalCustomers = customer::count();
-        $totalUsers = User::count();
+        $totalInquiries = $baseInquiry()->count();
+        $totalUsers = $isAdmin ? User::count() : 1;
 
-        // rolling 30-day windows (a calendar month looks empty on the 1st)
+        if ($isSalesDashboard && $user) {
+            $customerIds = $baseInquiry()->whereNotNull('customer_id')->pluck('customer_id')->unique();
+            $totalCustomers = customer::whereIn('id_customers', $customerIds)->count();
+        } else {
+            $totalCustomers = customer::count();
+        }
+
+        // Rolling 30-day windows
         $last30Start = $today->copy()->subDays(29);
         $prev30Start = $last30Start->copy()->subDays(30);
-        $inquiriesThisMonth = inquiry::where('created_at', '>=', $last30Start)->count();
-        $inquiriesLastMonth = inquiry::where('created_at', '>=', $prev30Start)->where('created_at', '<', $last30Start)->count();
-        $inquiriesToday = inquiry::whereDate('created_at', $today)->count();
+        $inquiriesThisMonth = $baseInquiry()->where('created_at', '>=', $last30Start)->count();
+        $inquiriesLastMonth = $baseInquiry()->where('created_at', '>=', $prev30Start)->where('created_at', '<', $last30Start)->count();
+        $inquiriesToday = $baseInquiry()->whereDate('created_at', $today)->count();
         $monthChange = $inquiriesLastMonth > 0
             ? round((($inquiriesThisMonth - $inquiriesLastMonth) / $inquiriesLastMonth) * 100)
             : null;
 
-        $inquiryStatusCounts = inquiry::select('status', DB::raw('count(*) as total'))
+        $inquiryStatusCounts = $baseInquiry()
+            ->select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
             ->pluck('total', 'status');
 
         $activePipeline = collect(self::ACTIVE)->sum(fn ($s) => (int) ($inquiryStatusCounts[$s] ?? 0));
         $wonTotal = collect(self::WON)->sum(fn ($s) => (int) ($inquiryStatusCounts[$s] ?? 0));
         $conversionRate = $totalInquiries > 0 ? round($wonTotal / $totalInquiries * 100, 1) : 0;
-        $wonThisMonth = inquiry::whereIn('status', self::WON)->where('created_at', '>=', $last30Start)->count();
+        $wonThisMonth = $baseInquiry()->whereIn('status', self::WON)->where('created_at', '>=', $last30Start)->count();
 
-        $newCustomersThisMonth = customer::where('created_at', '>=', $last30Start)->count();
+        if ($isSalesDashboard && $user) {
+            $newCustomersThisMonth = customer::whereIn('id_customers', $customerIds)
+                ->where('created_at', '>=', $last30Start)
+                ->count();
+        } else {
+            $newCustomersThisMonth = customer::where('created_at', '>=', $last30Start)->count();
+        }
 
         // ---------------------------------------------------------------
         // 2. Follow-ups: based on each inquiry's LATEST follow-up
-        //    (same rule as the Inquiry list's "FUD" filter, so the
-        //    numbers match what you see when you click through)
         // ---------------------------------------------------------------
         $latestFollowups = DB::table('followup_remarks as f')
             ->joinSub(
@@ -71,6 +109,13 @@ class DashboardController extends Controller
             )
             ->join('inquiry as i', 'i.id_inquiry', '=', 'f.inquiry_id')
             ->whereNull('i.deleted_at');
+
+        if ($isSalesDashboard && $user) {
+            $latestFollowups->where(function($q) use ($user) {
+                $q->where('i.saleperson', $user->id)
+                  ->orWhere('i.created_by', $user->id);
+            });
+        }
 
         $todaysFollowupsCount = (clone $latestFollowups)->whereDate('f.followup_date', $today)->count();
         $overdueFollowupsCount = (clone $latestFollowups)->whereDate('f.followup_date', '<', $today)->count();
@@ -92,7 +137,8 @@ class DashboardController extends Controller
         // 3. 12-month trend: new inquiries vs won
         // ---------------------------------------------------------------
         $trendStart = $monthStart->copy()->subMonths(11);
-        $monthly = inquiry::where('created_at', '>=', $trendStart)
+        $monthly = $baseInquiry()
+            ->where('created_at', '>=', $trendStart)
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as ym, COUNT(*) as total, SUM(CASE WHEN status IN ('Confirmed','Completed') THEN 1 ELSE 0 END) as won")
             ->groupBy('ym')
             ->get()
@@ -109,7 +155,8 @@ class DashboardController extends Controller
         // ---------------------------------------------------------------
         // 4. Lead sources and inquiry types (top 6)
         // ---------------------------------------------------------------
-        $leadSources = inquiry::leftJoin('sales_reference as sr', 'sr.type_id', '=', 'inquiry.sales_reference')
+        $leadSources = $baseInquiry()
+            ->leftJoin('sales_reference as sr', 'sr.type_id', '=', 'inquiry.sales_reference')
             ->selectRaw("COALESCE(NULLIF(TRIM(sr.type_name), ''), 'Not set') as name, COUNT(*) as total")
             ->groupBy('name')
             ->orderByDesc('total')
@@ -117,33 +164,43 @@ class DashboardController extends Controller
             ->get();
 
         // ---------------------------------------------------------------
-        // 5. Team leaderboard
+        // 5. Team performance (Admin: Top 8 salespeople; Sales: Own record only)
         // ---------------------------------------------------------------
-        $team = User::join('inquiry', 'users.id', '=', 'inquiry.saleperson')
-            ->whereNull('inquiry.deleted_at')
+        $teamQuery = User::join('inquiry', 'users.id', '=', 'inquiry.saleperson')
+            ->whereNull('inquiry.deleted_at');
+
+        if ($isSalesDashboard && $user) {
+            $teamQuery->where('users.id', $user->id);
+        }
+
+        $team = $teamQuery
             ->selectRaw("users.id, users.name, COUNT(*) as total,
                 SUM(CASE WHEN inquiry.status IN ('Confirmed','Completed') THEN 1 ELSE 0 END) as won,
                 SUM(CASE WHEN inquiry.status IN ('Open','In-Progress','Quotation','Hold') THEN 1 ELSE 0 END) as active")
             ->groupBy('users.id', 'users.name')
             ->orderByDesc('total')
-            ->limit(8)
+            ->limit($isSalesDashboard ? 1 : 8)
             ->get();
 
-        // kept for compatibility with anything that still reads it
         $userPerformance = $team->map(fn ($u) => (object) ['id' => $u->id, 'name' => $u->name, 'inquiry_count' => $u->total]);
 
         // ---------------------------------------------------------------
-        // 6. Reviews module (only if it has been set up)
+        // 6. Reviews module
         // ---------------------------------------------------------------
         $reviews = null;
         try {
             if (class_exists(\App\Services\ReviewService::class) && \App\Services\ReviewService::isReady()) {
                 $open = ['pending', 'requested', 'not_reachable'];
+                $revQuery = DB::table('inquiry_reviews')->whereNull('deleted_at');
+                if ($isSalesDashboard && $user) {
+                    $revQuery->where('assigned_to', $user->id);
+                }
+
                 $reviews = [
-                    'open' => DB::table('inquiry_reviews')->whereNull('deleted_at')->whereIn('status', $open)->count(),
-                    'due' => DB::table('inquiry_reviews')->whereNull('deleted_at')->whereIn('status', $open)->whereDate('next_followup_date', '<=', $today)->count(),
-                    'received_month' => DB::table('inquiry_reviews')->whereNull('deleted_at')->where('status', 'received')->where('received_at', '>=', $monthStart)->count(),
-                    'avg_rating' => round((float) DB::table('inquiry_reviews')->whereNull('deleted_at')->where('status', 'received')->whereNotNull('rating')->avg('rating'), 1),
+                    'open' => (clone $revQuery)->whereIn('status', $open)->count(),
+                    'due' => (clone $revQuery)->whereIn('status', $open)->whereDate('next_followup_date', '<=', $today)->count(),
+                    'received_month' => (clone $revQuery)->where('status', 'received')->where('received_at', '>=', $monthStart)->count(),
+                    'avg_rating' => round((float) (clone $revQuery)->where('status', 'received')->whereNotNull('rating')->avg('rating'), 1),
                 ];
             }
         } catch (\Throwable $e) {
@@ -151,9 +208,16 @@ class DashboardController extends Controller
         }
 
         // ---------------------------------------------------------------
-        // 7. Inquiry status by salesperson (existing table, unchanged logic)
+        // 7. Inquiry status by salesperson (Restricted to own row for sales staff)
         // ---------------------------------------------------------------
-        $rawCounts = inquiry::join('users', 'inquiry.saleperson', '=', 'users.id')
+        $rawCountsQuery = inquiry::join('users', 'inquiry.saleperson', '=', 'users.id')
+            ->whereNull('inquiry.deleted_at');
+
+        if ($isSalesDashboard && $user) {
+            $rawCountsQuery->where('users.id', $user->id);
+        }
+
+        $rawCounts = $rawCountsQuery
             ->select('users.id as salesperson_id', 'users.name as salesperson_name', 'inquiry.status', DB::raw('count(*) as total'))
             ->groupBy('users.id', 'users.name', 'inquiry.status')
             ->get();
@@ -174,7 +238,6 @@ class DashboardController extends Controller
                 $allStatuses[] = $row->status;
             }
         }
-        // make sure every row has every column
         foreach ($salespersonStatusCounts as $sp => $data) {
             foreach ($allStatuses as $st) {
                 $salespersonStatusCounts[$sp]['counts'][$st] = $data['counts'][$st] ?? 0;
@@ -186,7 +249,7 @@ class DashboardController extends Controller
         $greeting = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
 
         return view('dashboard', compact(
-            'greeting', 'userName',
+            'greeting', 'userName', 'isSalesDashboard', 'isAdmin',
             'totalInquiries', 'totalCustomers', 'totalUsers',
             'inquiriesThisMonth', 'inquiriesLastMonth', 'inquiriesToday', 'monthChange',
             'inquiryStatusCounts', 'activePipeline', 'wonTotal', 'wonThisMonth', 'conversionRate',

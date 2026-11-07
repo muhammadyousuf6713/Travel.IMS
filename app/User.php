@@ -16,7 +16,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'role_id', 'name', 'email', 'password',
+        'role_id', 'name', 'email', 'profile_picture', 'phone', 'location', 'about_me', 'password', 'status', 'business_id',
     ];
 
     /**
@@ -27,4 +27,21 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    public function getAvatarUrlAttribute()
+    {
+        if (!empty($this->profile_picture) && file_exists(public_path($this->profile_picture))) {
+            return asset($this->profile_picture);
+        }
+        return null;
+    }
+
+    public function getInitialsAttribute()
+    {
+        $words = preg_split('/\s+/', trim($this->name ?? 'User'));
+        if (count($words) >= 2) {
+            return strtoupper(mb_substr($words[0], 0, 1) . mb_substr($words[1], 0, 1));
+        }
+        return strtoupper(mb_substr($this->name ?? 'U', 0, 1));
+    }
 }

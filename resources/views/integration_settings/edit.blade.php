@@ -111,13 +111,24 @@
                                 </button>
                             </div>
 
-                            <div class="switch-row mb-4">
+                            <div class="switch-row mb-3">
                                 <div>
                                     <div class="title">Assign new leads automatically</div>
                                     <div class="desc">When off, every new lead goes to the default admin user.</div>
                                 </div>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" name="auto_assign_enabled" id="auto_assign_enabled" value="1" {{ $settings->auto_assign_enabled ? 'checked' : '' }}>
+                                </div>
+                            </div>
+
+                            <div class="switch-row mb-4">
+                                <input type="hidden" name="has_visibility_setting" value="1">
+                                <div>
+                                    <div class="title">Only show personal or assigned inquiries to sales agents</div>
+                                    <div class="desc">When checked, sales staff will only see their own assigned inquiries. Admins retain full company-wide visibility. Also managed via <a href="{{ route('settings.index') }}" class="text-primary font-weight-bold">Settings</a>.</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="only_assigned_inquiries" id="only_assigned_inquiries" value="1" {{ ($onlyAssignedInquiries ?? false) ? 'checked' : '' }}>
                                 </div>
                             </div>
 

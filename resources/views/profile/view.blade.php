@@ -16,9 +16,13 @@
         <div class="p-4" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
             <div class="row align-items-center">
                 <div class="col-auto">
-                    <div class="avatar avatar-xl rounded-circle bg-gradient-primary text-white font-weight-bold d-flex align-items-center justify-content-center shadow-sm" style="width: 72px; height: 72px; font-size: 28px; border: 3px solid rgba(255,255,255,0.2);">
-                        {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
-                    </div>
+                    @if(!empty($user->profile_picture) && file_exists(public_path($user->profile_picture)))
+                        <img src="{{ asset($user->profile_picture) }}" alt="{{ $user->name }}" class="avatar avatar-xl rounded-circle shadow-sm" style="width: 72px; height: 72px; object-fit: cover; border: 3px solid rgba(255,255,255,0.25);">
+                    @else
+                        <div class="avatar avatar-xl rounded-circle bg-gradient-primary text-white font-weight-bold d-flex align-items-center justify-content-center shadow-sm" style="width: 72px; height: 72px; font-size: 28px; border: 3px solid rgba(255,255,255,0.2);">
+                            {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
+                        </div>
+                    @endif
                 </div>
                 <div class="col my-auto">
                     <div class="h-100">

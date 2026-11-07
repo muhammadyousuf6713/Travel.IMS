@@ -82,6 +82,17 @@ class InquiryController extends Controller
             $query->where('id_inquiry', request()->q);
         }
 
+        $authUser = auth()->user();
+        $isAdmin = $authUser && ($authUser->hasRole(['Admin', 'Super-Admin', 'admin', 'super-admin']) || $authUser->role_id == 1 || $authUser->can('Super-Admin'));
+        $onlyAssigned = \App\Models\SystemSetting::get('only_assigned_inquiries', '0') === '1';
+
+        if (!$isAdmin && $onlyAssigned) {
+            $query->where(function ($q) use ($authUser) {
+                $q->where('inquiry.saleperson', $authUser->id)
+                  ->orWhere('inquiry.created_by', $authUser->id);
+            });
+        }
+
         $inquiry = $query->paginate(50);
         if ($inquiry === null) {
             $inquiry = collect();
@@ -436,6 +447,17 @@ class InquiryController extends Controller
 
             $query = inquiry::with(['customer', 'inquiryType', 'salesPerson', 'salesReference', 'createdBy', 'latestFollowup'])
                 ->select(['inquiry.*']);
+
+            $authUser = auth()->user();
+            $isAdmin = $authUser && ($authUser->hasRole(['Admin', 'Super-Admin', 'admin', 'super-admin']) || $authUser->role_id == 1 || $authUser->can('Super-Admin'));
+            $onlyAssigned = \App\Models\SystemSetting::get('only_assigned_inquiries', '0') === '1';
+
+            if (!$isAdmin && $onlyAssigned) {
+                $query->where(function ($q) use ($authUser) {
+                    $q->where('inquiry.saleperson', $authUser->id)
+                      ->orWhere('inquiry.created_by', $authUser->id);
+                });
+            }
 
             if (!request()->has('order')) {
                 $query->orderByDesc('inquiry.id_inquiry');

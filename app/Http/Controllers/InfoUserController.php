@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
@@ -49,6 +50,7 @@ class InfoUserController extends Controller
             'phone' => ['nullable', 'string', 'max:50'],
             'location' => ['nullable', 'string', 'max:100'],
             'about_me' => ['nullable', 'string', 'max:500'],
+            'profile_picture' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:3072'],
         ]);
 
         $updateData = [
@@ -60,6 +62,29 @@ class InfoUserController extends Controller
             if (Schema::hasColumn('users', $col)) {
                 $updateData[$col] = $attributes[$col] ?? null;
             }
+        }
+
+        // Handle profile picture upload or removal
+        if ($request->hasFile('profile_picture')) {
+            $dir = public_path('uploads/avatars');
+            if (!File::exists($dir)) {
+                File::makeDirectory($dir, 0755, true);
+            }
+
+            // Remove old picture if exists
+            if (!empty($user->profile_picture) && File::exists(public_path($user->profile_picture))) {
+                File::delete(public_path($user->profile_picture));
+            }
+
+            $file = $request->file('profile_picture');
+            $fileName = 'avatar_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move($dir, $fileName);
+            $updateData['profile_picture'] = 'uploads/avatars/' . $fileName;
+        } elseif ($request->boolean('remove_picture')) {
+            if (!empty($user->profile_picture) && File::exists(public_path($user->profile_picture))) {
+                File::delete(public_path($user->profile_picture));
+            }
+            $updateData['profile_picture'] = null;
         }
 
         $user->update($updateData);
