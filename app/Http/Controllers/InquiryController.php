@@ -1606,7 +1606,7 @@ class InquiryController extends Controller
         $inquiry->save();
 
         Session::flash('success', 'Inquiry has been updated successfully!');
-        return redirect()->route('inquiry.index');
+        return redirect()->route('inquiry.index', ['from_edit' => 1]);
     }
 
     /**

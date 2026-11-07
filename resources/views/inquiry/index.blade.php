@@ -439,6 +439,32 @@
 
         const INQ_SESSION_KEY = 'ims_filters_inquiry_state';
 
+        function checkIsReturningFromEdit() {
+            var urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('from_edit')) return true;
+
+            var ref = document.referrer || '';
+            if (ref && (ref.indexOf('edit_inquiry') !== -1 || ref.indexOf('/edit') !== -1 || ref.indexOf('inquiry_edit') !== -1)) {
+                return true;
+            }
+            return false;
+        }
+
+        function checkHasExplicitUrlFilters() {
+            var urlParams = new URLSearchParams(window.location.search);
+            const filterKeys = [
+                'sales_person', 'salesperson_id', 'inquiry_type', 'status',
+                'fud_filter', 'sales_reference', 'id_inquiry', 'date_from',
+                'date_to', 'customer_name', 'customer_cell', 'customer_email', 'q'
+            ];
+            for (var i = 0; i < filterKeys.length; i++) {
+                if (urlParams.has(filterKeys[i]) && urlParams.get(filterKeys[i])) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         function saveInquiryFilters() {
             try {
                 var state = {
@@ -461,31 +487,33 @@
 
         function restoreInquiryFilters() {
             var urlParams = new URLSearchParams(window.location.search);
-            var hasUrlParams = urlParams.toString().length > 0;
+            var isFromEdit = checkIsReturningFromEdit();
+            var hasExplicitFilters = checkHasExplicitUrlFilters();
             var state = null;
+            var hasActiveFilters = false;
 
-            if (!hasUrlParams) {
+            if (isFromEdit) {
+                // User returning from Edit Inquiry -> restore their active filters & search
                 try {
                     var raw = sessionStorage.getItem(INQ_SESSION_KEY);
                     if (raw) state = JSON.parse(raw);
                 } catch (e) {}
-            }
 
-            var hasActiveFilters = false;
-
-            if (state) {
-                if (state.inquiry_type) { $('select[name="inquiry_type"]').val(state.inquiry_type).trigger('change.select2'); hasActiveFilters = true; }
-                if (state.sales_person) { $('select[name="sales_person"]').val(state.sales_person).trigger('change.select2'); hasActiveFilters = true; }
-                if (state.status) { $('select[name="status"]').val(state.status).trigger('change.select2'); hasActiveFilters = true; }
-                if (state.id_inquiry) { $('input[name="id_inquiry"]').val(state.id_inquiry); hasActiveFilters = true; }
-                if (state.fud_filter) { $('select[name="fud_filter"]').val(state.fud_filter).trigger('change.select2'); hasActiveFilters = true; }
-                if (state.customer_name) { $('input[name="customer_name"]').val(state.customer_name); hasActiveFilters = true; }
-                if (state.customer_cell) { $('input[name="customer_cell"]').val(state.customer_cell); hasActiveFilters = true; }
-                if (state.customer_email) { $('input[name="customer_email"]').val(state.customer_email); hasActiveFilters = true; }
-                if (state.sales_reference) { $('select[name="sales_reference"]').val(state.sales_reference).trigger('change.select2'); hasActiveFilters = true; }
-                if (state.date_from) { $('input[name="date_from"]').val(state.date_from); hasActiveFilters = true; }
-                if (state.date_to) { $('input[name="date_to"]').val(state.date_to); hasActiveFilters = true; }
-            } else if (hasUrlParams) {
+                if (state) {
+                    if (state.inquiry_type) { $('select[name="inquiry_type"]').val(state.inquiry_type).trigger('change.select2'); hasActiveFilters = true; }
+                    if (state.sales_person) { $('select[name="sales_person"]').val(state.sales_person).trigger('change.select2'); hasActiveFilters = true; }
+                    if (state.status) { $('select[name="status"]').val(state.status).trigger('change.select2'); hasActiveFilters = true; }
+                    if (state.id_inquiry) { $('input[name="id_inquiry"]').val(state.id_inquiry); hasActiveFilters = true; }
+                    if (state.fud_filter) { $('select[name="fud_filter"]').val(state.fud_filter).trigger('change.select2'); hasActiveFilters = true; }
+                    if (state.customer_name) { $('input[name="customer_name"]').val(state.customer_name); hasActiveFilters = true; }
+                    if (state.customer_cell) { $('input[name="customer_cell"]').val(state.customer_cell); hasActiveFilters = true; }
+                    if (state.customer_email) { $('input[name="customer_email"]').val(state.customer_email); hasActiveFilters = true; }
+                    if (state.sales_reference) { $('select[name="sales_reference"]').val(state.sales_reference).trigger('change.select2'); hasActiveFilters = true; }
+                    if (state.date_from) { $('input[name="date_from"]').val(state.date_from); hasActiveFilters = true; }
+                    if (state.date_to) { $('input[name="date_to"]').val(state.date_to); hasActiveFilters = true; }
+                }
+            } else if (hasExplicitFilters) {
+                // User clicked an explicit filter link (e.g. from Dashboard KPI tile)
                 const filters = {
                     'sales_person': 'select[name="sales_person"]',
                     'salesperson_id': 'select[name="sales_person"]',
@@ -508,11 +536,28 @@
                     }
                 }
                 saveInquiryFilters();
+            } else {
+                // Navigating fresh from Dashboard, Sidebar, Add New Inquiry, or another page:
+                // MUST clear all saved filters, searches, and show ALL inquiries without any filter!
+                try {
+                    sessionStorage.removeItem(INQ_SESSION_KEY);
+                    sessionStorage.removeItem('DataTables_example23_state');
+                    localStorage.removeItem('DataTables_example23_' + window.location.pathname);
+                } catch (e) {}
+
+                // Reset filter form inputs to empty
+                if ($('#filterForm').length && $('#filterForm')[0]) {
+                    $('#filterForm')[0].reset();
+                }
+                $('#filterForm select').val('').trigger('change.select2');
             }
 
             if (hasActiveFilters) {
                 $('#filterCollapse').show();
                 $('#filterIcon').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+            } else {
+                $('#filterCollapse').hide();
+                $('#filterIcon').removeClass('fa-chevron-up').addClass('fa-chevron-down');
             }
 
             return state;
@@ -836,6 +881,21 @@
                     zeroRecords: 'No matching inquiries found for the current filters/search.'
                 },
                 stateSave: true,
+                stateLoadCallback: function(settings) {
+                    if (!checkIsReturningFromEdit()) {
+                        return null; // Do not restore stale search/paging when coming from other pages
+                    }
+                    try {
+                        return JSON.parse(sessionStorage.getItem('DataTables_example23_state') || 'null');
+                    } catch(e) {
+                        return null;
+                    }
+                },
+                stateSaveCallback: function(settings, data) {
+                    try {
+                        sessionStorage.setItem('DataTables_example23_state', JSON.stringify(data));
+                    } catch(e) {}
+                },
                 processing: true,
                 serverSide: true,
                 deferRender: true,
@@ -1064,6 +1124,8 @@
             $('#resetFilters').on('click', function() {
                 try {
                     sessionStorage.removeItem(INQ_SESSION_KEY);
+                    sessionStorage.removeItem('DataTables_example23_state');
+                    localStorage.removeItem('DataTables_example23_' + window.location.pathname);
                 } catch (e) {}
                 $('#filterForm')[0].reset();
                 $('#filterForm select').val('').trigger('change.select2');
@@ -1071,13 +1133,15 @@
                 table.ajax.reload();
             });
 
-            // Restore saved search on initial load
-            try {
-                var savedState = JSON.parse(sessionStorage.getItem(INQ_SESSION_KEY) || '{}');
-                if (savedState.table_search) {
-                    table.search(savedState.table_search).draw();
-                }
-            } catch (e) {}
+            // Restore saved search on initial load ONLY if returning from edit inquiry
+            if (checkIsReturningFromEdit()) {
+                try {
+                    var savedState = JSON.parse(sessionStorage.getItem(INQ_SESSION_KEY) || '{}');
+                    if (savedState.table_search) {
+                        table.search(savedState.table_search).draw();
+                    }
+                } catch (e) {}
+            }
 
             // Isolate wheel scrolling so cursor hovering over followups/remarks scrolls ONLY that box, NEVER the screen
             $(document).on('wheel', '.followup-history-scrollbox, .followup-modal-list, #progressRemarksList', function(e) {

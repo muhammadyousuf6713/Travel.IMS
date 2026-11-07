@@ -60,7 +60,7 @@
                                     <span class="badge bg-light text-dark border px-3 py-2">
                                         Status: <strong class="text-primary">{{ $inquiry->status ?? 'Open' }}</strong>
                                     </span>
-                                    <a href="{{ url('inquiry') }}" class="btn btn-sm btn-outline-primary mb-0">
+                                    <a href="{{ url('inquiry?from_edit=1') }}" class="btn btn-sm btn-outline-primary mb-0">
                                         <i class="fa fa-arrow-left me-1"></i> Back to Inquiry List
                                     </a>
                                 </div>
