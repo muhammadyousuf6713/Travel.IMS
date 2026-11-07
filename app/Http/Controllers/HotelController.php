@@ -152,16 +152,17 @@ class HotelController extends Controller
         $query = Hotel::active();
 
         if (!empty($city)) {
-            // Handle aliases like Makkah / Mecca or Madinah / Madina
+            // Handle aliases like Makkah / Mecca or Madinah / Madina / Medina
             if (stripos($city, 'makk') !== false || stripos($city, 'mecc') !== false) {
                 $query->where(function ($q) {
                     $q->where('city', 'LIKE', '%Makkah%')
                       ->orWhere('city', 'LIKE', '%Mecca%');
                 });
-            } elseif (stripos($city, 'madi') !== false) {
+            } elseif (stripos($city, 'madi') !== false || stripos($city, 'medi') !== false) {
                 $query->where(function ($q) {
                     $q->where('city', 'LIKE', '%Madinah%')
-                      ->orWhere('city', 'LIKE', '%Madina%');
+                      ->orWhere('city', 'LIKE', '%Madina%')
+                      ->orWhere('city', 'LIKE', '%Medina%');
                 });
             } else {
                 $query->where('city', 'LIKE', "%{$city}%");

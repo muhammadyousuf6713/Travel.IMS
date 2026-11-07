@@ -24,6 +24,28 @@ body {
     /* scroll-behavior: smooth; */
 }
 
+/* Background scroll isolation when any modal is open */
+body.modal-open .main-content,
+html.modal-open .main-content,
+body.has-active-modal .main-content {
+    overflow-y: hidden !important;
+    overflow-x: hidden !important;
+}
+
+.modal,
+.modal-dialog,
+.modal-content,
+.modal-body,
+.select2-dropdown,
+.select2-results,
+.select2-results__options,
+.followup-history-scrollbox,
+.followup-modal-list,
+.dropdown-menu {
+    overscroll-behavior: contain !important;
+}
+
+
 /* Custom Scrollbar Styling (Webkit) */
 ::-webkit-scrollbar {
     width: 8px !important; /* Visible width */

@@ -425,6 +425,7 @@
         // or whenever hovering over Select2 dropdowns
         // =====================================================================
         $(document).on('show.bs.modal', '.modal', function() {
+            $('body').addClass('has-active-modal');
             var mc = document.querySelector('.main-content');
             if (mc) {
                 mc.style.setProperty('overflow-y', 'hidden', 'important');
@@ -433,9 +434,10 @@
 
         $(document).on('hidden.bs.modal', '.modal', function() {
             if ($('.modal.show').length === 0) {
+                $('body').removeClass('has-active-modal');
                 var mc = document.querySelector('.main-content');
                 if (mc) {
-                    mc.style.setProperty('overflow-y', 'auto', 'important');
+                    mc.style.removeProperty('overflow-y');
                 }
             }
         });

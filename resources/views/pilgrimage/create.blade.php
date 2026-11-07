@@ -823,9 +823,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const currentVal = preferredSelection || hotelSelect.dataset.selected || hotelSelect.value;
         hotelSelect.innerHTML = '<option value="">Loading hotels...</option>';
 
-        fetch(`{{ url('api/hotels-by-city') }}?city=${encodeURIComponent(city)}`)
-            .then(res => res.json())
-            .then(hotels => {
+        const fetchUrl = "{{ route('hotels.by_city') }}?city=" + encodeURIComponent(city);
+
+        fetch(fetchUrl)
+            .then(res => {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(data => {
+                const hotels = Array.isArray(data) ? data : (data && Array.isArray(data.hotels) ? data.hotels : []);
                 hotelSelect.innerHTML = '';
                 const defaultOpt = document.createElement('option');
                 defaultOpt.value = '';
@@ -858,8 +864,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 addOpt.textContent = `+ Add New Hotel for ${city}...`;
                 hotelSelect.appendChild(addOpt);
             })
-            .catch(() => {
-                hotelSelect.innerHTML = '<option value="">Error loading hotels</option><option value="__CUSTOM__">+ Add New Hotel...</option>';
+            .catch(err => {
+                console.error('Failed to load hotels:', err);
+                hotelSelect.innerHTML = '<option value="">-- No hotels found / Custom --</option><option value="__CUSTOM__" class="fw-bold text-primary">+ Add New Hotel to Database...</option>';
             });
     }
 

@@ -4,7 +4,7 @@
 
     <div class="mb-3">
         <label class="form-label fw-semibold">Follow-up Status</label>
-        <select name="followup_status" class="form-select no-select2" id="followupStatus">
+        <select name="followup_status" class="form-select no-select2" id="followupStatus" onchange="toggleFollowupDate()">
             <option value="Open" {{ isset($inquiry) && $inquiry->status == 'Open' ? 'selected' : '' }}>
                 Open</option>
              <option value="In-Progress" {{ isset($inquiry) && $inquiry->status == 'In-Progress' ? 'selected' : '' }}>
@@ -52,11 +52,11 @@
             dateInput.removeAttribute('required');
             dateInput.value = '';
             dateInput.disabled = true;
-            dateContainer.style.display = 'none';
+            dateContainer.style.setProperty('display', 'none', 'important');
         } else {
             dateInput.setAttribute('required', 'required');
             dateInput.disabled = false;
-            dateContainer.style.display = 'block';
+            dateContainer.style.removeProperty('display');
         }
     }
 

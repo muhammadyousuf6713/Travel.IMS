@@ -489,7 +489,18 @@
             $(document).on('click', '.view-followup', function() {
                 var id = $(this).data('id');
                 $('#followUpModal').modal('show');
-                $.get("{{ url('/get_follow_up') }}/" + id, function(data) { $('#followup-content').html(data); });
+                $.get("{{ url('/get_follow_up') }}/" + id, function(data) {
+                    $('#followup-content').html(data);
+                    if (typeof toggleFollowupDate === 'function') {
+                        toggleFollowupDate();
+                    }
+                });
+            });
+
+            $(document).on('change', '#followupStatus', function() {
+                if (typeof toggleFollowupDate === 'function') {
+                    toggleFollowupDate();
+                }
             });
 
             $(document).on('submit', '#addFollowupForm', function(e) {

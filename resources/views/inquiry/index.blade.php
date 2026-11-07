@@ -2,8 +2,6 @@
 
 @section('content')
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-
-    <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}">
     <style>
       
     </style>
@@ -563,7 +561,16 @@
                 $('#followup-content').html('Loading...');
                 $.get("{{ url('/get_follow_up') }}/" + inquiry_id, function(data) {
                     $('#followup-content').html(data);
+                    if (typeof toggleFollowupDate === 'function') {
+                        toggleFollowupDate();
+                    }
                 });
+            });
+
+            $(document).on('change', '#followupStatus', function() {
+                if (typeof toggleFollowupDate === 'function') {
+                    toggleFollowupDate();
+                }
             });
 
             // Submit follow-up form
