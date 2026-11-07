@@ -379,3 +379,39 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
 .table-sm td, .table-sm th { font-size: 0.85rem !important; padding: 0.5rem !important; } .table { font-size: 0.875rem; }
 .navbar-vertical .navbar-nav .nav-link.active { background-color: var(--bs-primary) !important; color: white !important; font-weight: bold; } .navbar-vertical .navbar-nav .nav-link.active .icon { color: white !important; }
 
+
+
+/* ==========================================================================
+   KILL PERFECT-SCROLLBAR RAILS & ELIMINATE DOUBLE SCROLLBARS
+   ========================================================================== */
+.ps__rail-x,
+.ps__rail-y {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.ps {
+    overflow: visible !important;
+}
+
+/* DataTables 100% width stretch — eliminate dead gap after Action column */
+#example23,
+table.dataTable#example23 {
+    width: 100% !important;
+    margin: 0 !important;
+}
+.table-responsive {
+    width: 100% !important;
+}
+
+/* Sidebar Menu Search */
+#sidebarMenuSearchWrap {
+    transition: opacity 0.2s ease;
+}
+body.g-sidenav-hidden #sidebarMenuSearchWrap {
+    display: none !important;
+}

@@ -62,7 +62,7 @@
     <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
     <!-- CSS Files -->
     <link id="pagestyle" href="{{ asset('assets/css/soft-ui-dashboard.css?v=1.0.3') }}" rel="stylesheet" />
-    <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" />
+    <link href="{{ asset('assets/css/custom.css') }}?v={{ @filemtime(public_path('assets/css/custom.css')) }}" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- DataTables CSS (Bootstrap 5) -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
@@ -267,6 +267,15 @@
     <!-- Github buttons -->
     
     <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
+        <script>
+        // Completely neutralize PerfectScrollbar to eliminate duplicate scrollbars and wheel capture
+        window.PerfectScrollbar = function() {
+            return {
+                update: function() {},
+                destroy: function() {}
+            };
+        };
+    </script>
     <script src="{{ asset('assets/js/soft-ui-dashboard.min.js?v=1.0.3') }}"></script>
     
     <style>
@@ -443,60 +452,60 @@
         });
 
         document.addEventListener('wheel', function(e) {
-            var hasModalOpen = document.body.classList.contains('modal-open') || document.querySelector('.modal.show');
-            
-            if (hasModalOpen) {
-                // Find closest scrollable element under cursor inside modal or active select2
-                var scrollable = e.target.closest('.select2-results__options, .modal-body, .followup-history-scrollbox, .followup-modal-list, .dropdown-menu');
-                
-                if (!scrollable) {
-                    // Over modal-content header, footer, backdrop: LOCK scroll completely
-                    e.preventDefault();
-                    return;
+            // 1. If mouse is hovering over ANY Select2 options list (inside modal or regular page):
+            var select2List = e.target.closest('.select2-results__options');
+            if (select2List) {
+                var maxScroll = select2List.scrollHeight - select2List.clientHeight;
+                if (maxScroll > 0) {
+                    select2List.scrollTop += e.deltaY;
                 }
-
-                // Check if target container actually has scrollable overflow
-                var maxScroll = scrollable.scrollHeight - scrollable.clientHeight;
-                if (maxScroll <= 1) {
-                    // Content fits without scrollbar (e.g. only 4-5 items): LOCK wheel so it NEVER scrolls background
-                    e.preventDefault();
-                    return;
-                }
-
-                // Check boundary
-                var delta = e.deltaY;
-                var isAtTop = scrollable.scrollTop <= 0 && delta < 0;
-                var isAtBottom = (scrollable.scrollTop >= maxScroll - 1) && delta > 0;
-
-                if (isAtTop || isAtBottom) {
-                    e.preventDefault();
-                } else {
-                    e.stopPropagation();
-                }
+                // Always prevent default on the event so it NEVER leaks to .main-content or window!
+                e.preventDefault();
+                e.stopPropagation();
                 return;
             }
 
-            // When no modal is open, prevent Select2 dropdowns from scrolling the main content
-            var openDropdown = e.target.closest('.select2-results__options, .select2-dropdown, .dropdown-menu');
-            if (openDropdown) {
-                var scrollableList = e.target.closest('.select2-results__options, .dropdown-menu');
-                if (!scrollableList) {
-                    e.preventDefault();
-                    return;
+            // 2. If mouse is hovering over the Select2 search field or dropdown container:
+            var select2Dropdown = e.target.closest('.select2-dropdown, .select2-container--open');
+            if (select2Dropdown) {
+                var innerList = select2Dropdown.querySelector('.select2-results__options');
+                if (innerList && (innerList.scrollHeight > innerList.clientHeight)) {
+                    innerList.scrollTop += e.deltaY;
                 }
-                var maxScrollList = scrollableList.scrollHeight - scrollableList.clientHeight;
-                if (maxScrollList <= 1) {
-                    e.preventDefault();
-                    return;
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+
+            // 3. If ANY modal is currently open:
+            var openModal = document.querySelector('.modal.show');
+            if (openModal || document.body.classList.contains('modal-open') || document.body.classList.contains('has-active-modal')) {
+                // Find scrollable container inside modal (e.g. modal-body with overflow, follow-up remarks history)
+                var modalScrollable = e.target.closest('.modal-body, .followup-history-scrollbox, .followup-modal-list, .modal-dialog-scrollable .modal-body');
+                if (modalScrollable) {
+                    var maxScroll = modalScrollable.scrollHeight - modalScrollable.clientHeight;
+                    if (maxScroll > 0) {
+                        var delta = e.deltaY;
+                        var current = modalScrollable.scrollTop;
+                        if ((delta < 0 && current <= 0) || (delta > 0 && current >= maxScroll - 1)) {
+                            // At boundary: stop event from leaking to background!
+                            e.preventDefault();
+                            return;
+                        }
+                        modalScrollable.scrollTop += delta;
+                        e.preventDefault();
+                        return;
+                    } else {
+                        // Content fits completely: block wheel so backscreen doesn't move!
+                        e.preventDefault();
+                        return;
+                    }
                 }
-                var deltaY = e.deltaY;
-                var atTop = scrollableList.scrollTop <= 0 && deltaY < 0;
-                var atBottom = (scrollableList.scrollTop >= maxScrollList - 1) && deltaY > 0;
-                if (atTop || atBottom) {
-                    e.preventDefault();
-                } else {
-                    e.stopPropagation();
-                }
+
+                // Anywhere else over modal dialog, header, footer, backdrop:
+                // PREVENT ALL WHEEL SCROLLING so background NEVER scrolls!
+                e.preventDefault();
+                return;
             }
         }, { passive: false });
     </script>

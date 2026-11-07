@@ -2,8 +2,21 @@
 
 @section('content')
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-    <style>
-      
+        <style>
+        #example23,
+        table.dataTable#example23 {
+            width: 100% !important;
+            margin: 0 !important;
+            table-layout: auto !important;
+        }
+        .table-responsive {
+            width: 100% !important;
+            overflow-x: auto !important;
+        }
+        #example23 th,
+        #example23 td {
+            vertical-align: middle !important;
+        }
     </style>
 
     <div class="container-fluid">
@@ -748,6 +761,7 @@
             $.fn.dataTable.ext.errorMode = 'none';
 
             var table = $('#example23').DataTable({
+                autoWidth: false,
                 responsive: {
                     details: {
                         type: 'column',
@@ -982,6 +996,15 @@
             });
 
             // ✅ Friendly Ajax error handling — no native alert() popups
+                        table.on('draw.dt', function() {
+                $('#example23').css('width', '100%');
+            });
+            $(window).on('resize', function() {
+                if ($.fn.DataTable.isDataTable('#example23')) {
+                    $('#example23').DataTable().columns.adjust();
+                }
+            });
+
             table.on('error.dt', function(e, settings, techNote, message) {
                 console.error('DataTables error:', message);
                 let friendlyMsg = 'We could not load the inquiries list. Please try again.';

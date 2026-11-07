@@ -342,7 +342,19 @@
     
     <hr class="horizontal dark mt-0">
 
-    <div class="collapse show navbar-collapse w-auto" id="sidenav-collapse-main" style="display: block !important;">
+        <div class="collapse show navbar-collapse w-auto" id="sidenav-collapse-main" style="display: block !important;">
+        <!-- Compact Sidebar Menu Search -->
+        <div class="px-3 pt-2 pb-1" id="sidebarMenuSearchWrap">
+            <div class="input-group input-group-sm shadow-none" style="background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2px 8px; transition: all 0.2s ease;">
+                <span class="input-group-text bg-transparent border-0 p-0 text-secondary me-2">
+                    <i class="fa fa-search text-xs"></i>
+                </span>
+                <input type="text" id="sidebarMenuSearch" class="form-control form-control-sm bg-transparent border-0 p-0 text-xs shadow-none" placeholder="Search menu..." style="outline: none; height: 26px;">
+                <button type="button" id="sidebarMenuSearchClear" class="btn btn-link text-secondary p-0 m-0 border-0 d-none" style="font-size: 10px; line-height: 1;">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+        </div>
         <ul class="navbar-nav">
 
             <!-- Dashboard -->
@@ -506,5 +518,44 @@
 
         </ul>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var searchInput = document.getElementById('sidebarMenuSearch');
+            var clearBtn = document.getElementById('sidebarMenuSearchClear');
+            if (!searchInput) return;
+
+            searchInput.addEventListener('input', function() {
+                var q = this.value.toLowerCase().trim();
+                if (clearBtn) {
+                    if (q.length > 0) clearBtn.classList.remove('d-none');
+                    else clearBtn.classList.add('d-none');
+                }
+
+                var links = document.querySelectorAll('#sidenav-collapse-main .navbar-nav .nav-link');
+                links.forEach(function(link) {
+                    var textEl = link.querySelector('.nav-link-text');
+                    var text = textEl ? textEl.textContent.toLowerCase() : '';
+                    var isMatch = q === '' || text.indexOf(q) !== -1;
+                    link.style.display = isMatch ? '' : 'none';
+                });
+
+                var headings = document.querySelectorAll('#sidenav-collapse-main .navbar-nav h6.text-uppercase');
+                headings.forEach(function(h) {
+                    var parentLi = h.closest('li.nav-item');
+                    if (!parentLi) return;
+                    var visibleLinks = parentLi.querySelectorAll('.nav-link:not([style*="display: none"])');
+                    h.style.display = (visibleLinks.length > 0 || q === '') ? '' : 'none';
+                });
+            });
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    searchInput.value = '';
+                    searchInput.dispatchEvent(new Event('input'));
+                    searchInput.focus();
+                });
+            }
+        });
+    </script>
 </aside>
 @endif
