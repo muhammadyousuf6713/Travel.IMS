@@ -935,9 +935,11 @@ class InquiryController extends Controller
             <i class="fa fa-pen" style="font-size: 12px;"></i></a>';
         }
 
-        $html .= '<button type="button" class="btn btn-sm btn-dark p-2 view-followup" 
-            data-id="' . $inquiry->id_inquiry . '" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;" title="Follow-up">
-            <i class="fa fa-comments" style="font-size: 12px;"></i></button>';
+        if (Auth::user()?->can('Inquiry follow-up')) {
+            $html .= '<button type="button" class="btn btn-sm btn-dark p-2 view-followup" 
+                data-id="' . $inquiry->id_inquiry . '" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;" title="Follow-up">
+                <i class="fa fa-comments" style="font-size: 12px;"></i></button>';
+        }
 
         if (Auth::user()?->can('Inquiry Progress View')) {
             $html .= '<button type="button" class="btn btn-sm btn-info p-2 view-progress" 
@@ -945,7 +947,7 @@ class InquiryController extends Controller
                 <i class="fa fa-tasks" style="font-size: 12px;"></i></button>';
         }
 
-        if (Auth::user()?->can('Inquiry edit')) {
+        if (Auth::user()?->can('Inquiry assign')) {
             $currentSP = $inquiry->saleperson === 'un_assign' ? '' : $inquiry->saleperson;
             $html .= '<button type="button" class="btn btn-sm btn-warning p-2 change-salesperson" 
                 data-id="' . $inquiry->id_inquiry . '" 

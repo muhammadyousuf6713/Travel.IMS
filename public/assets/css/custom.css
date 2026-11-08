@@ -24,6 +24,21 @@ body {
     /* scroll-behavior: smooth; */
 }
 
+/* Universal Neutralization of Secondary / PerfectScrollbar rails */
+.ps__rail-y,
+.ps__rail-x,
+.ps__thumb-y,
+.ps__thumb-x,
+.scrollbar-track,
+.scrollbar-thumb {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
 /* Background scroll isolation when any modal is open */
 body.modal-open .main-content,
 html.modal-open .main-content,

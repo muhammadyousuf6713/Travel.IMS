@@ -1,380 +1,475 @@
 @extends('layouts.user_type.auth')
 
-
+@section('content')
 <style>
-    .dot {
-        height: 10px;
-        width: 10px;
-        background-color: #ef8e8e;
-        border-radius: 50%;
-        display: inline-block;
+    /* Modern Permission Matrix Styles */
+    .perm-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        transition: all 0.2s ease-in-out;
+        overflow: hidden;
+    }
+    .perm-card:hover {
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+    .perm-card-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 12px 18px;
     }
 
-    .dot2 {
-        height: 10px;
-        width: 10px;
-        background-color: #b69595;
-        border-radius: 50%;
-        display: inline-block;
-    }
-
-    .switch {
+    /* Modern Slide Switch */
+    .perm-switch {
         position: relative;
         display: inline-block;
-        width: 34px;
-        height: 20px;
+        width: 38px;
+        height: 22px;
+        margin: 0;
+        flex-shrink: 0;
     }
-
-    .switch input {
+    .perm-switch input {
         opacity: 0;
         width: 0;
         height: 0;
     }
-
-    .switch .slider {
+    .perm-slider {
         position: absolute;
         cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        /* Default color */
-        transition: .4s;
-        border-radius: 34px;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1;
+        transition: .25s ease;
+        border-radius: 22px;
     }
-
-    .switch .slider:before {
+    .perm-slider:before {
         position: absolute;
         content: "";
-        height: 14px;
-        width: 14px;
+        height: 16px;
+        width: 16px;
         left: 3px;
         bottom: 3px;
         background-color: white;
-        transition: .4s;
+        transition: .25s ease;
         border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    .perm-switch input:checked + .perm-slider.slider-primary {
+        background-color: #0284c7; /* Sky blue */
+    }
+    .perm-switch input:checked + .perm-slider.slider-submodule {
+        background-color: #10b981; /* Emerald */
+    }
+    .perm-switch input:checked + .perm-slider.slider-action {
+        background-color: #f59e0b; /* Amber */
+    }
+    .perm-switch input:checked + .perm-slider:before {
+        transform: translateX(16px);
     }
 
-    .switch input:checked+.slider.module-slider {
-        background-color: #3bafda;
-        /* Primary Modules Permission */
+    .perm-item-row {
+        transition: background-color 0.15s ease;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 8px 14px;
     }
-
-    .switch input:checked+.slider.submodule-slider {
-        background-color: #4caf50;
-        /* Sub Modules Permission */
+    .perm-item-row:last-child {
+        border-bottom: none;
     }
-
-    .switch input:checked+.slider.subpermissions-slider {
-        background-color: #ffc107;
-        /* Access Controls Permission */
+    .perm-item-row:hover {
+        background-color: #f8fafc;
     }
-
-    .switch input:checked+.slider:before {
-        transform: translateX(14px);
+    .perm-level-primary {
+        background: #f0f9ff;
+        border-left: 3px solid #0284c7;
     }
-
-    .switch label {
-        margin: 0;
+    .perm-level-submodule {
+        background: #ffffff;
+        padding-left: 28px !important;
     }
-
-    .description-container {
-        margin-bottom: 1rem;
+    .perm-level-action {
+        background: #ffffff;
+        padding-left: 48px !important;
     }
-
-    .description-container h5 {
-        font-weight: bold;
-        color: #333;
-    }
-
-    .description-text {
-        font-size: 0.9rem;
-        margin-left: 10px;
-    }
-
-    .btn {
-        border-radius: 4px;
-    }
-
-    .btn-primary {
-        background-color: #3bafda;
-        border-color: #3bafda;
-    }
-
-    .btn-danger {
-        background-color: #dc3545;
-        border-color: #dc3545;
-    }
-
-    .btn-sm {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.875rem;
-    }
-
-    .table thead th {
-        background-color: #f8f9fa;
-        font-weight: bold;
-    }
-
-    .table tbody tr:nth-child(odd) {
-        background-color: #f9f9f9;
-    }
-
-    .table tbody tr:hover {
-        background-color: #e9ecef;
-    }
-
-    .card {
+    .perm-badge {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 8px;
         border-radius: 6px;
-        border: 1px solid #ddd;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .badge-primary-chip {
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+    }
+    .badge-submodule-chip {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+    .badge-action-chip {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
     }
 
-    .card-body {
-        padding: 1.25rem;
-    }
-
-    .alert-card {
-        border-radius: 6px;
-        padding: 0.75rem 1.25rem;
-    }
-
-    .alert-card .close {
-        margin-top: -0.75rem;
-        margin-right: -0.75rem;
+    /* Sticky Action Bar */
+    .perm-sticky-bar {
+        position: sticky;
+        top: 10px;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 18px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
 </style>
 
-@section('content')
-    <div class="row">
-        <div class="col-12">
-            @if (Session('alert'))
-                <div class="alert alert-{{ Session('alert-class') }} alert-dismissible fade show" role="alert">
-                    <span class="alert-icon"><i class="ni ni-like-2"></i></span>
-                    <span class="alert-text"><strong>{{ Session('alert') }}</strong></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
+<div class="container-fluid py-3">
+    @if (session('alert'))
+        <div class="alert alert-{{ session('alert-class') == 'danger' ? 'danger' : 'success' }} alert-dismissible fade show text-white shadow-sm" role="alert">
+            <span class="alert-icon me-2"><i class="fa fa-{{ session('alert-class') == 'danger' ? 'exclamation-circle' : 'check-circle' }}"></i></span>
+            <span class="alert-text"><strong>{{ session('alert') }}</strong></span>
+            <button type="button" class="btn-close text-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <!-- Top Sticky Control Header -->
+    <div class="perm-sticky-bar mb-4">
+        <div class="row align-items-center g-2">
+            <div class="col-lg-4 col-md-5">
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url('roles') }}" class="btn btn-outline-secondary btn-sm mb-0 px-2" title="Back to Roles List">
+                        <i class="fa fa-arrow-left"></i>
+                    </a>
+                    <div class="flex-grow-1">
+                        <label class="form-label text-xxs font-weight-bold text-secondary mb-0">Role Being Configured</label>
+                        <select onchange="location.href='{{ url('roles/permission') }}/' + this.value;" class="form-select form-select-sm fw-bold">
+                            <option value="0">-- Select Role to Configure --</option>
+                            @foreach ($roles as $role)
+                                <option value="{{ $role->id }}" {{ $role_id == $role->id ? 'selected' : '' }}>
+                                    {{ $role->name }} {{ $role->id == 1 ? '(Master Root Bypass)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Permissions -->
+            <div class="col-lg-4 col-md-4">
+                <label class="form-label text-xxs font-weight-bold text-secondary mb-0">Filter Permissions</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="fa fa-search text-xs"></i></span>
+                    <input type="text" id="permSearchInput" class="form-control form-control-sm border-start-0" placeholder="Type to filter permissions (e.g. inquiry, delete, hotel)...">
+                    <button class="btn btn-outline-secondary btn-sm mb-0 d-none" type="button" id="clearPermSearch"><i class="fa fa-times"></i></button>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="col-lg-4 col-md-3 text-end">
+                <div class="d-flex align-items-center justify-content-end gap-2 mt-md-3">
+                    <span class="badge bg-light text-dark border text-xxs fw-bold px-2 py-1" id="activeCounterBadge">
+                        Active: <span id="activeCount" class="text-primary">{{ count($assigned_permissions) }}</span> / {{ $permissions->count() }}
+                    </span>
+                    <button type="button" class="btn btn-outline-primary btn-sm mb-0 px-2" id="btnSelectAll" title="Select All Permissions">
+                        <i class="fa fa-check-double me-1"></i>All
                     </button>
-                </div>
-            @endif
-
-            <div class="card mb-4 shadow-sm border-0">
-                <div class="card-header pb-0 bg-white">
-                    <div class="d-flex flex-row justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-0 fw-bold">Roles Permission Management</h5>
-                        </div>
-                        <a href="{{ url('roles') }}" class="btn bg-gradient-secondary btn-sm mb-0 text-uppercase">
-                            <i class="fa fa-arrow-left me-1"></i> Back to Roles
-                        </a>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="role" class="form-control-label">Select Role</label>
-                                <select onchange="location.href='{{ url('roles/permission') }}/' + this.value;" class="form-control">
-                                    <option value="0">--Select Role--</option>
-                                    @foreach ($roles as $role)
-                                        <option value="{{ $role->id }}" {{ $role_id == $role->id ? 'selected' : '' }}>
-                                            {{ $role->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-body px-0 pt-0 pb-2">
-                    <form id="permission" action="{{ url('roles/permission', [$role_id]) }}" method="post">
-                        @csrf
-                        <div class="p-4">
-                            <div class="row mb-4">
-                                <div class="col-md-12">
-                                    <div class="card shadow-none border">
-                                        <div class="card-body">
-                                            <!-- Colorful Switches Description -->
-                                            <div class="row align-items-center">
-                                                <div class="col-md-8">
-                                                    <div class="description-container">
-                                                        <h6 class="fw-bold mb-3">Access Control Legend:</h6>
-                                                        <div class="d-flex flex-wrap gap-3">
-                                                            <div class="d-flex align-items-center mb-2 me-3">
-                                                                <label class="switch switch-primary me-2 mb-0">
-                                                                    <input type="checkbox" checked disabled />
-                                                                    <span class="slider module-slider"></span>
-                                                                </label>
-                                                                <span class="text-xs text-muted"> <b class="text-info">Primary:</b> Core Module</span>
-                                                            </div>
-                                                            <div class="d-flex align-items-center mb-2 me-3">
-                                                                <label class="switch switch-success me-2 mb-0">
-                                                                    <input type="checkbox" checked disabled />
-                                                                    <span class="slider submodule-slider"></span>
-                                                                </label>
-                                                                <span class="text-xs text-muted"> <b class="text-success">Sub-Module:</b> Feature</span>
-                                                            </div>
-                                                            <div class="d-flex align-items-center mb-2">
-                                                                <label class="switch switch-warning me-2 mb-0">
-                                                                    <input type="checkbox" checked disabled />
-                                                                    <span class="slider subpermissions-slider"></span>
-                                                                </label>
-                                                                <span class="text-xs text-muted"> <b class="text-warning">Action:</b> Control</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4 text-end">
-                                                    <button type="submit" class="btn bg-gradient-primary mb-0">
-                                                        <i class="fa fa-save me-1"></i> Update Permissions
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr class="horizontal dark my-4">
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0 fw-bold">Module Permissions</h6>
-                                <div class="form-check form-switch ps-0">
-                                    <input class="form-check-input ms-auto check-module" type="checkbox" id="check-all">
-                                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="check-all">Check All</label>
-                                </div>
-                            </div>
-                                {{-- @csrf --}}
-                            <div class="table-responsive">
-                                <table id="permissionsTable" class="table table-striped table-bordered w-100">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Pages</th>
-                                            <th>Permission</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php $count = 1; @endphp
-                                        @foreach ($permissions->groupBy('parent_id') as $parent_id => $group)
-                                            @if ($parent_id == 0)
-                                                @foreach ($group as $permission)
-                                                    <tr class="odd gradeX">
-                                                        <td>{{ $count++ }}</td>
-                                                        <td class="fw-bold text-dark">
-                                                            {{ $permission->name }}
-                                                        </td>
-                                                        <td>
-                                                            <label class="switch">
-                                                                <input type="checkbox" class="check-module"
-                                                                    name="permissions[]" value="{{ $permission->id }}"
-                                                                    {{ in_array($permission->id, $assigned_permissions) ? 'checked' : '' }}>
-                                                                <span class="slider module-slider"></span>
-                                                            </label>
-                                                        </td>
-                                                    </tr>
-                                                    @foreach ($permissions->where('parent_id', $permission->id) as $subPermission)
-                                                        <tr class="odd gradeX sub-module"
-                                                            data-parent="{{ $permission->id }}">
-                                                            <td>{{ $count++ }}</td>
-                                                            <td style="padding-left: 3rem;">
-                                                                <span class="dot me-2"></span>
-                                                                <span class="text-secondary">{{ $subPermission->name }}</span>
-                                                            </td>
-                                                            <td>
-                                                                <label class="switch">
-                                                                    <input type="checkbox" class="check-module"
-                                                                        name="permissions[]"
-                                                                        value="{{ $subPermission->id }}"
-                                                                        {{ in_array($subPermission->id, $assigned_permissions) ? 'checked' : '' }}>
-                                                                    <span class="slider submodule-slider"></span>
-                                                                </label>
-                                                            </td>
-                                                        </tr>
-                                                        @foreach ($permissions->where('parent_id', $subPermission->id) as $subSubPermission)
-                                                            <tr class="odd gradeX sub-permissions"
-                                                                data-parent="{{ $subPermission->id }}">
-                                                                <td>{{ $count++ }}</td>
-                                                                <td style="padding-left: 5rem;">
-                                                                    <span class="dot2 me-2"></span>
-                                                                    <small class="text-muted">{{ $subSubPermission->name }}</small>
-                                                                </td>
-                                                                <td>
-                                                                    <label class="switch">
-                                                                        <input type="checkbox" class="check-module"
-                                                                            name="permissions[]"
-                                                                            value="{{ $subSubPermission->id }}"
-                                                                            {{ in_array($subSubPermission->id, $assigned_permissions) ? 'checked' : '' }}>
-                                                                        <span
-                                                                            class="slider subpermissions-slider"></span>
-                                                                    </label>
-                                                                </td>
-                                                            </tr>
-                                                        @endforeach
-                                                    @endforeach
-                                                @endforeach
-                                            @endif
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </form>
+                    <button type="button" class="btn btn-outline-secondary btn-sm mb-0 px-2" id="btnDeselectAll" title="Clear All Permissions">
+                        <i class="fa fa-ban me-1"></i>None
+                    </button>
+                    <button type="button" class="btn bg-gradient-primary btn-sm mb-0 px-3 shadow-sm" id="btnSavePermissionsTop">
+                        <i class="fa fa-save me-1"></i> Save
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+
+    @if(!$role_id)
+        <div class="card p-5 text-center shadow-sm border-0">
+            <div class="py-4">
+                <i class="fa-solid fa-shield-halved text-secondary opacity-50 fa-4x mb-3"></i>
+                <h5 class="fw-bold text-dark">Please Select a Role Above</h5>
+                <p class="text-secondary text-sm mb-3">Choose a role from the dropdown above to view, configure, and customize granular permissions.</p>
+            </div>
+        </div>
+    @else
+        <!-- Access Control Legend -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body py-2 px-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div class="d-flex align-items-center gap-1 text-xs text-secondary">
+                        <i class="fa fa-info-circle text-primary me-1"></i>
+                        <span class="fw-bold text-dark">Access Control Legend:</span>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-3 text-xs">
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="perm-badge badge-primary-chip">Primary Module</span>
+                            <span class="text-muted text-xxs">Core Menu (Dashboard, Operations, Administration)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="perm-badge badge-submodule-chip">Sub-Module</span>
+                            <span class="text-muted text-xxs">Functional Sections (Customers, Inquiries, Hotels)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="perm-badge badge-action-chip">Action Control</span>
+                            <span class="text-muted text-xxs">Granular Actions (Add, Edit, Delete, Assign, Follow-up)</span>
+                        </div>
+                    </div>
+                    @if($role_id == 1)
+                        <span class="badge bg-warning text-dark text-xxs px-2 py-1">
+                            <i class="fa fa-crown me-1"></i> Super-Admin has universal system bypass
+                        </span>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissions Form -->
+        <form id="permissionForm" action="{{ url('roles/permission', [$role_id]) }}" method="POST">
+            @csrf
+
+            <div class="row g-4" id="permModulesContainer">
+                @php
+                    // Group permissions by their hierarchy:
+                    // Level 1: parent_id == 0
+                    // Level 2: parent_id == level 1 ID
+                    // Level 3: parent_id == level 2 ID
+                    $rootPermissions = $permissions->where('parent_id', 0)->values();
+                    // Fallback: If any permission has a parent_id that does not exist in rootPermissions, treat as root or attach
+                    $rootIds = $rootPermissions->pluck('id')->toArray();
+                @endphp
+
+                @foreach($rootPermissions as $modIndex => $mod)
+                    @php
+                        $subModules = $permissions->where('parent_id', $mod->id)->values();
+                        // Find all descendant IDs for this module to count active/total
+                        $allDescendantIds = collect([$mod->id]);
+                        foreach($subModules as $sub) {
+                            $allDescendantIds->push($sub->id);
+                            $actions = $permissions->where('parent_id', $sub->id);
+                            foreach($actions as $act) {
+                                $allDescendantIds->push($act->id);
+                            }
+                        }
+                        $totalModPerms = $allDescendantIds->count();
+                        $activeModPerms = count(array_intersect($allDescendantIds->toArray(), $assigned_permissions));
+                    @endphp
+
+                    <div class="col-lg-6 col-md-12 perm-module-card-col" data-module-name="{{ strtolower($mod->name) }}">
+                        <div class="perm-card h-100">
+                            <!-- Card Header -->
+                            <div class="perm-card-header d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-white border d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;">
+                                        @if(stripos($mod->name, 'dash') !== false)
+                                            <i class="fa-solid fa-gauge text-primary text-xs"></i>
+                                        @elseif(stripos($mod->name, 'oper') !== false)
+                                            <i class="fa-solid fa-briefcase text-info text-xs"></i>
+                                        @elseif(stripos($mod->name, 'admin') !== false)
+                                            <i class="fa-solid fa-shield text-danger text-xs"></i>
+                                        @elseif(stripos($mod->name, 'pref') !== false)
+                                            <i class="fa-solid fa-sliders text-warning text-xs"></i>
+                                        @elseif(stripos($mod->name, 'review') !== false)
+                                            <i class="fa-solid fa-star text-warning text-xs"></i>
+                                        @elseif(stripos($mod->name, 'report') !== false)
+                                            <i class="fa-solid fa-chart-pie text-success text-xs"></i>
+                                        @else
+                                            <i class="fa-solid fa-layer-group text-secondary text-xs"></i>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-dark text-sm">{{ $mod->name }}</h6>
+                                        <span class="text-xxs text-secondary">
+                                            <span class="mod-active-count fw-bold text-primary">{{ $activeModPerms }}</span> of {{ $totalModPerms }} permissions active
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-xs btn-outline-secondary mb-0 btn-toggle-module" title="Toggle all in this module">
+                                        Toggle All
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Card Body: Permissions List -->
+                            <div class="perm-card-body p-0">
+                                <!-- Root Permission Row -->
+                                <div class="perm-item-row perm-level-primary d-flex justify-content-between align-items-center" data-perm-name="{{ strtolower($mod->name) }}">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="perm-badge badge-primary-chip">Primary</span>
+                                        <span class="fw-bold text-dark text-xs">{{ $mod->name }}</span>
+                                    </div>
+                                    <label class="perm-switch">
+                                        <input type="checkbox" class="perm-checkbox" name="permissions[]" value="{{ $mod->id }}"
+                                            {{ in_array($mod->id, $assigned_permissions) ? 'checked' : '' }}>
+                                        <span class="perm-slider slider-primary"></span>
+                                    </label>
+                                </div>
+
+                                <!-- Sub-modules & Action Controls -->
+                                @foreach($subModules as $sub)
+                                    @php
+                                        $actions = $permissions->where('parent_id', $sub->id)->values();
+                                    @endphp
+                                    <div class="perm-item-row perm-level-submodule d-flex justify-content-between align-items-center" data-perm-name="{{ strtolower($sub->name) }}">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-angle-right text-muted text-xxs"></i>
+                                            <span class="perm-badge badge-submodule-chip">Sub-Module</span>
+                                            <span class="fw-semibold text-dark text-xs">{{ $sub->name }}</span>
+                                        </div>
+                                        <label class="perm-switch">
+                                            <input type="checkbox" class="perm-checkbox" name="permissions[]" value="{{ $sub->id }}"
+                                                {{ in_array($sub->id, $assigned_permissions) ? 'checked' : '' }}>
+                                            <span class="perm-slider slider-submodule"></span>
+                                        </label>
+                                    </div>
+
+                                    @foreach($actions as $act)
+                                        <div class="perm-item-row perm-level-action d-flex justify-content-between align-items-center" data-perm-name="{{ strtolower($act->name) }}">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="fa-solid fa-turn-up fa-rotate-90 text-muted text-xxs"></i>
+                                                <span class="perm-badge badge-action-chip">Action</span>
+                                                <span class="text-secondary text-xs">{{ $act->name }}</span>
+                                            </div>
+                                            <label class="perm-switch">
+                                                <input type="checkbox" class="perm-checkbox" name="permissions[]" value="{{ $act->id }}"
+                                                    {{ in_array($act->id, $assigned_permissions) ? 'checked' : '' }}>
+                                                <span class="perm-slider slider-action"></span>
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Bottom Floating Save Bar -->
+            <div class="card p-3 shadow-sm border mt-4 text-end bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-xs text-secondary">
+                        <i class="fa-solid fa-lock text-primary me-1"></i> Permissions are strictly enforced immediately upon saving.
+                    </span>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{{ url('roles') }}" class="btn btn-outline-secondary btn-sm mb-0">Cancel</a>
+                        <button type="submit" class="btn bg-gradient-primary btn-sm mb-0 px-4 shadow-sm" id="btnSavePermissionsBottom">
+                            <i class="fa fa-save me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    @endif
+</div>
 
 @push('scripts')
-    <script>
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 's') {
-                e.preventDefault(); // Prevent the default save dialog in the browser
-                document.getElementById('permission').submit(); // Submit the form
-            }
+<script>
+$(document).ready(function() {
+    function updateActiveCounters() {
+        var totalActive = $('.perm-checkbox:checked').length;
+        $('#activeCount').text(totalActive);
+
+        // Update module level badges
+        $('.perm-card').each(function() {
+            var $card = $(this);
+            var activeInCard = $card.find('.perm-checkbox:checked').length;
+            $card.find('.mod-active-count').text(activeInCard);
         });
-        $(document).ready(function() {
-            $('#permissionsTable').DataTable({
-                "paging": false,
-                "info": false,
-                "dom": 'Bfrtip',
-                "buttons": [
-                    'excel', 'pdf', 'print'
-                ],
-                "language": {
-                    "search": "",
-                    "searchPlaceholder": "Search Permissions...",
-                    "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
+    }
+
+    // Toggle switch change updates counters
+    $(document).on('change', '.perm-checkbox', function() {
+        updateActiveCounters();
+    });
+
+    // Global Select All
+    $('#btnSelectAll').on('click', function(e) {
+        e.preventDefault();
+        $('.perm-checkbox:visible').prop('checked', true);
+        updateActiveCounters();
+        if (window.toastr) toastr.info('All permissions checked.');
+    });
+
+    // Global Deselect All
+    $('#btnDeselectAll').on('click', function(e) {
+        e.preventDefault();
+        $('.perm-checkbox:visible').prop('checked', false);
+        updateActiveCounters();
+        if (window.toastr) toastr.info('All permissions unchecked.');
+    });
+
+    // Module Card "Toggle All" Button
+    $(document).on('click', '.btn-toggle-module', function(e) {
+        e.preventDefault();
+        var $card = $(this).closest('.perm-card');
+        var $checkboxes = $card.find('.perm-checkbox');
+        var allChecked = $checkboxes.length > 0 && $checkboxes.filter(':checked').length === $checkboxes.length;
+        $checkboxes.prop('checked', !allChecked);
+        updateActiveCounters();
+    });
+
+    // Save button trigger from top bar
+    $('#btnSavePermissionsTop').on('click', function(e) {
+        e.preventDefault();
+        $('#permissionForm').submit();
+    });
+
+    // Form submit loading indicator
+    $('#permissionForm').on('submit', function() {
+        var $btn = $('#btnSavePermissionsTop, #btnSavePermissionsBottom');
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Saving...');
+    });
+
+    // Live Permission Search Filter
+    $('#permSearchInput').on('input', function() {
+        var term = $(this).val().toLowerCase().trim();
+        if (term.length > 0) {
+            $('#clearPermSearch').removeClass('d-none');
+        } else {
+            $('#clearPermSearch').addClass('d-none');
+        }
+
+        if (!term) {
+            $('.perm-item-row').show();
+            $('.perm-module-card-col').show();
+            return;
+        }
+
+        $('.perm-module-card-col').each(function() {
+            var $cardCol = $(this);
+            var cardHasMatch = false;
+
+            $cardCol.find('.perm-item-row').each(function() {
+                var $row = $(this);
+                var rowText = ($row.data('perm-name') || '') + ' ' + $row.text().toLowerCase();
+                if (rowText.indexOf(term) !== -1) {
+                    $row.show();
+                    cardHasMatch = true;
+                } else {
+                    $row.hide();
                 }
             });
 
-
-            $('#check-all').change(function() {
-                var isChecked = $(this).is(':checked');
-                $('.check-module').prop('checked', isChecked);
-            });
-
-            // $('.check-module').change(function() {
-            //     var isChecked = $(this).is(':checked');
-            //     var parentId = $(this).closest('tr').data('parent');
-            //     $(this).closest('tr').nextUntil('tr:not([data-parent="' + parentId + '"])').find('input')
-            //         .prop('checked', isChecked);
-            // });
-
-            $('.check-submodule').change(function() {
-                var isChecked = $(this).is(':checked');
-                var parentId = $(this).closest('tr').data('parent');
-                $(this).closest('tr').nextUntil('tr:not([data-parent="' + parentId + '"])').find('input')
-                    .prop('checked', isChecked);
-            });
+            if (cardHasMatch) {
+                $cardCol.show();
+            } else {
+                $cardCol.hide();
+            }
         });
-        var checkAllAccountsBtn = document.getElementById('checkAllAccounts');
-        if (checkAllAccountsBtn) {
-            checkAllAccountsBtn.addEventListener('click', function() {
-                const checkboxes = document.querySelectorAll('.account-slider');
-                const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
-                checkboxes.forEach(checkbox => { checkbox.checked = !allChecked; });
-            });
-        }
-    </script>
+    });
+
+    $('#clearPermSearch').on('click', function() {
+        $('#permSearchInput').val('').trigger('input');
+    });
+
+    updateActiveCounters();
+});
+</script>
 @endpush
+@endsection

@@ -551,6 +551,20 @@ body.dark-mode .ims-mobile-toggle {
    Universal Scroll Isolation & Modal Lock
    Prevents background page scrolling when cursor is over modal or Select2 dropdown
    ========================================================================== */
+.ps__rail-y,
+.ps__rail-x,
+.ps__thumb-y,
+.ps__thumb-x,
+.scrollbar-track,
+.scrollbar-thumb {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
 body.modal-open .main-content {
     overflow: hidden !important;
 }

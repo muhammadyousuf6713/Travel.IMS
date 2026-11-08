@@ -706,20 +706,24 @@ document.addEventListener('DOMContentLoaded', function () {
         const city = citySelect.value.trim();
         if (!city) {
             hotelSelect.innerHTML = '<option value="">-- Select City First --</option><option value="__CUSTOM__" class="fw-bold text-primary">+ Add New Hotel to Database...</option>';
+            $(hotelSelect).trigger('change.select2');
             return;
         }
 
         const currentVal = preferredSelection || hotelSelect.dataset.selected || hotelSelect.value;
         hotelSelect.innerHTML = '<option value="">Loading hotels...</option>';
+        $(hotelSelect).trigger('change.select2');
 
-        const fetchUrl = "{{ route('hotels.by_city') }}?city=" + encodeURIComponent(city);
-
-        fetch(fetchUrl)
-            .then(res => {
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                return res.json();
-            })
-            .then(data => {
+        $.ajax({
+            url: "{{ route('hotels.by_city') }}",
+            type: "GET",
+            data: { city: city },
+            dataType: "json",
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(data) {
                 const hotels = Array.isArray(data) ? data : (data && Array.isArray(data.hotels) ? data.hotels : []);
                 hotelSelect.innerHTML = '';
                 const defaultOpt = document.createElement('option');
@@ -752,11 +756,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 addOpt.className = 'fw-bold text-primary';
                 addOpt.textContent = `+ Add New Hotel for ${city}...`;
                 hotelSelect.appendChild(addOpt);
-            })
-            .catch(err => {
+
+                $(hotelSelect).trigger('change.select2');
+            },
+            error: function(err) {
                 console.error('Failed to load hotels:', err);
                 hotelSelect.innerHTML = '<option value="">-- No hotels found / Custom --</option><option value="__CUSTOM__" class="fw-bold text-primary">+ Add New Hotel to Database...</option>';
-            });
+                $(hotelSelect).trigger('change.select2');
+            }
+        });
     }
 
     $(document).on('change', '.hotel-city-select', function() {

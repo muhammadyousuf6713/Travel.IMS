@@ -25,15 +25,15 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Super Admin & Admin implicitly get all permissions.
-        // IMPORTANT: Never call $user->can(...) inside Gate::before(), as that re-invokes Gate::before() infinitely for non-admin users.
+        // Super-Admin implicitly gets all abilities/permissions.
+        // Other roles (including Admin, Manager, Sales) strictly obey their assigned Spatie permissions.
         Gate::before(function ($user, $ability) {
             if (method_exists($user, 'hasRole')) {
-                if ($user->hasRole(['Super Admin', 'Super-Admin', 'super-admin', 'admin', 'Admin', 'Administrator'])) {
+                if ($user->hasRole(['Super Admin', 'Super-Admin', 'super-admin'])) {
                     return true;
                 }
             }
-            if (in_array((int) ($user->role_id ?? 0), [1, 8], true)) {
+            if ((int) ($user->role_id ?? 0) === 1) {
                 return true;
             }
             return null;

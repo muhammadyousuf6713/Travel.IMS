@@ -343,13 +343,13 @@
     <hr class="horizontal dark mt-0">
 
         <div class="collapse show navbar-collapse w-auto" id="sidenav-collapse-main" style="display: block !important;">
-        <!-- Compact Sidebar Menu Search -->
-        <div class="px-3 pt-2 pb-1" id="sidebarMenuSearchWrap">
-            <div class="input-group input-group-sm shadow-none" style="background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2px 8px; transition: all 0.2s ease;">
+        <!-- Compact Sticky Sidebar Menu Search -->
+        <div class="px-3 pt-2 pb-2 sticky-top bg-white border-bottom" id="sidebarMenuSearchWrap" style="z-index: 10;">
+            <div class="input-group input-group-sm shadow-none" style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2px 8px; transition: all 0.2s ease;">
                 <span class="input-group-text bg-transparent border-0 p-0 text-secondary me-2">
-                    <i class="fa fa-search text-xs"></i>
+                    <i class="fa fa-search" style="font-size: 11px;"></i>
                 </span>
-                <input type="text" id="sidebarMenuSearch" class="form-control form-control-sm bg-transparent border-0 p-0 text-xs shadow-none" placeholder="Search menu..." style="outline: none; height: 26px;">
+                <input type="text" id="sidebarMenuSearch" class="form-control form-control-sm bg-transparent border-0 p-0 text-xs shadow-none" placeholder="Search menu..." style="outline: none; height: 24px; font-size: 11.5px;">
                 <button type="button" id="sidebarMenuSearchClear" class="btn btn-link text-secondary p-0 m-0 border-0 d-none" style="font-size: 10px; line-height: 1;">
                     <i class="fa fa-times"></i>
                 </button>
@@ -358,6 +358,7 @@
         <ul class="navbar-nav">
 
             <!-- Dashboard -->
+            @if(auth()->user()->can('Dashboard') || auth()->user()->can('Admin Dashboard list') || auth()->user()->can('Sales Dashboard list'))
             <li class="nav-item mt-2">
                 <h6 class="ps-4 text-uppercase">Dashboard</h6>
                 <a class="nav-link {{ Request::is('dashboard') ? 'active' : '' }}" href="{{ url('dashboard') }}">
@@ -367,6 +368,7 @@
                     <span class="nav-link-text">Dashboard</span>
                 </a>
             </li>
+            @endif
 
             <!-- Operations -->
             <li class="nav-item mt-3">
@@ -386,13 +388,15 @@
                     </div>
                     <span class="nav-link-text">Inquiry</span>
                 </a>
+                @endcan
+                @if(auth()->user()->can('Inquiry follow-up') || auth()->user()->can('Inquiry list'))
                 <a class="nav-link {{ Request::is('followups*') ? 'active' : '' }}" href="{{ route('followups.index') }}">
                     <div class="icon">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                     </div>
                     <span class="nav-link-text">Follow-up List</span>
                 </a>
-                @endcan
+                @endif
                 @can('Reviews list')
                 <a class="nav-link {{ Request::is('reviews*') ? 'active' : '' }}" href="{{ route('reviews.index') }}">
                     <div class="icon">
@@ -458,14 +462,14 @@
                     <span class="nav-link-text">Currencies & Rates</span>
                 </a>
                 @endcan
-                @if(auth()->user()->can('Hotels list') || auth()->user()->hasRole(['Admin', 'Super-Admin', 'admin', 'super-admin']) || auth()->user()->role_id == 1)
+                @can('Hotels list')
                 <a class="nav-link {{ Request::is('hotels*') ? 'active' : '' }}" href="{{ route('hotels.index') }}">
                     <div class="icon">
                         <i class="fa-solid fa-hotel"></i>
                     </div>
                     <span class="nav-link-text">Hotels</span>
                 </a>
-                @endif
+                @endcan
             </li>
             @endif
 
@@ -489,14 +493,14 @@
                     <span class="nav-link-text">Organization Settings</span>
                 </a>
                 @endcan
-                @if(auth()->user()->can('Organization Settings edit') || auth()->user()->can('Super-Admin') || auth()->user()->hasRole(['Admin', 'Super-Admin', 'admin', 'super-admin']) || auth()->user()->role_id == 1)
+                @can('Organization Settings edit')
                 <a class="nav-link {{ Request::is('settings*') ? 'active' : '' }}" href="{{ route('settings.index') }}">
                     <div class="icon">
                         <i class="fa-solid fa-gear"></i>
                     </div>
                     <span class="nav-link-text">Settings</span>
                 </a>
-                @endif
+                @endcan
                 @can('Super-Admin')
                 <a class="nav-link {{ Request::is('system-integration-settings*') ? 'active' : '' }}" href="{{ route('integration_settings.edit') }}">
                     <div class="icon">

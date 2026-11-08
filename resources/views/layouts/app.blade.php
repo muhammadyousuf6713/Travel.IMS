@@ -216,8 +216,19 @@
     </script>
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
-    <script src="{{ asset('assets/js/plugins/smooth-scrollbar.min.js') }}"></script>
+    <script>
+        // Completely neutralize PerfectScrollbar and SmoothScrollbar to eliminate duplicate scrollbars and wheel capture
+        window.PerfectScrollbar = function() {
+            return {
+                update: function() {},
+                destroy: function() {}
+            };
+        };
+        window.Scrollbar = {
+            init: function() { return { destroy: function() {}, update: function() {} }; },
+            destroy: function() {}
+        };
+    </script>
     <script src="{{ asset('assets/js/plugins/fullcalendar.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugins/chartjs.min.js') }}"></script>
     @stack('rtl')
@@ -455,11 +466,12 @@
             // 1. If mouse is hovering over ANY Select2 options list (inside modal or regular page):
             var select2List = e.target.closest('.select2-results__options');
             if (select2List) {
+                var delta = e.deltaY;
                 var maxScroll = select2List.scrollHeight - select2List.clientHeight;
                 if (maxScroll > 0) {
-                    select2List.scrollTop += e.deltaY;
+                    select2List.scrollTop += delta;
                 }
-                // Always prevent default on the event so it NEVER leaks to .main-content or window!
+                // Stop wheel event from propagating to modal or background
                 e.preventDefault();
                 e.stopPropagation();
                 return;
@@ -477,34 +489,26 @@
                 return;
             }
 
-            // 3. If ANY modal is currently open:
-            var openModal = document.querySelector('.modal.show');
-            if (openModal || document.body.classList.contains('modal-open') || document.body.classList.contains('has-active-modal')) {
-                // Find scrollable container inside modal (e.g. modal-body with overflow, follow-up remarks history)
-                var modalScrollable = e.target.closest('.modal-body, .followup-history-scrollbox, .followup-modal-list, .modal-dialog-scrollable .modal-body');
-                if (modalScrollable) {
-                    var maxScroll = modalScrollable.scrollHeight - modalScrollable.clientHeight;
-                    if (maxScroll > 0) {
-                        var delta = e.deltaY;
-                        var current = modalScrollable.scrollTop;
-                        if ((delta < 0 && current <= 0) || (delta > 0 && current >= maxScroll - 1)) {
-                            // At boundary: stop event from leaking to background!
-                            e.preventDefault();
-                            return;
-                        }
-                        modalScrollable.scrollTop += delta;
-                        e.preventDefault();
-                        return;
-                    } else {
-                        // Content fits completely: block wheel so backscreen doesn't move!
-                        e.preventDefault();
-                        return;
-                    }
+            // 3. If mouse is inside ANY open modal or if any modal is active:
+            var activeModal = e.target.closest('.modal.show, .modal');
+            var isModalOpen = activeModal || document.body.classList.contains('modal-open') || document.body.classList.contains('has-active-modal');
+            if (isModalOpen) {
+                // Determine the target container to scroll
+                var scrollTarget = e.target.closest('.modal-body, .followup-history-scrollbox, .followup-modal-list, #progressRemarksList');
+                if (!scrollTarget && activeModal) {
+                    // Check if modal dialog itself or modal wrapper is scrollable
+                    scrollTarget = activeModal;
                 }
 
-                // Anywhere else over modal dialog, header, footer, backdrop:
-                // PREVENT ALL WHEEL SCROLLING so background NEVER scrolls!
+                if (scrollTarget && (scrollTarget.scrollHeight > scrollTarget.clientHeight)) {
+                    var delta = e.deltaY;
+                    var maxScroll = scrollTarget.scrollHeight - scrollTarget.clientHeight;
+                    scrollTarget.scrollTop += delta;
+                }
+
+                // Never let the wheel event leak to .main-content or the page behind the modal
                 e.preventDefault();
+                e.stopPropagation();
                 return;
             }
         }, { passive: false });

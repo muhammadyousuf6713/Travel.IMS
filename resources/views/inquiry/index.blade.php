@@ -6,16 +6,30 @@
         #example23,
         table.dataTable#example23 {
             width: 100% !important;
+            min-width: 100% !important;
             margin: 0 !important;
-            table-layout: auto !important;
+        }
+        #example23_wrapper,
+        #example23_wrapper .dataTables_scroll,
+        #example23_wrapper .dataTables_scrollHead,
+        #example23_wrapper .dataTables_scrollBody {
+            width: 100% !important;
         }
         .table-responsive {
             width: 100% !important;
             overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
         }
         #example23 th,
         #example23 td {
             vertical-align: middle !important;
+            padding: 0.42rem 0.5rem !important;
+            font-size: 0.8125rem !important;
+        }
+        #example23 th input.form-control-sm {
+            height: 26px !important;
+            font-size: 0.75rem !important;
+            padding: 2px 6px !important;
         }
     </style>
 
@@ -135,11 +149,11 @@
                                 </small>
                             </div>
                             <div class="d-flex align-items-center gap-3">
-                                @can('Inquiry edit')
+                                @if(auth()->user()->can('Inquiry bulk assign') || auth()->user()->can('Inquiry assign'))
                                 <button type="button" class="btn btn-sm btn-info d-none" id="bulkAssignBtn">
                                     <i class="fa fa-users-cog"></i> Bulk Assign
                                 </button>
-                                @endcan
+                                @endif
                                 @can('Reviews sync')
                                 <button type="button" class="btn btn-sm btn-success d-none" id="syncReviewsBtn">
                                     <i class="fa fa-star"></i> Sync to Reviews
@@ -942,15 +956,18 @@
                     {
                         data: 'id_inquiry',
                         name: 'inquiry.id_inquiry',
-                        className: 'dtr-control'
+                        className: 'dtr-control',
+                        responsivePriority: 1
                     },
                     {
                         data: 'customer_name',
-                        name: 'customer_name'
+                        name: 'customer_name',
+                        responsivePriority: 2
                     },
                     {
                         data: 'customer_cell',
-                        name: 'customer_cell'
+                        name: 'customer_cell',
+                        responsivePriority: 3
                     },
 
                     /*{
@@ -960,23 +977,28 @@
 
                     {
                         data: 'inquiry_type_name',
-                        name: 'inquiry_type_name'
+                        name: 'inquiry_type_name',
+                        responsivePriority: 4
                     },
                     {
                         data: 'salesperson_name',
-                        name: 'salesperson_name'
+                        name: 'salesperson_name',
+                        responsivePriority: 4
                     },
                     {
                         data: 'sales_ref_name',
-                        name: 'sales_ref_name'
+                        name: 'sales_ref_name',
+                        responsivePriority: 6
                     },
                     {
                         data: 'followup_date',
-                        name: 'followup_date'
+                        name: 'followup_date',
+                        responsivePriority: 2
                     },
                     {
                         data: 'travel_date',
-                        name: 'travel_date'
+                        name: 'travel_date',
+                        responsivePriority: 5
                     },
                     {
                         data: 'status',
