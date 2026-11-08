@@ -958,6 +958,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         activeHotelSelectForQuickAdd.appendChild(newOpt);
                     }
                     activeHotelSelectForQuickAdd.value = data.hotel.name;
+                    $(activeHotelSelectForQuickAdd).trigger('change');
                 }
                 if (window.toastr) {
                     toastr.success(`Hotel '${name}' registered successfully!`);

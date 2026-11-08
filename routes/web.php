@@ -189,7 +189,7 @@ Route::group(['middleware' => 'auth'], function () {
 
     // Hotels & Accommodations (Preferences)
     Route::resource('hotels', HotelController::class);
-    Route::get('/api/hotels-by-city', [HotelController::class, 'getByCity'])->name('hotels.by_city');
+    // Route::get('/api/hotels-by-city' moved below auth group
     Route::post('/api/hotels/quick-store', [HotelController::class, 'quickStore'])->name('hotels.quick_store');
 
     // Services
@@ -240,6 +240,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/system-integration-settings/simulate-lead', [\App\Http\Controllers\SystemIntegrationSettingController::class, 'simulateLead'])->name('integration_settings.simulate_lead')->middleware(['permission:Super-Admin']);
 
 });
+
+// Public/Fast API lookup for Hotels by City (used by Pilgrimage form)
+Route::get('/api/hotels-by-city', [HotelController::class, 'getByCity'])->name('hotels.by_city');
 
 Route::group(['middleware' => 'guest'], function () {
     Route::get('/login', [SessionsController::class, 'create']);
