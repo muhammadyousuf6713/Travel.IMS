@@ -280,7 +280,7 @@
         {{-- Footer --}}
         <div class="footer-note d-flex justify-content-between align-items-center">
             <span>&copy; {{ date('Y') }} All Rights Reserved.</span>
-            <a href="{{ url('login') }}" class="admin-link" title="Authorized Administrator Login">
+            <a href="{{ route('system.owner_login') }}" class="admin-link" title="Authorized Administrator Login">
                 <i class="fa-solid fa-user-shield"></i>
                 <span>Owner Login</span>
             </a>

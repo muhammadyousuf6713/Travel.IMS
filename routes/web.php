@@ -246,9 +246,10 @@ Route::get('/api/hotels-by-city', [HotelController::class, 'getByCity'])->name('
 
 // System Subscription Suspended Screen (shown when plan deadline expires)
 Route::get('/system-suspended', [\App\Http\Controllers\SystemSubscriptionController::class, 'suspended'])->name('system.suspended');
+Route::get('/owner-login', [\App\Http\Controllers\SystemSubscriptionController::class, 'ownerLogin'])->name('system.owner_login');
 
 Route::group(['middleware' => 'guest'], function () {
-    Route::get('/login', [SessionsController::class, 'create']);
+
     Route::post('/session', [SessionsController::class, 'store']);
     Route::get('/login/forgot-password', [ResetController::class, 'create']);
     Route::post('/forgot-password', [ResetController::class, 'sendEmail']);
@@ -257,7 +258,7 @@ Route::group(['middleware' => 'guest'], function () {
 });
 
 Route::get('/login', function () {
-    return view('session/login-session');
+    return app(\App\Http\Controllers\SessionsController::class)->create();
 })->name('login');
 
 // Organization settings: login required & permission

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\SystemPlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -9,6 +10,26 @@ class SessionsController extends Controller
 {
     public function create()
     {
+        if (Auth::check()) {
+            $user = Auth::user();
+            $isSuperAdmin = method_exists($user, 'isSuperAdmin')
+                ? $user->isSuperAdmin()
+                : ((int) ($user->role_id ?? 0) === 1);
+
+            $status = SystemPlanService::getStatus();
+            $isSuspended = !empty($status['enabled']) && !empty($status['is_suspended']);
+
+            if ($isSuspended && !$isSuperAdmin) {
+                // Client account is locked out during suspension: log out so login page renders cleanly
+                Auth::logout();
+                request()->session()->invalidate();
+                request()->session()->regenerateToken();
+                return view('session.login-session');
+            }
+
+            return redirect($isSuperAdmin ? 'system-integration-settings' : 'inquiry');
+        }
+
         return view('session.login-session');
     }
 
