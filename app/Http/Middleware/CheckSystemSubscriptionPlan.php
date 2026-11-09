@@ -30,12 +30,15 @@ class CheckSystemSubscriptionPlan
             return $next($request);
         }
 
-        // Super-Admin users are NEVER locked out (so the owner can always log in and manage the plan)
+        // ONLY genuine Super-Admin (Owner) is exempt from suspension lockout.
+        // Client Admins (role 8), Managers, and all other users ARE LOCKED OUT once suspended.
         if (Auth::check()) {
             $user = Auth::user();
-            if ((int) ($user->role_id ?? 0) === 1 || 
-                (method_exists($user, 'hasRole') && $user->hasRole(['Super-Admin', 'Super Admin'])) ||
-                (method_exists($user, 'can') && $user->can('Super-Admin'))) {
+            $isSuperAdmin = method_exists($user, 'isSuperAdmin')
+                ? $user->isSuperAdmin()
+                : ((int) ($user->role_id ?? 0) === 1);
+
+            if ($isSuperAdmin) {
                 return $next($request);
             }
         }

@@ -1,7 +1,15 @@
+@php
+    $isSuperAdminUser = auth()->check() && (
+        method_exists(auth()->user(), 'isSuperAdmin')
+            ? auth()->user()->isSuperAdmin()
+            : ((int) (auth()->user()->role_id ?? 0) === 1)
+    );
+@endphp
+
 @if(!empty($systemPlanNotice) && is_array($systemPlanNotice) && !empty($systemPlanNotice['enabled']))
-    {{-- CASE 1: Suspended State (Super-Admin Override View) --}}
+    {{-- CASE 1: Suspended State (Strictly Super-Admin / Owner Override View Only) --}}
     @if(!empty($systemPlanNotice['is_suspended']))
-        @if(auth()->check() && ((int)(auth()->user()->role_id ?? 0) === 1 || (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole(['Super-Admin', 'Super Admin'])) || (method_exists(auth()->user(), 'can') && auth()->user()->can('Super-Admin'))))
+        @if($isSuperAdminUser)
         <div class="system-plan-sticky-alert system-plan-suspended-banner" style="background: linear-gradient(90deg, #111827 0%, #7f1d1d 50%, #991b1b 100%); color: #fff; padding: 0.65rem 1rem; position: sticky; top: 0; z-index: 1050; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border-bottom: 2px solid #ef4444;">
             <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-2 px-2">
                 <div class="d-flex align-items-center gap-2">
@@ -47,6 +55,13 @@
                         <i class="fa-solid fa-clock-rotate-left text-danger me-1"></i>
                         {{ $systemPlanNotice['time_left_text'] }}
                     </span>
+
+                    {{-- STRICT PRIVACY RULE: 'Update Plan' button is shown ONLY to genuine Super-Admin who can manage the plan. Clients / Admins / Employees NEVER see it. --}}
+                    @if($isSuperAdminUser)
+                        <a href="{{ route('integration_settings.edit') }}#system-plan" class="btn btn-xs btn-light text-dark mb-0 py-1 px-2.5 shadow-none font-weight-bold" title="Manage Subscription Settings">
+                            <i class="fa-solid fa-sliders me-1 text-primary"></i> Update Plan
+                        </a>
+                    @endif
 
                     @if(!empty($systemPlanNotice['owner_whatsapp']))
                         @php

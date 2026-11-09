@@ -15,11 +15,11 @@ class SystemSubscriptionController extends Controller
     {
         $status = SystemPlanService::getStatus();
 
-        // If the system is not suspended and user is not previewing as Super-Admin, redirect to home
+        // If the system is not suspended and user is not previewing as genuine Super-Admin, redirect to home
         $isPreview = $request->has('preview') && Auth::check() && (
-            (int) (Auth::user()->role_id ?? 0) === 1 ||
-            (method_exists(Auth::user(), 'hasRole') && Auth::user()->hasRole(['Super-Admin', 'Super Admin'])) ||
-            (method_exists(Auth::user(), 'can') && Auth::user()->can('Super-Admin'))
+            method_exists(Auth::user(), 'isSuperAdmin')
+                ? Auth::user()->isSuperAdmin()
+                : ((int) (Auth::user()->role_id ?? 0) === 1)
         );
 
         if (!$status['is_suspended'] && !$isPreview) {

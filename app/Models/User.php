@@ -57,6 +57,38 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if the user is a genuine Super-Admin (Owner).
+     * Strictly: role_id == 1 or Role named 'Super-Admin' / 'Super Admin'.
+     * 'Admin' (role_id 8) is client-level, NOT Super-Admin, and will return false.
+     * Permissions are intentionally NOT checked here to prevent privilege escalation.
+     */
+    public function isSuperAdmin(): bool
+    {
+        // 1. Primary role_id check (1 is Super-Admin)
+        if ((int) ($this->role_id ?? 0) === 1) {
+            return true;
+        }
+
+        // 2. BelongsTo Role check
+        if ($this->relationLoaded('role') && $this->role) {
+            if ((int)$this->role->id === 1 || in_array(strtolower(trim($this->role->name)), ['super-admin', 'super admin'])) {
+                return true;
+            }
+        }
+
+        // 3. Spatie roles collection check (strictly role name 'Super-Admin', NOT 'Admin')
+        if (method_exists($this, 'roles') && $this->roles) {
+            foreach ($this->roles as $r) {
+                if ((int)$r->id === 1 || in_array(strtolower(trim($r->name)), ['super-admin', 'super admin'])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Get avatar URL if picture exists on disk.
      */
     public function getAvatarUrlAttribute()
