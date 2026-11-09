@@ -94,11 +94,22 @@
                                                             </div>
                                                             <h6 class="mb-0 text-sm font-weight-bolder text-dark">{{ $my_user->name }}</h6>
                                                             <span class="text-xxs text-secondary d-block">{{ $my_user->email }}</span>
+                                                            @php
+                                                                $isThisSuperAdmin = ((int) ($my_user->role_id ?? 0) === 1 || 
+                                                                    (method_exists($my_user, 'hasRole') && $my_user->hasRole(['Super-Admin', 'Super Admin', 'super-admin'])) ||
+                                                                    (method_exists($my_user, 'can') && $my_user->can('Super-Admin')));
+                                                                $currentIsSuperAdmin = auth()->user() && (
+                                                                    (int)(auth()->user()->role_id ?? 0) === 1 ||
+                                                                    (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole(['Super-Admin', 'Super Admin', 'super-admin']))
+                                                                );
+                                                            @endphp
+                                                            @if(!$isThisSuperAdmin)
                                                             <div class="mt-2">
                                                                 <a href="{{ route('users.impersonate', $my_user->id) }}" class="btn btn-xs bg-gradient-warning mb-0 text-white shadow-xs">
                                                                     <i class="fa-solid fa-right-to-bracket me-1"></i> Login as User
                                                                 </a>
                                                             </div>
+                                                            @endif
                                                         </div>
 
                                                         <div class="col-md-5 border-end">
@@ -162,27 +173,40 @@
                                         </td>
                                         <td class="text-xs text-secondary">{{ date('d M Y', strtotime($my_user->created_at)) }}</td>
                                         <td class="text-center text-nowrap">
-                                            <!-- Login As Button -->
-                                            <a class="btn bg-gradient-warning btn-sm mb-0 me-1 text-white shadow-xs"
-                                                href="{{ route('users.impersonate', $my_user->id) }}"
-                                                title="Login as {{ $my_user->name }} with allotted permissions">
-                                                <i class="fa-solid fa-right-to-bracket me-1"></i> Login As
-                                            </a>
+                                            @if($isThisSuperAdmin)
+                                                <span class="badge bg-light text-secondary border py-1.5 px-2 me-1 font-weight-bold" title="Protected System Account">
+                                                    <i class="fa-solid fa-shield-halved text-primary me-1"></i> Protected
+                                                </span>
+                                                @if($currentIsSuperAdmin)
+                                                    <a class="btn bg-gradient-info btn-sm mb-0"
+                                                        href="{{ url('users/edit/' . $my_user->id) }}"
+                                                        title="Edit user details">
+                                                        <i class="fa fa-pen-to-square me-1"></i> Edit
+                                                    </a>
+                                                @endif
+                                            @else
+                                                <!-- Login As Button -->
+                                                <a class="btn bg-gradient-warning btn-sm mb-0 me-1 text-white shadow-xs"
+                                                    href="{{ route('users.impersonate', $my_user->id) }}"
+                                                    title="Login as {{ $my_user->name }} with allotted permissions">
+                                                    <i class="fa-solid fa-right-to-bracket me-1"></i> Login As
+                                                </a>
 
-                                            <!-- Edit Button -->
-                                            <a class="btn bg-gradient-info btn-sm mb-0 me-1"
-                                                href="{{ url('users/edit/' . $my_user->id) }}"
-                                                title="Edit user details">
-                                                <i class="fa fa-pen-to-square me-1"></i> Edit
-                                            </a>
+                                                <!-- Edit Button -->
+                                                <a class="btn bg-gradient-info btn-sm mb-0 me-1"
+                                                    href="{{ url('users/edit/' . $my_user->id) }}"
+                                                    title="Edit user details">
+                                                    <i class="fa fa-pen-to-square me-1"></i> Edit
+                                                </a>
 
-                                            <!-- Delete Button -->
-                                            <a class="btn bg-gradient-danger btn-sm mb-0" data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal"
-                                                data-id="{{ $my_user->id }}"
-                                                title="Delete user">
-                                                <i class="fa fa-trash-can me-1"></i> Delete
-                                            </a>
+                                                <!-- Delete Button -->
+                                                <a class="btn bg-gradient-danger btn-sm mb-0" data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal"
+                                                    data-id="{{ $my_user->id }}"
+                                                    title="Delete user">
+                                                    <i class="fa fa-trash-can me-1"></i> Delete
+                                                </a>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

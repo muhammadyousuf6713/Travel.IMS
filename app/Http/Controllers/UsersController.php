@@ -216,8 +216,11 @@ class UsersController extends Controller
         $menu = 'Users';
         $submenu = 'create';
 
-        $roles = roles::all();
-        //        echo '<pre>'; print_r($roles);exit;
+        // Security Guard: Super-Admin role is restricted and cannot be selected/assigned
+        $roles = roles::where('name', 'NOT LIKE', '%super%')
+            ->where('id', '!=', 1)
+            ->get();
+
         return view('users.create', compact('roles', 'title', 'menu', 'submenu'));
     }
 
@@ -267,6 +270,13 @@ class UsersController extends Controller
             'role_id' => 'required',
         ]);
 
+        // Security Guard: Forbid assigning the Super-Admin role to any newly created user
+        $targetRole = roles::find($request->role_id);
+        if (!$targetRole || (int)$targetRole->id === 1 || stripos($targetRole->name, 'super') !== false) {
+            session()->flash('error', 'Security Violation: The Super-Admin role is protected and cannot be assigned.');
+            return redirect()->back()->withInput();
+        }
+
         $user = new User();
         $user->name = $request->name;
         $user->role_id = $request->role_id;
@@ -293,18 +303,34 @@ class UsersController extends Controller
 
     public function edit($id)
     {
-        // $dec_id = \Crypt::decrypt($id);
         $users = User::find($id);
+        if (!$users) {
+            abort(404);
+        }
 
-        $roles = roles::all();
+        $currentIsSuperAdmin = auth()->user() && (
+            (int)(auth()->user()->role_id ?? 0) === 1 ||
+            (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole(['Super-Admin', 'Super Admin', 'super-admin']))
+        );
 
-        // print_r($plot); exit;
+        $targetIsSuperAdmin = ((int) ($users->role_id ?? 0) === 1 || 
+            (method_exists($users, 'hasRole') && $users->hasRole(['Super-Admin', 'Super Admin', 'super-admin'])));
+
+        // Security Guard: Non-superadmin cannot edit a Super-Admin user
+        if ($targetIsSuperAdmin && !$currentIsSuperAdmin) {
+            abort(403, 'Unauthorized: Super-Admin accounts are protected and cannot be modified.');
+        }
+
+        // Security Guard: Super-Admin role is restricted and cannot be selected/assigned
+        $roles = roles::where('name', 'NOT LIKE', '%super%')
+            ->where('id', '!=', 1)
+            ->get();
+
         return view('users.edit')->with(compact('users', 'roles'));
     }
 
     public function update(Request $request)
     {
-        // $dec_id = \Crypt::decrypt($request->u_id);
         $dec_id = \Crypt::decrypt($request->u_id);
         $validator = [
             'name' => 'required',
@@ -314,9 +340,33 @@ class UsersController extends Controller
             $validator['password'] = 'required|string|min:8|confirmed';
         }
         $this->validate($request, $validator);
-        // $this->validate($request, $validate);
 
         $user = User::find($dec_id);
+        if (!$user) {
+            abort(404);
+        }
+
+        $currentIsSuperAdmin = auth()->user() && (
+            (int)(auth()->user()->role_id ?? 0) === 1 ||
+            (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole(['Super-Admin', 'Super Admin', 'super-admin']))
+        );
+
+        $targetIsSuperAdmin = ((int) ($user->role_id ?? 0) === 1 || 
+            (method_exists($user, 'hasRole') && $user->hasRole(['Super-Admin', 'Super Admin', 'super-admin'])));
+
+        // Security Guard: Non-superadmin cannot modify a Super-Admin account
+        if ($targetIsSuperAdmin && !$currentIsSuperAdmin) {
+            abort(403, 'Unauthorized: Super-Admin accounts are protected and cannot be modified.');
+        }
+
+        // Security Guard: Forbid assigning the Super-Admin role to any user
+        $selectedRole = roles::find($request->role_id);
+        if ($selectedRole && ((int)$selectedRole->id === 1 || stripos($selectedRole->name, 'super') !== false)) {
+            if (!$targetIsSuperAdmin || !$currentIsSuperAdmin) {
+                session()->flash('error', 'Security Violation: The Super-Admin role cannot be assigned.');
+                return redirect()->back();
+            }
+        }
 
         if ($request->password) {
             $user->password = Hash::make($request->password);
@@ -376,6 +426,15 @@ class UsersController extends Controller
         }
         $user = User::find($id);
         if ($user) {
+            $isSuperAdmin = ((int) ($user->role_id ?? 0) === 1 || 
+                (method_exists($user, 'hasRole') && $user->hasRole(['Super-Admin', 'Super Admin', 'super-admin'])) ||
+                (method_exists($user, 'can') && $user->can('Super-Admin')));
+
+            if ($isSuperAdmin) {
+                session()->flash('error', 'Security Violation: Super-Admin accounts are protected and cannot be deleted.');
+                return redirect(url('user-management'));
+            }
+
             $user->delete();
             session()->flash('success', 'User deleted successfully');
         } else {
@@ -404,6 +463,15 @@ class UsersController extends Controller
 
         if ((int) $targetUser->id === (int) $currentUser->id) {
             return redirect()->back()->with('error', 'You are already logged into this account.');
+        }
+
+        // Security Guard: Super-Admin accounts can NEVER be impersonated!
+        $isTargetSuperAdmin = ((int) ($targetUser->role_id ?? 0) === 1 || 
+            (method_exists($targetUser, 'hasRole') && $targetUser->hasRole(['Super-Admin', 'Super Admin', 'super-admin'])) ||
+            (method_exists($targetUser, 'can') && $targetUser->can('Super-Admin')));
+
+        if ($isTargetSuperAdmin) {
+            return redirect()->back()->with('error', 'Security Violation: Super-Admin accounts are protected and cannot be impersonated.');
         }
 
         // Store parent account ID in session

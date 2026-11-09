@@ -88,12 +88,20 @@
                             <span class="nav-status {{ $settings->review_auto_sync_enabled ? 'on' : '' }}">{{ $settings->review_auto_sync_enabled ? 'Auto' : 'Manual' }}</span>
                         @endif
                     </button>
+                    @php
+                        $isSuperAdminUser = auth()->check() && (
+                            (int)(auth()->user()->role_id ?? 0) === 1 ||
+                            (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole(['Super-Admin', 'Super Admin', 'super-admin']))
+                        );
+                    @endphp
+                    @if($isSuperAdminUser)
                     <button class="nav-link" id="system-plan-tab" data-bs-toggle="pill" data-bs-target="#system-plan-pane" type="button" role="tab">
-                        <i class="fa-solid fa-gem"></i> System Plan
+                        <i class="fa-solid fa-gem text-primary"></i> System Plan
                         <span class="nav-status {{ !empty($planStatus['enabled']) ? (!empty($planStatus['is_suspended']) ? 'bg-danger text-white' : (!empty($planStatus['is_warning']) ? 'bg-warning text-dark' : 'on')) : '' }}">
                             {{ !empty($planStatus['enabled']) ? (!empty($planStatus['is_suspended']) ? 'Suspended' : (!empty($planStatus['is_warning']) ? 'Due Soon' : 'Active')) : 'Off' }}
                         </span>
                     </button>
+                    @endif
                 </div>
             </div>
 
@@ -362,7 +370,8 @@ X-API-KEY: your-api-key
                             @endif
                         </div>
 
-                        {{-- ============ System Subscription Plan ============ --}}
+                        {{-- ============ System Subscription Plan (SUPER-ADMIN ONLY) ============ --}}
+                        @if($isSuperAdminUser)
                         <div class="tab-pane fade" id="system-plan-pane" role="tabpanel">
                             <input type="hidden" name="has_system_plan_setting" value="1">
 
@@ -465,6 +474,7 @@ X-API-KEY: your-api-key
                                             </select>
                                             <input type="text" name="system_plan_amount" class="form-control form-control-sm" value="{{ $planStatus['amount'] ?? '' }}" placeholder="e.g. 13118">
                                         </div>
+                                        <small class="text-xxs text-muted"><i class="fa-solid fa-lock me-1"></i>Private Super-Admin record only (never shown to employees or clients).</small>
                                     </div>
                                 </div>
                             </div>
@@ -520,7 +530,7 @@ X-API-KEY: your-api-key
                                 <div class="mb-3">
                                     <label class="form-label text-xs fw-bold text-dark mb-1">Sticky Warning Banner Message</label>
                                     <textarea name="system_plan_banner_message" rows="2" class="form-control form-control-sm">{{ $planStatus['banner_message'] ?? '' }}</textarea>
-                                    <small class="text-xxs text-muted">Available variables: <code>:deadline</code>, <code>:time_left</code>, <code>:days_left</code>, <code>:amount</code>, <code>:currency</code></small>
+                                    <small class="text-xxs text-muted">Available variables: <code>:deadline</code>, <code>:time_left</code>, <code>:days_left</code></small>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label text-xs fw-bold text-dark mb-1">Suspended Screen Title</label>
@@ -557,6 +567,7 @@ X-API-KEY: your-api-key
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                     </div>
 

@@ -238,12 +238,10 @@
             </div>
             @endif
 
-            @if(!empty($status['amount']))
             <div class="info-row">
-                <span class="info-label"><i class="fa-solid fa-receipt me-2"></i>Subscription Amount</span>
-                <span class="info-val">{{ $status['currency'] }} {{ is_numeric($status['amount']) ? number_format((float)$status['amount']) : $status['amount'] }} <small class="text-muted text-uppercase">({{ $status['plan_type'] }})</small></span>
+                <span class="info-label"><i class="fa-solid fa-clock-rotate-left me-2"></i>Status</span>
+                <span class="info-val text-warning"><i class="fa-solid fa-hourglass-half me-1"></i>Pending Renewal Confirmation</span>
             </div>
-            @endif
 
             <div class="info-row">
                 <span class="info-label"><i class="fa-solid fa-database me-2"></i>Database & Storage</span>

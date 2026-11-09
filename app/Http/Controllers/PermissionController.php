@@ -155,11 +155,28 @@ class PermissionController extends Controller
             return redirect()->back()->with('alert', 'Role not found')->with('alert-class', 'danger');
         }
 
+        $currentIsSuperAdmin = auth()->user() && (
+            (int)(auth()->user()->role_id ?? 0) === 1 ||
+            (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole(['Super-Admin', 'Super Admin', 'super-admin']))
+        );
+
+        // Security Guard: Non-superadmin cannot alter Super-Admin role permissions
+        if (((int) $role_id === 1 || stripos($role->name, 'super') !== false) && !$currentIsSuperAdmin) {
+            abort(403, 'Unauthorized: The Super-Admin role permissions cannot be altered.');
+        }
+
         // Filter permissions for the 'web' guard
         $permissions = Permission::whereIn('id', $validated['permissions'] ?? [])
             ->where('guard_name', 'web')
             ->pluck('name') // Get the names of the permissions
             ->toArray();
+
+        // Security Guard: The 'Super-Admin' permission can NEVER be assigned to any role other than Super-Admin (id 1)
+        if ((int) $role_id !== 1) {
+            $permissions = array_values(array_filter($permissions, function ($pName) {
+                return stripos($pName, 'super-admin') === false && stripos($pName, 'super admin') === false;
+            }));
+        }
 
         // Sync permissions to the role (adds and removes accordingly)
         $role->syncPermissions($permissions);

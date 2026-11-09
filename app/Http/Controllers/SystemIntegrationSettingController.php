@@ -153,7 +153,14 @@ class SystemIntegrationSettingController extends Controller
         }
 
         if ($request->has('has_system_plan_setting')) {
-            \App\Services\SystemPlanService::saveSettings($request);
+            $isSuperAdmin = auth()->check() && (
+                (int)(auth()->user()->role_id ?? 0) === 1 ||
+                (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole(['Super-Admin', 'Super Admin', 'super-admin']))
+            );
+
+            if ($isSuperAdmin) {
+                \App\Services\SystemPlanService::saveSettings($request);
+            }
         }
 
         return redirect()->route('integration_settings.edit')->with('success', 'System Integration & Lead Assignment Settings updated successfully.');
