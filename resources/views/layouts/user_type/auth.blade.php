@@ -23,6 +23,7 @@
         @elseif (\Request::is('profile*') || \Request::is('user-profile'))
             @include('layouts.navbars.auth.sidebar')
             <div class="main-content position-relative bg-gray-100 max-height-vh-100 h-100">
+                @include('layouts.system_plan_banner')
                 @include('layouts.navbars.auth.nav')
                 @yield('content')
             </div>
@@ -40,6 +41,7 @@
             @include('layouts.navbars.auth.sidebar')
             <main
                 class="main-content position-relative max-height-vh-100 h-100 mt-1 border-radius-lg {{ Request::is('rtl') ? 'overflow-hidden' : '' }}">
+                @include('layouts.system_plan_banner')
                 @include('layouts.navbars.auth.nav')
                 <div class="container-fluid py-2 px-2">
                     @yield('content')

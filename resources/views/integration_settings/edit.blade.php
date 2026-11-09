@@ -88,6 +88,12 @@
                             <span class="nav-status {{ $settings->review_auto_sync_enabled ? 'on' : '' }}">{{ $settings->review_auto_sync_enabled ? 'Auto' : 'Manual' }}</span>
                         @endif
                     </button>
+                    <button class="nav-link" id="system-plan-tab" data-bs-toggle="pill" data-bs-target="#system-plan-pane" type="button" role="tab">
+                        <i class="fa-solid fa-gem"></i> System Plan
+                        <span class="nav-status {{ !empty($planStatus['enabled']) ? (!empty($planStatus['is_suspended']) ? 'bg-danger text-white' : (!empty($planStatus['is_warning']) ? 'bg-warning text-dark' : 'on')) : '' }}">
+                            {{ !empty($planStatus['enabled']) ? (!empty($planStatus['is_suspended']) ? 'Suspended' : (!empty($planStatus['is_warning']) ? 'Due Soon' : 'Active')) : 'Off' }}
+                        </span>
+                    </button>
                 </div>
             </div>
 
@@ -356,6 +362,202 @@ X-API-KEY: your-api-key
                             @endif
                         </div>
 
+                        {{-- ============ System Subscription Plan ============ --}}
+                        <div class="tab-pane fade" id="system-plan-pane" role="tabpanel">
+                            <input type="hidden" name="has_system_plan_setting" value="1">
+
+                            <div class="section-head d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <h6>System Plan & Billing Control</h6>
+                                    <p>Configure subscription billing terms, payment deadline, warning countdown, and automatic lockout behavior.</p>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <a href="{{ route('system.suspended', ['preview' => 1]) }}" target="_blank" class="btn btn-sm btn-outline-danger mb-0 text-nowrap">
+                                        <i class="fa-solid fa-eye me-1"></i> Preview Lock Screen
+                                    </a>
+                                </div>
+                            </div>
+
+                            {{-- Live Status Alert Banner --}}
+                            @if(!empty($planStatus['enabled']) && !empty($planStatus['is_configured']))
+                                @if(!empty($planStatus['is_suspended']))
+                                    <div class="alert alert-danger text-white d-flex align-items-center justify-content-between p-3 mb-3 border-0" style="background: linear-gradient(90deg, #dc2626, #991b1b); border-radius: 12px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-circle-exclamation fa-lg"></i>
+                                            <div>
+                                                <strong class="d-block">STATUS: SYSTEM IS CURRENTLY SUSPENDED</strong>
+                                                <small>Client & staff URLs are redirecting to the suspension screen. Expired on {{ $planStatus['formatted_deadline'] }}.</small>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-white text-danger font-weight-bolder px-2 py-1">HARD LOCK ACTIVE</span>
+                                    </div>
+                                @elseif(!empty($planStatus['is_warning']))
+                                    <div class="alert alert-warning text-dark d-flex align-items-center justify-content-between p-3 mb-3 border-0" style="background: linear-gradient(90deg, #fef3c7, #fde68a); border-radius: 12px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-triangle-exclamation fa-lg text-warning"></i>
+                                            <div>
+                                                <strong class="d-block text-dark">STATUS: WARNING NOTICE ACTIVE</strong>
+                                                <small class="text-dark">All users currently see the sticky countdown banner at the top of the screen ({{ $planStatus['time_left_text'] }} remaining).</small>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-danger text-white font-weight-bolder px-2 py-1">{{ $planStatus['time_left_text'] }}</span>
+                                    </div>
+                                @else
+                                    <div class="alert alert-success text-white d-flex align-items-center justify-content-between p-3 mb-3 border-0" style="background: linear-gradient(90deg, #10b981, #059669); border-radius: 12px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-circle-check fa-lg"></i>
+                                            <div>
+                                                <strong class="d-block">STATUS: SUBSCRIPTION ACTIVE & HEALTHY</strong>
+                                                <small>Renewal due on {{ $planStatus['formatted_deadline'] }}. System operates normally with no warnings.</small>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-white text-success font-weight-bolder px-2 py-1">HEALTHY</span>
+                                    </div>
+                                @endif
+                            @else
+                                <div class="alert alert-secondary text-secondary d-flex align-items-center p-3 mb-3 border-0" style="background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1 !important;">
+                                    <i class="fa-solid fa-circle-info fa-lg me-2 text-secondary"></i>
+                                    <div>
+                                        <strong class="text-dark">Subscription Control Disabled:</strong>
+                                        <span class="text-muted">The system is operating without any deadline restrictions, warning notices, or lockout rules.</span>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Main Activation Switch --}}
+                            <div class="switch-row mb-3 p-3 bg-light border-radius-lg border">
+                                <div>
+                                    <div class="title fw-bold text-dark">Enable Subscription Plan Control</div>
+                                    <div class="desc text-xs text-muted">When enabled, the system enforces the configured payment deadline, countdown notices, and automated access suspension. If disabled, the system has zero restrictions.</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="system_plan_enabled" id="system_plan_enabled" value="1" {{ !empty($planStatus['enabled']) ? 'checked' : '' }}>
+                                </div>
+                            </div>
+
+                            {{-- Plan Details Card --}}
+                            <div class="card border border-radius-md p-3 mb-3 bg-white shadow-none">
+                                <h6 class="text-xs font-weight-bolder text-uppercase text-secondary mb-3">
+                                    <i class="fa-solid fa-credit-card me-1 text-primary"></i> 1. Billing Frequency & Amount
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-xs fw-bold text-dark mb-1">Payment Billing Type</label>
+                                        <select name="system_plan_type" class="form-select form-select-sm">
+                                            <option value="monthly" {{ ($planStatus['plan_type'] ?? '') === 'monthly' ? 'selected' : '' }}>Monthly Subscription</option>
+                                            <option value="quarterly" {{ ($planStatus['plan_type'] ?? '') === 'quarterly' ? 'selected' : '' }}>Quarterly (Every 3 Months)</option>
+                                            <option value="half-yearly" {{ ($planStatus['plan_type'] ?? '') === 'half-yearly' ? 'selected' : '' }}>Half-Yearly (Every 6 Months)</option>
+                                            <option value="yearly" {{ ($planStatus['plan_type'] ?? '') === 'yearly' ? 'selected' : '' }}>Yearly (Annual Plan)</option>
+                                            <option value="custom" {{ ($planStatus['plan_type'] ?? '') === 'custom' ? 'selected' : '' }}>Custom Term / One-Time</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label text-xs fw-bold text-dark mb-1">Subscription Amount & Currency</label>
+                                        <div class="input-group input-group-sm">
+                                            <select name="system_plan_currency" class="form-select form-select-sm" style="max-width: 90px;">
+                                                <option value="PKR" {{ ($planStatus['currency'] ?? '') === 'PKR' ? 'selected' : '' }}>PKR</option>
+                                                <option value="USD" {{ ($planStatus['currency'] ?? '') === 'USD' ? 'selected' : '' }}>USD</option>
+                                                <option value="SAR" {{ ($planStatus['currency'] ?? '') === 'SAR' ? 'selected' : '' }}>SAR</option>
+                                                <option value="AED" {{ ($planStatus['currency'] ?? '') === 'AED' ? 'selected' : '' }}>AED</option>
+                                                <option value="EUR" {{ ($planStatus['currency'] ?? '') === 'EUR' ? 'selected' : '' }}>EUR</option>
+                                                <option value="GBP" {{ ($planStatus['currency'] ?? '') === 'GBP' ? 'selected' : '' }}>GBP</option>
+                                            </select>
+                                            <input type="text" name="system_plan_amount" class="form-control form-control-sm" value="{{ $planStatus['amount'] ?? '' }}" placeholder="e.g. 13118">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Deadline & Schedule Card --}}
+                            <div class="card border border-radius-md p-3 mb-3 bg-white shadow-none">
+                                <h6 class="text-xs font-weight-bolder text-uppercase text-secondary mb-3">
+                                    <i class="fa-solid fa-calendar-days me-1 text-primary"></i> 2. Deadline Date & Lockout Rules
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <label class="form-label text-xs fw-bold text-dark mb-0">Payment Deadline Date</label>
+                                            <div class="d-flex gap-1">
+                                                <button type="button" class="btn btn-outline-secondary btn-xxs py-0 px-1 mb-0" onclick="setQuickDeadline(30)">+30d</button>
+                                                <button type="button" class="btn btn-outline-secondary btn-xxs py-0 px-1 mb-0" onclick="setQuickDeadline(90)">+90d</button>
+                                                <button type="button" class="btn btn-outline-secondary btn-xxs py-0 px-1 mb-0" onclick="setQuickDeadline(365)">+1yr</button>
+                                            </div>
+                                        </div>
+                                        <input type="date" name="system_plan_deadline" id="system_plan_deadline" class="form-control form-control-sm" value="{{ $planStatus['deadline'] ?? '' }}">
+                                        <small class="text-xxs text-muted">When this date arrives (+ grace days), non-admin users will be redirected to the suspended screen.</small>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="form-label text-xs fw-bold text-dark mb-1">Warning Notice (Days Before)</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" name="system_plan_warning_days" class="form-control form-control-sm" min="1" max="60" value="{{ $planStatus['warning_days'] ?? 7 }}">
+                                            <span class="input-group-text text-xxs">Days</span>
+                                        </div>
+                                        <small class="text-xxs text-muted">Days before deadline to show sticky countdown banner.</small>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="form-label text-xs fw-bold text-dark mb-1">Grace Period (Days After)</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" name="system_plan_grace_days" class="form-control form-control-sm" min="0" max="30" value="{{ $planStatus['grace_days'] ?? 0 }}">
+                                            <span class="input-group-text text-xxs">Days</span>
+                                        </div>
+                                        <small class="text-xxs text-muted">Extra days after deadline before hard lockout begins.</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Messaging Customization Card --}}
+                            <div class="card border border-radius-md p-3 mb-3 bg-white shadow-none">
+                                <h6 class="text-xs font-weight-bolder text-uppercase text-secondary mb-3">
+                                    <i class="fa-solid fa-bullhorn me-1 text-primary"></i> 3. Notification & Banner Messaging
+                                </h6>
+                                <div class="mb-3">
+                                    <label class="form-label text-xs fw-bold text-dark mb-1">Sticky Warning Banner Title</label>
+                                    <input type="text" name="system_plan_banner_title" class="form-control form-control-sm" value="{{ $planStatus['banner_title'] ?? 'System Subscription Renewal Notice' }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-xs fw-bold text-dark mb-1">Sticky Warning Banner Message</label>
+                                    <textarea name="system_plan_banner_message" rows="2" class="form-control form-control-sm">{{ $planStatus['banner_message'] ?? '' }}</textarea>
+                                    <small class="text-xxs text-muted">Available variables: <code>:deadline</code>, <code>:time_left</code>, <code>:days_left</code>, <code>:amount</code>, <code>:currency</code></small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-xs fw-bold text-dark mb-1">Suspended Screen Title</label>
+                                    <input type="text" name="system_plan_suspended_title" class="form-control form-control-sm" value="{{ $planStatus['suspended_title'] ?? 'System Access Temporarily Suspended' }}">
+                                </div>
+                                <div>
+                                    <label class="form-label text-xs fw-bold text-dark mb-1">Suspended Screen Message</label>
+                                    <textarea name="system_plan_suspended_message" rows="3" class="form-control form-control-sm">{{ $planStatus['suspended_message'] ?? '' }}</textarea>
+                                </div>
+                            </div>
+
+                            {{-- Owner Contact Card --}}
+                            <div class="card border border-radius-md p-3 mb-3 bg-white shadow-none">
+                                <h6 class="text-xs font-weight-bolder text-uppercase text-secondary mb-3">
+                                    <i class="fa-solid fa-address-card me-1 text-primary"></i> 4. System Owner Contact Details (Shown on Suspended Screen)
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-xs fw-bold text-dark mb-1">Administrator / Company Name</label>
+                                        <input type="text" name="system_plan_owner_name" class="form-control form-control-sm" value="{{ $planStatus['owner_name'] ?? 'Nyrogen Technologies' }}" placeholder="e.g. Nyrogen Technologies">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-xs fw-bold text-dark mb-1">WhatsApp Number (with Country Code)</label>
+                                        <input type="text" name="system_plan_owner_whatsapp" class="form-control form-control-sm" value="{{ $planStatus['owner_whatsapp'] ?? '' }}" placeholder="e.g. +923001234567">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-xs fw-bold text-dark mb-1">Contact Phone</label>
+                                        <input type="text" name="system_plan_owner_phone" class="form-control form-control-sm" value="{{ $planStatus['owner_phone'] ?? '' }}" placeholder="e.g. +92 300 1234567">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-xs fw-bold text-dark mb-1">Support Email</label>
+                                        <input type="email" name="system_plan_owner_email" class="form-control form-control-sm" value="{{ $planStatus['owner_email'] ?? '' }}" placeholder="e.g. support@nyrogentechnologies.com">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="save-bar">
@@ -502,6 +704,18 @@ function toggleKey() {
 function regenerateKey() {
     if (confirm('Generate a new API key? Any website or system using the current key will stop sending leads until you update it.')) {
         document.getElementById('regenerateKeyForm').submit();
+    }
+}
+
+function setQuickDeadline(days) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const input = document.getElementById('system_plan_deadline');
+    if (input) {
+        input.value = `${yyyy}-${mm}-${dd}`;
     }
 }
 </script>

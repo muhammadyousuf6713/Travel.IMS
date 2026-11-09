@@ -244,6 +244,9 @@ Route::group(['middleware' => 'auth'], function () {
 // Public/Fast API lookup for Hotels by City (used by Pilgrimage form)
 Route::get('/api/hotels-by-city', [HotelController::class, 'getByCity'])->name('hotels.by_city');
 
+// System Subscription Suspended Screen (shown when plan deadline expires)
+Route::get('/system-suspended', [\App\Http\Controllers\SystemSubscriptionController::class, 'suspended'])->name('system.suspended');
+
 Route::group(['middleware' => 'guest'], function () {
     Route::get('/login', [SessionsController::class, 'create']);
     Route::post('/session', [SessionsController::class, 'store']);

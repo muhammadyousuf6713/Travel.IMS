@@ -50,6 +50,7 @@ class SystemIntegrationSettingController extends Controller
         $reviewLinks = ($reviewReady && is_array($settings->review_links)) ? $settings->review_links : [];
         $reviewTemplate = ($reviewReady ? $settings->review_whatsapp_template : null) ?: \App\Http\Controllers\ReviewController::defaultTemplate();
         $onlyAssignedInquiries = \App\Models\SystemSetting::get('only_assigned_inquiries', '0') === '1';
+        $planStatus = \App\Services\SystemPlanService::getStatus();
 
         $webhookUrl = url('/api/v1/integrations/lead-webhook');
         $metaWebhookUrl = url('/api/v1/integrations/meta-leadgen');
@@ -68,7 +69,8 @@ class SystemIntegrationSettingController extends Controller
             'reviewAssigneeIds',
             'reviewLinks',
             'reviewTemplate',
-            'onlyAssignedInquiries'
+            'onlyAssignedInquiries',
+            'planStatus'
         ));
     }
 
@@ -133,6 +135,10 @@ class SystemIntegrationSettingController extends Controller
 
         if ($request->has('has_visibility_setting')) {
             \App\Models\SystemSetting::set('only_assigned_inquiries', $request->boolean('only_assigned_inquiries') ? '1' : '0');
+        }
+
+        if ($request->has('has_system_plan_setting')) {
+            \App\Services\SystemPlanService::saveSettings($request);
         }
 
         return redirect()->route('integration_settings.edit')->with('success', 'System Integration & Lead Assignment Settings updated successfully.');
