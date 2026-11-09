@@ -44,6 +44,23 @@ class SessionsController extends Controller
 
         if (Auth::attempt($attributes, $remember)) {
             session()->regenerate();
+
+            $user = Auth::user();
+            $isSuperAdmin = method_exists($user, 'isSuperAdmin')
+                ? $user->isSuperAdmin()
+                : ((int) ($user->role_id ?? 0) === 1);
+
+            $status = SystemPlanService::getStatus();
+            $isSuspended = !empty($status['enabled']) && !empty($status['is_suspended']);
+
+            if ($isSuspended) {
+                if ($isSuperAdmin) {
+                    return redirect('system-integration-settings')->with(['success' => 'Welcome Super-Admin. The system subscription is currently suspended; manage the plan below.']);
+                } else {
+                    return redirect()->route('system.suspended');
+                }
+            }
+
             return redirect('inquiry')->with(['success' => 'You are logged in.']);
         } else {
             return back()->withErrors(['email' => 'Email or password invalid.']);
