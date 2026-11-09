@@ -596,7 +596,7 @@ X-API-KEY: your-api-key
 })();
 
 // ---------- Lead rotation ----------
-let orderedUserIds = @json(array_values(array_map('intval', $assignedIds)));
+let orderedUserIds = @json(array_values(array_intersect(array_map('intval', $assignedIds), $users->pluck('id')->toArray())));
 const userNames = @json($users->pluck('name', 'id'));
 const nextAgentId = {{ $nextAgent ? (int) $nextAgent->id : 'null' }};
 

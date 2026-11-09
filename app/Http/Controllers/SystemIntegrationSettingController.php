@@ -28,8 +28,10 @@ class SystemIntegrationSettingController extends Controller
         $salesReferences = sales_reference::all();
         $inquiryTypes = inquirytypes::all();
 
-        // Decode assigned user IDs
-        $assignedIds = is_array($settings->assigned_user_ids) ? $settings->assigned_user_ids : [];
+        // Decode and filter assigned user IDs against existing users
+        $existingUserIds = $users->pluck('id')->all();
+        $rawAssignedIds = is_array($settings->assigned_user_ids) ? $settings->assigned_user_ids : [];
+        $assignedIds = array_values(array_intersect(array_map('intval', $rawAssignedIds), $existingUserIds));
         
         // Active rotation pool
         $activeRotationUsers = User::whereIn('id', $assignedIds)->get()->sortBy(function ($user) use ($assignedIds) {
@@ -46,7 +48,9 @@ class SystemIntegrationSettingController extends Controller
 
         // Review Sync tab
         $reviewReady = \App\Services\ReviewService::isReady();
-        $reviewAssigneeIds = ($reviewReady && is_array($settings->review_assignee_ids)) ? array_map('intval', $settings->review_assignee_ids) : [];
+        $reviewAssigneeIds = ($reviewReady && is_array($settings->review_assignee_ids)) 
+            ? array_values(array_intersect(array_map('intval', $settings->review_assignee_ids), $existingUserIds)) 
+            : [];
         $reviewLinks = ($reviewReady && is_array($settings->review_links)) ? $settings->review_links : [];
         $reviewTemplate = ($reviewReady ? $settings->review_whatsapp_template : null) ?: \App\Http\Controllers\ReviewController::defaultTemplate();
         $onlyAssignedInquiries = \App\Models\SystemSetting::get('only_assigned_inquiries', '0') === '1';
@@ -80,6 +84,17 @@ class SystemIntegrationSettingController extends Controller
     public function update(Request $request)
     {
         $settings = SystemIntegrationSetting::getSettings();
+
+        // Sanitize user ID arrays against existing users in database before validation
+        $existingUserIds = User::pluck('id')->toArray();
+        if ($request->has('assigned_user_ids') && is_array($request->input('assigned_user_ids'))) {
+            $cleanedAssigned = array_values(array_intersect(array_map('intval', (array) $request->input('assigned_user_ids')), $existingUserIds));
+            $request->merge(['assigned_user_ids' => $cleanedAssigned]);
+        }
+        if ($request->has('review_assignee_ids') && is_array($request->input('review_assignee_ids'))) {
+            $cleanedReview = array_values(array_intersect(array_map('intval', (array) $request->input('review_assignee_ids')), $existingUserIds));
+            $request->merge(['review_assignee_ids' => $cleanedReview]);
+        }
 
         $validated = $request->validate([
             'auto_assign_enabled' => 'nullable',
